@@ -85,16 +85,16 @@ const arcPath = (() => {
 <section class="hero" id="hero">
 	<div class="hero-inner">
 		<div class="hero-content">
-			<div class="tag-row">
+			<div class="tag-row reveal" style="--reveal-order: 0">
 				{tags.map((tag) => <span class="tag">{tag}</span>)}
 			</div>
 
 			<h1 class="headline">
-				<span class="line">We build things.</span>
-				<span class="line line--dim">Sometimes we don't know what they'll become.</span>
+				<span class="line reveal" style="--reveal-order: 1">We build things.</span>
+				<span class="line line--dim reveal" style="--reveal-order: 2">Sometimes we don't know what they'll become.</span>
 			</h1>
 
-			<div class="cta-row">
+			<div class="cta-row reveal" style="--reveal-order: 3">
 				<a href="#contact" class="cta-btn">
 					<span>Bring us a problem</span>
 					<span class="cta-arrow">&rarr;</span>
@@ -103,7 +103,7 @@ const arcPath = (() => {
 			</div>
 		</div>
 
-		<div class="hero-visual" id="pipeline" aria-label="How an idea becomes something real">
+		<div class="hero-visual reveal" id="pipeline" aria-label="How an idea becomes something real" style="--reveal-order: 4">
 			<div class="hero-circle" aria-hidden="true"></div>
 
 			<svg class="arc-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
@@ -167,6 +167,31 @@ const arcPath = (() => {
 		   .hero-content column and overshoots upward, off the top of the
 		   section. Matching its own height here keeps that math correct. */
 		min-height: calc(clamp(480px, 50vw, 630px) + 160px);
+	}
+
+	/* ---------- page-load entrance ---------- */
+	.reveal {
+		opacity: 0;
+		transform: translateY(18px);
+		transition:
+			opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+			transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+		transition-delay: calc(var(--reveal-order, 0) * 90ms);
+	}
+
+	.hero.is-visible .reveal {
+		opacity: 1;
+		transform: translateY(0);
+	}
+
+	/* .hero-visual already carries transform: translateY(-50%) for centering
+	   — the reveal offset has to stack on top of that, not replace it. */
+	.hero-visual.reveal {
+		transform: translateY(-50%) translateY(18px);
+	}
+
+	.hero.is-visible .hero-visual.reveal {
+		transform: translateY(-50%) translateY(0);
 	}
 
 	/* ---------- left column ---------- */
@@ -308,7 +333,10 @@ const arcPath = (() => {
 		background: var(--bg);
 		border: 1px solid rgba(255, 255, 255, 0.4);
 		transform: translate(-50%, -50%);
-		transition: background-color 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+		transition:
+			background-color 0.25s ease,
+			border-color 0.25s ease,
+			transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 		pointer-events: none;
 	}
 
@@ -336,7 +364,10 @@ const arcPath = (() => {
 		text-align: left;
 		cursor: pointer;
 		font-family: inherit;
-		transition: border-color 0.3s ease, background-color 0.3s ease;
+		transition:
+			border-color 0.3s ease,
+			background-color 0.3s ease,
+			transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 		box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
 	}
 
@@ -374,6 +405,7 @@ const arcPath = (() => {
 	.stage-card.is-current {
 		border-color: var(--accent);
 		background: rgba(109, 40, 217, 0.14);
+		transform: translateY(-50%) scale(1.045);
 	}
 
 	/* ---------- responsive ---------- */
@@ -397,6 +429,14 @@ const arcPath = (() => {
 			max-width: 640px;
 			height: clamp(460px, 80vw, 600px);
 			margin-top: 1.5rem;
+		}
+
+		.hero-visual.reveal {
+			transform: translateY(18px);
+		}
+
+		.hero.is-visible .hero-visual.reveal {
+			transform: translateY(0);
 		}
 	}
 
@@ -435,14 +475,58 @@ const arcPath = (() => {
 		.cta-arrow {
 			transition: none;
 		}
+
+		.reveal,
+		.hero-visual.reveal {
+			transition: none;
+		}
 	}
 </style>
 
+<noscript>
+	<style>
+		.hero .reveal {
+			opacity: 1 !important;
+		}
+
+		.hero .tag-row.reveal,
+		.hero .line.reveal,
+		.hero .cta-row.reveal {
+			transform: none !important;
+		}
+
+		/* .hero-visual's transform also handles centering — no-JS fallback
+		   must resolve to that, not a blank transform, or it drifts off
+		   its vertical center. */
+		.hero .hero-visual.reveal {
+			transform: translateY(-50%) !important;
+		}
+
+		@media (max-width: 1080px) {
+			.hero .hero-visual.reveal {
+				transform: none !important;
+			}
+		}
+	</style>
+</noscript>
+
 <script>
+	const heroSection = document.getElementById('hero');
 	const stageCards = Array.from(document.querySelectorAll('.stage-card')) as HTMLButtonElement[];
 	const nodeEls = Array.from(document.querySelectorAll('.node')) as HTMLElement[];
 	const pipeline = document.getElementById('pipeline');
 	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+	// page-load entrance: reduced-motion just snaps everything visible;
+	// otherwise wait a frame so the browser paints the hidden state first,
+	// then add the class that triggers the staggered fade/slide-in.
+	if (reduceMotion) {
+		heroSection?.classList.add('is-visible');
+	} else {
+		requestAnimationFrame(() => {
+			requestAnimationFrame(() => heroSection?.classList.add('is-visible'));
+		});
+	}
 
 	let current = 0;
 	let timer: ReturnType<typeof setTimeout> | null = null;

@@ -33,22 +33,22 @@ const questions = [
 
 	<div class="problem-inner">
 		<div class="problem-left">
-			<div class="problem-eyebrow">
+			<div class="problem-eyebrow reveal" style="--reveal-order: 0">
 				<span class="eyebrow-idx">02</span>
 				<span class="eyebrow-dot" aria-hidden="true">&bull;</span>
 				<span class="eyebrow-label">The Problem Wall</span>
 			</div>
 
-			<span class="problem-pill">Problem</span>
+			<span class="problem-pill reveal" style="--reveal-order: 1">Problem</span>
 
-			<h2 class="problem-heading">Things We&rsquo;re<br />Interested In</h2>
+			<h2 class="problem-heading reveal" style="--reveal-order: 2">Things We&rsquo;re<br />Interested In</h2>
 
-			<p class="problem-desc">
+			<p class="problem-desc reveal" style="--reveal-order: 3">
 				Not a services pitch. Before we build anything, we sit with the questions most
 				companies skip past.
 			</p>
 
-			<p class="problem-quote" id="problemQuote" aria-live="polite">
+			<p class="problem-quote reveal" id="problemQuote" aria-live="polite" style="--reveal-order: 4">
 				<span class="quote-default">&ldquo;These guys understand how I think.&rdquo;</span>
 			</p>
 		</div>
@@ -56,7 +56,7 @@ const questions = [
 		<div class="problem-right">
 			<ul class="card-stack">
 				{questions.map((q, i) => (
-					<li class="card-item" style={i % 2 === 1 ? 'transform: translateX(28px);' : undefined}>
+					<li class:list={['card-item', 'reveal', i % 2 === 1 && 'is-offset']} style={`--reveal-order: ${i + 5}`}>
 						<button
 							type="button"
 							class="problem-card"
@@ -79,6 +79,28 @@ const questions = [
 </section>
 
 <script>
+	const section = document.getElementById('problem');
+	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+	if (section) {
+		if (reduceMotion || !('IntersectionObserver' in window)) {
+			section.classList.add('is-visible');
+		} else {
+			const observer = new IntersectionObserver(
+				(entries) => {
+					entries.forEach((entry) => {
+						if (entry.isIntersecting) {
+							section.classList.add('is-visible');
+							observer.disconnect();
+						}
+					});
+				},
+				{ threshold: 0.15 },
+			);
+			observer.observe(section);
+		}
+	}
+
 	const cards = Array.from(document.querySelectorAll<HTMLButtonElement>('.problem-card'));
 	const quoteEl = document.getElementById('problemQuote');
 	const defaultQuoteHTML = quoteEl?.innerHTML ?? '';
@@ -172,6 +194,31 @@ const questions = [
 		max-width: 1320px;
 		margin: 0 auto;
 		padding: clamp(72px, 10vw, 128px) clamp(20px, 4vw, 32px);
+	}
+
+	/* ---------- scroll-in reveal ---------- */
+	.reveal {
+		opacity: 0;
+		transform: translateY(18px);
+		transition:
+			opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+			transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+		transition-delay: calc(var(--reveal-order, 0) * 80ms);
+	}
+
+	.problem.is-visible .reveal {
+		opacity: 1;
+		transform: translateY(0);
+	}
+
+	/* the alternating card offset has to stack with the reveal's own
+	   translateY rather than replace it */
+	.card-item.is-offset.reveal {
+		transform: translateX(28px) translateY(18px);
+	}
+
+	.problem.is-visible .card-item.is-offset.reveal {
+		transform: translateX(28px) translateY(0);
 	}
 
 	/* ---------- left column ---------- */
@@ -270,11 +317,17 @@ const questions = [
 		text-align: left;
 		color: inherit;
 		cursor: pointer;
-		transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+		transition:
+			border-color 0.2s ease,
+			background-color 0.2s ease,
+			box-shadow 0.25s ease,
+			transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 	}
 
 	.problem-card:hover {
 		border-color: rgba(255, 255, 255, 0.18);
+		box-shadow: 0 20px 40px rgba(0, 0, 0, 0.32);
+		transform: translateY(-3px);
 	}
 
 	.problem-card:focus-visible {
@@ -286,6 +339,11 @@ const questions = [
 		border-color: var(--accent);
 		background: rgba(109, 40, 217, 0.14);
 		box-shadow: 0 16px 34px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(109, 40, 217, 0.4);
+		transform: scale(1.02);
+	}
+
+	.problem-card.is-active:hover {
+		transform: translateY(-3px) scale(1.02);
 	}
 
 	.problem-card.is-active .card-badge {
@@ -353,8 +411,16 @@ const questions = [
 			max-width: 60ch;
 		}
 
-		.card-item {
-			transform: none !important;
+		.card-item.is-offset {
+			transform: none;
+		}
+
+		.card-item.is-offset.reveal {
+			transform: translateY(18px);
+		}
+
+		.problem.is-visible .card-item.is-offset.reveal {
+			transform: translateY(0);
 		}
 	}
 
@@ -378,5 +444,29 @@ const questions = [
 		.problem-card {
 			transition: none;
 		}
+
+		.reveal,
+		.card-item.is-offset.reveal {
+			transition: none;
+		}
 	}
 </style>
+
+<noscript>
+	<style>
+		.problem .reveal {
+			opacity: 1 !important;
+			transform: none !important;
+		}
+
+		.problem .card-item.is-offset {
+			transform: translateX(28px) !important;
+		}
+
+		@media (max-width: 900px) {
+			.problem .card-item.is-offset {
+				transform: none !important;
+			}
+		}
+	</style>
+</noscript>

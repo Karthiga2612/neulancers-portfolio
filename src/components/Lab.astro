@@ -1,0 +1,510 @@
+---
+const stages = ['Thinking', 'Experimenting', 'Prototype', 'Building', 'Live'] as const;
+
+const experiments = [
+	{
+		name: 'AI × Business',
+		tagline: 'Where day-to-day decisions could just... happen.',
+		stage: 2,
+		log: 'We keep asking: which decisions in a business are actually just pattern-matching in a trench coat? Testing whether an agent can make the boring 80% of calls correctly, and only flag the ones that need a human.',
+	},
+	{
+		name: 'AI × Search',
+		tagline: 'Search that understands the question behind the question.',
+		stage: 1,
+		log: 'Most search returns documents. We want it to return answers — and the reasoning behind them. Still figuring out how much context is too much before it starts guessing.',
+	},
+	{
+		name: 'AI × Operations',
+		tagline: "Watching how work actually moves, not how it's supposed to.",
+		stage: 0,
+		log: "Before automating anything, we're just watching — screen recordings, shadowing, timing things with a stopwatch. Old-fashioned, but it's the only way to find the real bottleneck.",
+	},
+	{
+		name: 'AI × Knowledge',
+		tagline: 'What a company knows, made findable.',
+		stage: 3,
+		log: "Every company has tribal knowledge trapped in someone's head or a forgotten doc. Building a way to make it queryable without turning it into another wiki nobody updates.",
+	},
+	{
+		name: 'Automation × WhatsApp',
+		tagline: 'The most-used app becomes the least-used interface.',
+		stage: 4,
+		log: "For a lot of businesses, WhatsApp already is the interface. So instead of building an app nobody opens, we're teaching WhatsApp to do the app's job.",
+	},
+	{
+		name: 'Data × Decision Making',
+		tagline: 'Numbers that argue back before you commit.',
+		stage: 0,
+		log: 'Dashboards show you numbers. We want something that pushes back — "are you sure?" — before a bad call gets made, not after.',
+	},
+	{
+		name: 'Software × Traditional Business',
+		tagline: 'Old business, new nervous system.',
+		stage: 1,
+		log: "Can a business that's run on paper and phone calls for 20 years get a real nervous system without becoming unrecognizable to the people who built it?",
+	},
+];
+---
+
+<section class="lab" id="lab">
+	<div class="lab-inner">
+		<div class="lab-head">
+			<div class="lab-eyebrow reveal" style="--reveal-order: 0">
+				<span class="eyebrow-idx">05</span>
+				<span class="eyebrow-dot" aria-hidden="true">&bull;</span>
+				<span class="eyebrow-label">The Lab</span>
+			</div>
+
+			<h2 class="lab-heading reveal" style="--reveal-order: 1">N Lab</h2>
+			<p class="lab-desc reveal" style="--reveal-order: 2">
+				Some ideas are too early to become products. So we experiment with them.
+			</p>
+		</div>
+
+		<div class="lab-filters reveal" id="labFilters" style="--reveal-order: 3">
+			<button type="button" class="filter-pill" data-filter="all" aria-pressed="true">All</button>
+			{stages.map((s) => (
+				<button type="button" class="filter-pill" data-filter={s.toLowerCase()} aria-pressed="false">
+					{s}
+				</button>
+			))}
+		</div>
+
+		<div class="lab-grid reveal" id="labGrid" style="--reveal-order: 4">
+			{experiments.map((e, idx) => (
+				<article class="exp-card" data-stage={stages[e.stage].toLowerCase()}>
+					<button
+						type="button"
+						class="exp-trigger"
+						id={`exp-trigger-${idx}`}
+						aria-expanded="false"
+						aria-controls={`exp-log-${idx}`}
+					>
+						<h3 class="exp-name">{e.name}</h3>
+						<span class="exp-toggle" aria-hidden="true">
+							<span class="toggle-line toggle-line--h"></span>
+							<span class="toggle-line toggle-line--v"></span>
+						</span>
+					</button>
+
+					<p class="exp-tagline">{e.tagline}</p>
+
+					<div class="exp-meter" aria-hidden="true">
+						{stages.map((_, i) => (
+							<span class={`meter-seg${i <= e.stage ? ' is-filled' : ''}${i === e.stage ? ' is-current' : ''}`}></span>
+						))}
+					</div>
+
+					<span class="exp-stage">{stages[e.stage]}</span>
+
+					<div class="exp-log" id={`exp-log-${idx}`} role="region" aria-labelledby={`exp-trigger-${idx}`}>
+						<div class="exp-log-inner">
+							<p class="log-kicker">Lab notebook</p>
+							<p class="log-text">{e.log}</p>
+						</div>
+					</div>
+				</article>
+			))}
+		</div>
+
+		<p class="lab-footer reveal" style="--reveal-order: 5">
+			This makes Neulancers feel like a living technology company, not an agency.
+		</p>
+	</div>
+</section>
+
+<style>
+	.lab {
+		--ink: #f3f3f1;
+		--muted: #8b929d;
+		--ink-faint: rgba(139, 146, 157, 0.75);
+		--border-soft: rgba(255, 255, 255, 0.1);
+		--accent: #6d28d9;
+		--bg: #0a0a0d;
+		--card-bg: #0d1018;
+
+		position: relative;
+		background: var(--bg);
+		color: var(--ink);
+		font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+		border-top: 1px solid var(--border-soft);
+	}
+
+	.lab-inner {
+		max-width: 1320px;
+		margin: 0 auto;
+		padding: clamp(72px, 10vw, 128px) clamp(20px, 4vw, 32px);
+	}
+
+	/* ---------- scroll-in reveal ---------- */
+	.reveal {
+		opacity: 0;
+		transform: translateY(18px);
+		transition:
+			opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+			transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+		transition-delay: calc(var(--reveal-order, 0) * 90ms);
+	}
+
+	.lab.is-visible .reveal {
+		opacity: 1;
+		transform: translateY(0);
+	}
+
+	.lab-head {
+		max-width: 560px;
+		margin: 0 auto clamp(40px, 5vw, 56px);
+		text-align: center;
+	}
+
+	.lab-eyebrow {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+		margin-bottom: 1.1rem;
+	}
+
+	.eyebrow-idx,
+	.eyebrow-label {
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.75rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--muted);
+	}
+
+	.eyebrow-dot {
+		color: var(--accent);
+		font-size: 0.6rem;
+	}
+
+	.lab-heading {
+		margin: 0 0 0.75rem;
+		font-size: clamp(2rem, 1.6vw + 1.7rem, 2.75rem);
+		font-weight: 700;
+		letter-spacing: -0.01em;
+	}
+
+	.lab-desc {
+		margin: 0;
+		font-size: 1rem;
+		line-height: 1.6;
+		color: var(--muted);
+	}
+
+	/* ---------- filters ---------- */
+	.lab-filters {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 0.6rem;
+		margin-bottom: clamp(2.5rem, 5vw, 3.5rem);
+	}
+
+	.filter-pill {
+		padding: 0.5rem 1.05rem;
+		background: none;
+		border: 1px solid var(--border-soft);
+		border-radius: 999px;
+		color: var(--muted);
+		font-size: 0.85rem;
+		font-weight: 500;
+		cursor: pointer;
+		transition: border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease;
+	}
+
+	.filter-pill:hover {
+		color: var(--ink);
+		border-color: rgba(255, 255, 255, 0.22);
+	}
+
+	.filter-pill[aria-pressed='true'] {
+		background: var(--accent);
+		border-color: var(--accent);
+		color: #ffffff;
+	}
+
+	/* ---------- experiment grid ---------- */
+	.lab-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+		gap: 1.25rem;
+		/* without this, grid stretches every card in a row to match the
+		   tallest one — so opening one card's notebook entry left blank
+		   space inside all its neighbors instead of just that card growing */
+		align-items: start;
+	}
+
+	.exp-card {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 0.75rem;
+		background: var(--card-bg);
+		border: 1px solid var(--border-soft);
+		border-radius: 16px;
+		padding: 1.5rem;
+		transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease;
+	}
+
+	.exp-card:hover {
+		border-color: rgba(255, 255, 255, 0.2);
+	}
+
+	.exp-card.is-hidden {
+		display: none;
+	}
+
+	.exp-trigger {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 0.75rem;
+		width: 100%;
+		padding: 0;
+		background: none;
+		border: none;
+		cursor: pointer;
+		text-align: left;
+		color: inherit;
+		font-family: inherit;
+	}
+
+	.exp-name {
+		margin: 0;
+		font-size: 1.1rem;
+		font-weight: 700;
+		letter-spacing: -0.005em;
+	}
+
+	/* same plus → cross toggle used in the Method section, reused here
+	   for a consistent "this expands" affordance across the site */
+	.exp-toggle {
+		position: relative;
+		flex-shrink: 0;
+		width: 15px;
+		height: 15px;
+		margin-top: 0.2rem;
+		transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+	}
+
+	.toggle-line {
+		position: absolute;
+		background: var(--ink-faint);
+		transition: background-color 0.2s ease;
+	}
+
+	.toggle-line--h {
+		top: 50%;
+		left: 0;
+		width: 100%;
+		height: 1.5px;
+		transform: translateY(-50%);
+	}
+
+	.toggle-line--v {
+		left: 50%;
+		top: 0;
+		width: 1.5px;
+		height: 100%;
+		transform: translateX(-50%);
+	}
+
+	.exp-trigger[aria-expanded='true'] .exp-toggle {
+		transform: rotate(45deg);
+	}
+
+	.exp-trigger[aria-expanded='true'] .toggle-line {
+		background: var(--accent);
+	}
+
+	.exp-tagline {
+		margin: 0;
+		flex: 1;
+		font-size: 0.88rem;
+		line-height: 1.55;
+		color: var(--muted);
+	}
+
+	/* ---------- 5-segment stage meter ---------- */
+	.exp-meter {
+		display: flex;
+		gap: 4px;
+		width: 100%;
+		margin-top: 0.25rem;
+	}
+
+	.meter-seg {
+		flex: 1;
+		height: 4px;
+		border-radius: 2px;
+		background: var(--border-soft);
+	}
+
+	.meter-seg.is-filled {
+		background: var(--accent);
+	}
+
+	.meter-seg.is-current {
+		animation: meter-pulse 2.6s ease-in-out infinite;
+	}
+
+	@keyframes meter-pulse {
+		0%,
+		100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.55;
+		}
+	}
+
+	.exp-stage {
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.68rem;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--ink-faint);
+	}
+
+	/* ---------- lab notebook entry (accordion) ---------- */
+	.exp-log {
+		display: grid;
+		grid-template-rows: 0fr;
+		width: 100%;
+		transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+	}
+
+	.exp-card.is-open .exp-log {
+		grid-template-rows: 1fr;
+	}
+
+	.exp-log-inner {
+		overflow: hidden;
+	}
+
+	.log-kicker {
+		margin: 0.9rem 0 0.4rem;
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.62rem;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--accent);
+	}
+
+	.log-text {
+		margin: 0;
+		padding-top: 0.6rem;
+		border-top: 1px solid var(--border-soft);
+		font-size: 0.86rem;
+		line-height: 1.6;
+		color: var(--muted);
+	}
+
+	/* ---------- footer ---------- */
+	.lab-footer {
+		margin: clamp(3rem, 6vw, 4rem) 0 0;
+		text-align: center;
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.85rem;
+		color: var(--ink-faint);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.reveal,
+		.filter-pill,
+		.exp-card,
+		.exp-toggle,
+		.toggle-line,
+		.exp-log {
+			transition: none;
+		}
+
+		.meter-seg.is-current {
+			animation: none;
+		}
+	}
+</style>
+
+<noscript>
+	<style>
+		.lab .reveal {
+			opacity: 1 !important;
+			transform: none !important;
+		}
+
+		.lab-filters {
+			display: none !important;
+		}
+
+		/* no click handler without JS — show every log entry open rather
+		   than leaving them permanently collapsed and unreachable */
+		.exp-log {
+			grid-template-rows: 1fr !important;
+		}
+
+		.exp-toggle {
+			display: none !important;
+		}
+	</style>
+</noscript>
+
+<script>
+	const section = document.getElementById('lab');
+	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+	if (reduceMotion || !('IntersectionObserver' in window)) {
+		section?.classList.add('is-visible');
+	} else {
+		const revealObserver = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					if (entry.isIntersecting) {
+						section?.classList.add('is-visible');
+						revealObserver.disconnect();
+					}
+				});
+			},
+			{ threshold: 0.1 },
+		);
+		if (section) revealObserver.observe(section);
+	}
+
+	const filterPills = Array.from(document.querySelectorAll('.filter-pill')) as HTMLButtonElement[];
+	const cards = Array.from(document.querySelectorAll('.exp-card')) as HTMLElement[];
+	const triggers = Array.from(document.querySelectorAll('.exp-trigger')) as HTMLButtonElement[];
+
+	triggers.forEach((trigger) => {
+		trigger.addEventListener('click', () => {
+			const card = trigger.closest('.exp-card');
+			const isOpen = trigger.getAttribute('aria-expanded') === 'true';
+
+			// only one notebook entry open at a time — close whichever
+			// other card was open before opening this one
+			triggers.forEach((t) => {
+				t.setAttribute('aria-expanded', 'false');
+				t.closest('.exp-card')?.classList.remove('is-open');
+			});
+
+			if (!isOpen) {
+				trigger.setAttribute('aria-expanded', 'true');
+				card?.classList.add('is-open');
+			}
+		});
+	});
+
+	filterPills.forEach((pill) => {
+		pill.addEventListener('click', () => {
+			const filter = pill.dataset.filter ?? 'all';
+
+			filterPills.forEach((p) => p.setAttribute('aria-pressed', String(p === pill)));
+
+			cards.forEach((card) => {
+				const matches = filter === 'all' || card.dataset.stage === filter;
+				card.classList.toggle('is-hidden', !matches);
+			});
+		});
+	});
+</script>

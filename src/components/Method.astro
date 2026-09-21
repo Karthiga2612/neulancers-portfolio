@@ -11,46 +11,45 @@ const steps = [
 ---
 
 <section class="method" id="method">
-	<div class="method-inner">
-		<div class="method-eyebrow">
-			<span class="eyebrow-idx">04</span>
-			<span class="eyebrow-line" aria-hidden="true"></span>
-			<span class="eyebrow-label">The Neulancers Method</span>
+	<div class="method-scroll">
+		<div class="method-sticky">
+			<div class="method-eyebrow reveal" style="--reveal-order: 0">
+				<span class="eyebrow-idx">04</span>
+				<span class="eyebrow-line" aria-hidden="true"></span>
+				<span class="eyebrow-label">The Neulancers Method</span>
+			</div>
+
+			<h2 class="method-heading reveal" style="--reveal-order: 1">We don&rsquo;t start with technology.</h2>
+
+			<nav class="method-nav reveal" aria-label="Method steps" style="--reveal-order: 2">
+				<div class="nav-track" aria-hidden="true">
+					<div class="nav-track-fill" id="navTrackFill"></div>
+				</div>
+				<ol class="nav-list" id="navList">
+					{steps.map((step, i) => (
+						<li>
+							<a class="nav-item" href={`#method-step-${i}`} data-index={i} aria-current={i === 0 ? 'true' : 'false'}>
+								<span class="nav-dot" aria-hidden="true"></span>
+								<span class="nav-idx">{`0${i + 1}`}</span>
+								<span class="nav-label">{step.label}</span>
+							</a>
+						</li>
+					))}
+				</ol>
+			</nav>
 		</div>
 
-		<h2 class="method-heading">We don&rsquo;t start with technology.</h2>
-
-		<div class="method-list" id="methodList">
+		<div class="method-steps" id="methodSteps">
 			{steps.map((step, i) => (
-				<div class="method-step" data-index={i}>
-					<button
-						type="button"
-						class="step-trigger"
-						id={`step-trigger-${i}`}
-						aria-expanded={i === 0 ? 'true' : 'false'}
-						aria-controls={`step-panel-${i}`}
-					>
-						<span class="step-rail" aria-hidden="true">
-							<span class="step-dot"></span>
-							{i < steps.length - 1 && <span class="step-line"></span>}
-						</span>
-						<span class="step-idx">{`0${i + 1}`}</span>
-						<span class="step-label">{step.label}</span>
-						<svg class="step-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-							<path d="m6 9 6 6 6-6"/>
-						</svg>
-					</button>
-
-					<div class={`step-panel${i === 0 ? ' is-open' : ''}`} id={`step-panel-${i}`} role="region" aria-labelledby={`step-trigger-${i}`}>
-						<div class="step-panel-inner">
-							<p class="step-desc">{step.desc}</p>
-						</div>
-					</div>
+				<div class="step-block" id={`method-step-${i}`} data-index={i}>
+					<span class="step-block-idx">{`0${i + 1}`}</span>
+					<h3 class="step-block-label">{step.label}</h3>
+					<p class="step-block-desc">{step.desc}</p>
 				</div>
 			))}
-		</div>
 
-		<p class="method-footer">Technology is usually the last part of the conversation.</p>
+			<p class="method-footer">Technology is usually the last part of the conversation.</p>
+		</div>
 	</div>
 </section>
 
@@ -70,10 +69,35 @@ const steps = [
 		border-top: 1px solid var(--border-soft);
 	}
 
-	.method-inner {
-		max-width: 900px;
+	.method-scroll {
+		display: grid;
+		grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.3fr);
+		gap: clamp(2rem, 6vw, 5rem);
+		max-width: 1200px;
 		margin: 0 auto;
 		padding: clamp(72px, 10vw, 128px) clamp(20px, 4vw, 32px);
+	}
+
+	/* ---------- scroll-in reveal (sticky column only) ---------- */
+	.reveal {
+		opacity: 0;
+		transform: translateY(18px);
+		transition:
+			opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+			transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+		transition-delay: calc(var(--reveal-order, 0) * 90ms);
+	}
+
+	.method.is-visible .reveal {
+		opacity: 1;
+		transform: translateY(0);
+	}
+
+	/* ---------- sticky left column ---------- */
+	.method-sticky {
+		position: sticky;
+		top: clamp(96px, 14vh, 140px);
+		align-self: start;
 	}
 
 	.method-eyebrow {
@@ -104,172 +128,260 @@ const steps = [
 	}
 
 	.method-heading {
-		margin: 0 0 3rem;
-		font-size: clamp(1.8rem, 1.3vw + 1.6rem, 2.6rem);
+		margin: 0 0 2.5rem;
+		font-size: clamp(1.7rem, 1.3vw + 1.5rem, 2.3rem);
 		font-weight: 700;
 		letter-spacing: -0.01em;
-		max-width: 18ch;
+		max-width: 16ch;
 	}
 
-	/* ---------- accordion timeline ---------- */
-	.method-list {
-		border-top: 1px solid var(--border-soft);
-	}
-
-	.method-step {
-		border-bottom: 1px solid var(--border-soft);
-	}
-
-	.step-trigger {
-		display: flex;
-		align-items: center;
-		gap: clamp(0.9rem, 2vw, 1.5rem);
-		width: 100%;
-		padding: clamp(1.1rem, 2vw, 1.5rem) 0.25rem;
-		background: none;
-		border: none;
-		cursor: pointer;
-		text-align: left;
-		font-family: inherit;
-		color: var(--ink);
-	}
-
-	.step-rail {
+	/* ---------- nav rail: tracks scroll position ---------- */
+	.method-nav {
 		position: relative;
-		flex-shrink: 0;
-		display: flex;
-		justify-content: center;
-		width: 12px;
-		align-self: stretch;
 	}
 
-	.step-dot {
+	.nav-track {
 		position: absolute;
-		top: 0.4rem;
-		width: 9px;
-		height: 9px;
-		border-radius: 50%;
-		background: var(--bg);
-		border: 1.5px solid var(--border-soft);
-		transition: background-color 0.25s ease, border-color 0.25s ease;
-	}
-
-	.step-line {
-		position: absolute;
-		top: 1.1rem;
-		bottom: -1.5rem;
+		top: 0.55rem;
+		bottom: 0.55rem;
+		left: 3px;
 		width: 1px;
 		background: var(--border-soft);
 	}
 
-	.step-trigger[aria-expanded='true'] .step-dot {
+	.nav-track-fill {
+		width: 100%;
+		height: 0%;
 		background: var(--accent);
-		border-color: var(--accent);
+		transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 	}
 
-	.step-idx {
+	.nav-list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.85rem;
+	}
+
+	.nav-item {
+		display: flex;
+		align-items: center;
+		gap: 0.85rem;
+		padding: 0.15rem 0;
+		text-decoration: none;
+		color: inherit;
+	}
+
+	.nav-dot {
+		position: relative;
+		flex-shrink: 0;
+		width: 7px;
+		height: 7px;
+		margin-left: -1.5px;
+		border-radius: 50%;
+		background: var(--bg);
+		border: 1.5px solid var(--border-soft);
+		transition: background-color 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+	}
+
+	.nav-idx {
 		flex-shrink: 0;
 		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-		font-size: 0.78rem;
+		font-size: 0.72rem;
 		color: var(--ink-faint);
+		transition: color 0.25s ease;
 	}
 
-	.step-label {
-		flex: 1;
-		font-size: clamp(1.15rem, 0.6vw + 1.05rem, 1.5rem);
-		font-weight: 600;
-		letter-spacing: -0.005em;
-		color: var(--muted);
-		transition: color 0.2s ease;
-	}
-
-	.step-trigger[aria-expanded='true'] .step-label {
-		color: var(--ink);
-	}
-
-	.step-chevron {
-		flex-shrink: 0;
-		width: 18px;
-		height: 18px;
-		color: var(--ink-faint);
-		transition: transform 0.3s ease, color 0.2s ease;
-	}
-
-	.step-trigger[aria-expanded='true'] .step-chevron {
-		color: var(--accent);
-		transform: rotate(180deg);
-	}
-
-	.step-trigger:hover .step-label {
-		color: var(--ink);
-	}
-
-	.step-panel {
-		display: grid;
-		grid-template-rows: 0fr;
-		transition: grid-template-rows 0.35s ease;
-	}
-
-	.step-panel.is-open {
-		grid-template-rows: 1fr;
-	}
-
-	.step-panel-inner {
-		overflow: hidden;
-	}
-
-	.step-desc {
-		margin: 0;
-		padding: 0 0.25rem 1.4rem calc(12px + clamp(0.9rem, 2vw, 1.5rem) + 2.2rem);
-		max-width: 46ch;
+	.nav-label {
 		font-size: 0.95rem;
-		line-height: 1.55;
+		font-weight: 600;
+		color: var(--muted);
+		transition: color 0.25s ease;
+	}
+
+	.nav-item:hover .nav-label {
+		color: var(--ink);
+	}
+
+	.nav-item[aria-current='true'] .nav-dot {
+		background: var(--accent);
+		border-color: var(--accent);
+		transform: scale(1.3);
+	}
+
+	.nav-item[aria-current='true'] .nav-label {
+		color: var(--ink);
+	}
+
+	.nav-item[aria-current='true'] .nav-idx {
+		color: var(--accent);
+	}
+
+	/* ---------- right column: full-height step reading blocks ---------- */
+	.step-block {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		justify-content: center;
+		min-height: 22vh;
+		padding: 1.25rem 0;
+		border-bottom: 1px solid var(--border-soft);
+	}
+
+	.step-block:first-child {
+		padding-top: 0;
+	}
+
+	.step-block-idx {
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.8rem;
+		color: var(--ink-faint);
+		margin-bottom: 0.75rem;
+	}
+
+	.step-block-label {
+		margin: 0 0 1rem;
+		font-size: clamp(2rem, 2.4vw + 1.3rem, 3.2rem);
+		font-weight: 700;
+		letter-spacing: -0.015em;
+		color: var(--ink);
+	}
+
+	.step-block-desc {
+		margin: 0;
+		max-width: 42ch;
+		font-size: clamp(1rem, 0.5vw + 0.9rem, 1.2rem);
+		line-height: 1.6;
 		color: var(--muted);
 	}
 
 	.method-footer {
-		margin: 3rem 0 0;
+		margin: 2.5rem 0 0;
 		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 		font-size: 0.85rem;
 		color: var(--ink-faint);
 	}
 
-	@media (max-width: 560px) {
-		.step-desc {
-			padding-left: 0.25rem;
+	/* ---------- responsive: sticky two-column doesn't work on narrow
+	   screens — stack normally instead ---------- */
+	@media (max-width: 860px) {
+		.method-scroll {
+			display: block;
+		}
+
+		.method-sticky {
+			position: static;
+			margin-bottom: clamp(2.5rem, 8vw, 3.5rem);
+		}
+
+		.method-heading {
+			max-width: none;
+		}
+
+		.nav-track {
+			display: none;
+		}
+
+		.step-block {
+			min-height: 0;
+			padding: 1.25rem 0;
 		}
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.step-panel,
-		.step-chevron,
-		.step-dot,
-		.step-label {
+		.nav-dot,
+		.nav-idx,
+		.nav-label,
+		.nav-track-fill,
+		.reveal {
 			transition: none;
 		}
 	}
 </style>
 
-<script>
-	const list = document.getElementById('methodList');
-	const triggers = Array.from(document.querySelectorAll('.step-trigger')) as HTMLButtonElement[];
-
-	list?.addEventListener('click', (event) => {
-		const trigger = (event.target as HTMLElement).closest('.step-trigger') as HTMLButtonElement | null;
-		if (!trigger) return;
-
-		const isOpen = trigger.getAttribute('aria-expanded') === 'true';
-		const panel = document.getElementById(trigger.getAttribute('aria-controls') ?? '');
-
-		triggers.forEach((t) => {
-			t.setAttribute('aria-expanded', 'false');
-			const p = document.getElementById(t.getAttribute('aria-controls') ?? '');
-			p?.classList.remove('is-open');
-		});
-
-		if (!isOpen) {
-			trigger.setAttribute('aria-expanded', 'true');
-			panel?.classList.add('is-open');
+<noscript>
+	<style>
+		.method .reveal {
+			opacity: 1 !important;
+			transform: none !important;
 		}
-	});
+
+		.method-sticky {
+			position: static !important;
+		}
+	</style>
+</noscript>
+
+<script>
+	const section = document.getElementById('method');
+	const navItems = Array.from(document.querySelectorAll('.nav-item')) as HTMLAnchorElement[];
+	const trackFill = document.getElementById('navTrackFill');
+	const stepBlocks = Array.from(document.querySelectorAll('.step-block')) as HTMLElement[];
+	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+	// section entrance (eyebrow / heading / nav) fades in once, same as
+	// the other sections
+	if (section) {
+		if (reduceMotion || !('IntersectionObserver' in window)) {
+			section.classList.add('is-visible');
+		} else {
+			const entranceObserver = new IntersectionObserver(
+				(entries) => {
+					entries.forEach((entry) => {
+						if (entry.isIntersecting) {
+							section.classList.add('is-visible');
+							entranceObserver.disconnect();
+						}
+					});
+				},
+				{ threshold: 0.15 },
+			);
+			entranceObserver.observe(section);
+		}
+	}
+
+	// active-step tracking: whichever step-block occupies the vertical
+	// center of the viewport is "current" — highlights the matching nav
+	// item and fills the rail up to it.
+	if (navItems.length && stepBlocks.length && 'IntersectionObserver' in window) {
+		const setActive = (index: number) => {
+			navItems.forEach((item, i) => {
+				item.setAttribute('aria-current', String(i === index));
+			});
+			if (trackFill) {
+				trackFill.style.height = `${(index / (navItems.length - 1)) * 100}%`;
+			}
+		};
+
+		const activeObserver = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					if (entry.isIntersecting) {
+						const index = Number((entry.target as HTMLElement).dataset.index ?? 0);
+						setActive(index);
+					}
+				});
+			},
+			{ rootMargin: '-45% 0px -45% 0px', threshold: 0 },
+		);
+
+		stepBlocks.forEach((block) => activeObserver.observe(block));
+	}
+
+	// clicking a nav item still works as a plain anchor link without this,
+	// but smooth-scroll it when motion is allowed
+	if (!reduceMotion) {
+		navItems.forEach((item) => {
+			item.addEventListener('click', (event) => {
+				const targetId = item.getAttribute('href')?.slice(1);
+				const target = targetId ? document.getElementById(targetId) : null;
+				if (target) {
+					event.preventDefault();
+					target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+				}
+			});
+		});
+	}
 </script>
