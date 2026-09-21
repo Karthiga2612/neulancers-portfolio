@@ -1,0 +1,493 @@
+---
+const icons: Record<string, string> = {
+	chart: '<path d="M4 20V11M10 20V4M16 20v-8M22 20H2"/>',
+	document: '<path d="M6 3h9l5 5v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M14 3v5h5"/>',
+	droplet: '<path d="M12 2s7 8 7 13a7 7 0 0 1-14 0c0-5 7-13 7-13Z"/>',
+	spark: '<path d="M12 3l1.6 4.9L18.5 9l-4.9 1.6L12 15.5l-1.6-4.9L5.5 9l4.9-1.6L12 3Z"/>',
+	layers: '<path d="M12 4 3 9l9 5 9-5-9-5Z"/><path d="m3 14 9 5 9-5"/>',
+};
+
+const projects = [
+	{
+		name: 'Finveda',
+		icon: 'chart',
+		tagline: 'Financial intelligence for CA firms.',
+		desc: 'A system that turns raw financial data into clear, actionable intelligence for chartered accountants — built from scratch, not bolted onto existing software.',
+	},
+	{
+		name: 'Litwatch',
+		icon: 'document',
+		tagline: 'Keeping track of tax & legal matters.',
+		desc: "Deadlines, filings, and compliance shouldn't live in someone's memory. Litwatch turns scattered legal obligations into a single, dependable system.",
+	},
+	{
+		name: 'Mr. Water',
+		icon: 'droplet',
+		tagline: 'Turning a traditional water business into a connected operation.',
+		desc: 'From delivery schedules to customer requests, we rebuilt how a decades-old water business runs — without asking it to become a tech company.',
+	},
+	{
+		name: 'AI Agents',
+		icon: 'spark',
+		tagline: "Machines that don't just talk. They work.",
+		desc: 'We build agents that take real action — checking documents, updating records, closing loops — not just answering questions.',
+	},
+	{
+		name: 'Automation Systems',
+		icon: 'layers',
+		tagline: 'Removing repetitive work from businesses.',
+		desc: 'The parts of a job nobody wants to do by hand, we quietly automate — so people can spend time on the parts that actually need them.',
+	},
+];
+---
+
+<section class="work" id="work">
+	<div class="work-head">
+		<div class="work-eyebrow">
+			<span class="eyebrow-idx">03</span>
+			<span class="eyebrow-dot" aria-hidden="true">&bull;</span>
+			<span class="eyebrow-label">Case Studies</span>
+		</div>
+
+		<h2 class="work-heading">What We've Built</h2>
+		<p class="work-not">Not &ldquo;Our Services.&rdquo;</p>
+	</div>
+
+	<div class="carousel" id="workCarousel">
+		<button type="button" class="carousel-arrow prev" id="carouselPrev" aria-label="Previous project">
+			<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+		</button>
+
+		<div class="carousel-viewport" id="carouselViewport">
+			<div class="carousel-track" id="carouselTrack">
+				{[...projects, ...projects].map((p, i) => (
+					<article
+						class="case-card"
+						data-project-index={i % projects.length}
+						aria-hidden={i >= projects.length ? 'true' : undefined}
+					>
+						<div class="case-visual">
+							<span class="visual-letter" aria-hidden="true">{p.name.charAt(0)}</span>
+							<svg class="visual-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" set:html={icons[p.icon]}></svg>
+						</div>
+						<div class="case-content">
+							<div class="case-tag">
+								<svg class="case-tag-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" set:html={icons[p.icon]}></svg>
+								<span>{p.name}</span>
+							</div>
+							<h3 class="case-heading">{p.tagline}</h3>
+							<p class="case-desc">{p.desc}</p>
+							<p class="case-flow">
+								Problem <span class="flow-arrow">&rarr;</span> Experiment <span class="flow-arrow">&rarr;</span> Build
+								<span class="flow-arrow">&rarr;</span> Result
+							</p>
+						</div>
+					</article>
+				))}
+			</div>
+		</div>
+
+		<button type="button" class="carousel-arrow next" id="carouselNext" aria-label="Next project">
+			<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+		</button>
+	</div>
+
+	<div class="carousel-dots" id="carouselDots">
+		{projects.map((p, i) => (
+			<button type="button" class="dot" data-index={i} aria-label={`Go to ${p.name}`}></button>
+		))}
+	</div>
+
+	<div class="work-cta">
+		<a href="#contact" class="cta-btn">Explore all projects</a>
+	</div>
+</section>
+
+<style>
+	.work {
+		--ink: #f3f3f1;
+		--muted: #8b929d;
+		--ink-faint: rgba(139, 146, 157, 0.75);
+		--border-soft: rgba(255, 255, 255, 0.1);
+		--accent: #6d28d9;
+		--accent-hover: #5b21b6;
+		--bg: #0a0a0d;
+		--card-bg: #0d1018;
+		--visual-bg: #121620;
+
+		position: relative;
+		background: var(--bg);
+		color: var(--ink);
+		font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+		border-top: 1px solid var(--border-soft);
+		padding: clamp(72px, 10vw, 128px) clamp(20px, 4vw, 32px) clamp(72px, 9vw, 110px);
+	}
+
+	.work-head {
+		max-width: 640px;
+		margin: 0 auto clamp(40px, 5vw, 56px);
+		text-align: center;
+	}
+
+	.work-eyebrow {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+		margin-bottom: 1.1rem;
+	}
+
+	.eyebrow-idx,
+	.eyebrow-label {
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.75rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--muted);
+	}
+
+	.eyebrow-dot {
+		color: var(--accent);
+		font-size: 0.6rem;
+	}
+
+	.work-heading {
+		margin: 0 0 0.6rem;
+		font-size: clamp(2rem, 1.6vw + 1.7rem, 2.75rem);
+		font-weight: 700;
+		letter-spacing: -0.01em;
+	}
+
+	.work-not {
+		margin: 0;
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.82rem;
+		color: var(--ink-faint);
+	}
+
+	/* ---------- carousel ---------- */
+	.carousel {
+		position: relative;
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		max-width: 1320px;
+		margin: 0 auto;
+	}
+
+	.carousel-viewport {
+		flex: 1;
+		overflow-x: auto;
+		scrollbar-width: none;
+		-ms-overflow-style: none;
+	}
+
+	.carousel-viewport::-webkit-scrollbar {
+		display: none;
+	}
+
+	.carousel-track {
+		display: flex;
+		gap: clamp(1rem, 2.5vw, 1.75rem);
+		padding: 20px clamp(20px, 12vw, 140px);
+	}
+
+	.case-card {
+		flex: 0 0 min(880px, 82vw);
+		display: grid;
+		grid-template-columns: minmax(0, 0.85fr) minmax(0, 1fr);
+		background: var(--card-bg);
+		border: 1px solid var(--border-soft);
+		border-radius: 22px;
+		overflow: hidden;
+		transform: scale(0.94);
+		opacity: 0.7;
+		transition: transform 0.35s ease, opacity 0.35s ease, border-color 0.35s ease;
+	}
+
+	.case-card.is-active {
+		transform: scale(1);
+		opacity: 1;
+		border-color: rgba(109, 40, 217, 0.4);
+	}
+
+	.case-visual {
+		position: relative;
+		background: var(--visual-bg);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 260px;
+		overflow: hidden;
+	}
+
+	.visual-letter {
+		font-size: clamp(7rem, 14vw, 10rem);
+		font-weight: 800;
+		color: rgba(109, 40, 217, 0.16);
+		line-height: 1;
+		user-select: none;
+	}
+
+	.visual-icon {
+		position: absolute;
+		width: 34px;
+		height: 34px;
+		color: var(--accent);
+	}
+
+	.case-content {
+		display: flex;
+		flex-direction: column;
+		gap: 0.9rem;
+		padding: clamp(1.6rem, 3vw, 2.4rem);
+	}
+
+	.case-tag {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.72rem;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--muted);
+	}
+
+	.case-tag-icon {
+		width: 14px;
+		height: 14px;
+		color: var(--accent);
+	}
+
+	.case-heading {
+		margin: 0;
+		font-size: clamp(1.25rem, 1vw + 1.05rem, 1.6rem);
+		font-weight: 700;
+		letter-spacing: -0.01em;
+		line-height: 1.25;
+	}
+
+	.case-desc {
+		margin: 0;
+		flex: 1;
+		font-size: 0.92rem;
+		line-height: 1.55;
+		color: var(--muted);
+	}
+
+	.case-flow {
+		margin: 0;
+		padding-top: 0.85rem;
+		border-top: 1px solid var(--border-soft);
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.64rem;
+		letter-spacing: 0.03em;
+		text-transform: uppercase;
+		color: var(--ink-faint);
+	}
+
+	.flow-arrow {
+		color: var(--accent);
+	}
+
+	.carousel-arrow {
+		flex-shrink: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 42px;
+		height: 42px;
+		border-radius: 50%;
+		background: var(--card-bg);
+		border: 1px solid var(--border-soft);
+		color: var(--ink);
+		cursor: pointer;
+		transition: border-color 0.2s ease, color 0.2s ease;
+		z-index: 1;
+	}
+
+	.carousel-arrow svg {
+		width: 18px;
+		height: 18px;
+	}
+
+	.carousel-arrow:hover,
+	.carousel-arrow:focus-visible {
+		border-color: var(--accent);
+		color: var(--accent);
+	}
+
+	/* ---------- dots ---------- */
+	.carousel-dots {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+		margin: clamp(1.5rem, 3vw, 2.25rem) 0;
+	}
+
+	.dot {
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background: var(--border-soft);
+		border: none;
+		cursor: pointer;
+		padding: 0;
+		transition: background-color 0.2s ease, transform 0.2s ease;
+	}
+
+	.dot.is-active {
+		background: var(--accent);
+		transform: scale(1.5);
+	}
+
+	/* ---------- cta ---------- */
+	.work-cta {
+		display: flex;
+		justify-content: center;
+	}
+
+	.cta-btn {
+		display: inline-flex;
+		align-items: center;
+		padding: 0.8rem 1.6rem;
+		background: var(--accent);
+		color: #ffffff;
+		border-radius: 999px;
+		text-decoration: none;
+		font-size: 0.92rem;
+		font-weight: 600;
+		transition: background-color 0.15s ease;
+	}
+
+	.cta-btn:hover,
+	.cta-btn:focus-visible {
+		background: var(--accent-hover);
+	}
+
+	/* ---------- responsive ---------- */
+	@media (max-width: 780px) {
+		.case-card {
+			grid-template-columns: 1fr;
+			flex-basis: min(600px, 88vw);
+		}
+
+		.case-visual {
+			min-height: 160px;
+		}
+
+		.carousel-arrow {
+			display: none;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.carousel-viewport {
+			scroll-behavior: auto;
+		}
+
+		.dot,
+		.carousel-arrow,
+		.cta-btn,
+		.case-card {
+			transition: none;
+		}
+
+		.case-card[aria-hidden='true'] {
+			display: none;
+		}
+	}
+</style>
+
+<script>
+	const carousel = document.getElementById('workCarousel');
+	const viewport = document.getElementById('carouselViewport');
+	const track = document.getElementById('carouselTrack');
+	const cards = Array.from(document.querySelectorAll('.case-card')) as HTMLElement[];
+	const dots = Array.from(document.querySelectorAll('.dot')) as HTMLButtonElement[];
+	const prevBtn = document.getElementById('carouselPrev');
+	const nextBtn = document.getElementById('carouselNext');
+	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	const projectCount = dots.length;
+
+	if (carousel && viewport && track && cards.length && projectCount) {
+		let domIndex = 0; // position within the doubled card list
+		let timer: ReturnType<typeof setInterval> | null = null;
+		let loopWidth = 0;
+
+		const measure = () => {
+			// width of the first, non-duplicated set of cards — once we land
+			// on a duplicate card we silently snap back by this much, onto
+			// the identical original, so the loop never runs out of cards.
+			loopWidth = track.scrollWidth / 2;
+		};
+		measure();
+		window.addEventListener('resize', measure);
+
+		const setActiveCard = (index: number) => {
+			const projectIndex = Number(cards[index]?.dataset.projectIndex ?? 0);
+			cards.forEach((card, i) => card.classList.toggle('is-active', i === index));
+			dots.forEach((d, i) => d.classList.toggle('is-active', i === projectIndex));
+		};
+
+		const scrollToDomIndex = (index: number, smooth = true) => {
+			const card = cards[index];
+			if (!card) return;
+			viewport.scrollTo({
+				left: card.offsetLeft + card.clientWidth / 2 - viewport.clientWidth / 2,
+				behavior: smooth ? 'smooth' : 'auto',
+			});
+			setActiveCard(index);
+		};
+
+		const goTo = (index: number) => {
+			domIndex = index;
+			scrollToDomIndex(domIndex);
+			// once we've stepped onto a duplicate card, wait for the smooth
+			// scroll to finish, then snap invisibly back to its identical
+			// original counterpart so the next step has room to advance.
+			if (domIndex >= projectCount) {
+				window.setTimeout(() => {
+					domIndex -= projectCount;
+					viewport.scrollLeft -= loopWidth;
+					setActiveCard(domIndex);
+				}, 500);
+			}
+		};
+
+		const advance = () => goTo(domIndex + 1);
+		const retreat = () => goTo(domIndex > 0 ? domIndex - 1 : projectCount - 1);
+
+		const start = () => {
+			if (reduceMotion || timer) return;
+			timer = setInterval(advance, 2000);
+		};
+
+		const stop = () => {
+			if (timer) {
+				clearInterval(timer);
+				timer = null;
+			}
+		};
+
+		prevBtn?.addEventListener('click', retreat);
+		nextBtn?.addEventListener('click', advance);
+
+		dots.forEach((dot, i) => {
+			dot.addEventListener('click', () => goTo(i));
+		});
+
+		carousel.addEventListener('pointerenter', stop);
+		carousel.addEventListener('pointerleave', start);
+		carousel.addEventListener('focusin', stop);
+		carousel.addEventListener('focusout', (event) => {
+			const next = (event as FocusEvent).relatedTarget as Node | null;
+			if (!carousel.contains(next)) start();
+		});
+
+		setActiveCard(0);
+		start();
+	}
+</script>

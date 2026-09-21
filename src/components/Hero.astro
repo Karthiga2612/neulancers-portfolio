@@ -1,0 +1,504 @@
+---
+const tags = ['AI', 'Software', 'Automation', 'Products', 'Experiments'];
+
+const icons: Record<string, string> = {
+	bulb: '<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.5.4.8 1 .8 1.6v.5h5.4v-.5c0-.6.3-1.2.8-1.6A6 6 0 0 0 12 3Z"/>',
+	search: '<circle cx="10.5" cy="10.5" r="6"/><path d="m19.5 19.5-4.3-4.3"/>',
+	spark: '<path d="M12 3l1.6 4.9L18.5 9l-4.9 1.6L12 15.5l-1.6-4.9L5.5 9l4.9-1.6L12 3Z"/>',
+	code: '<path d="m9 8-4 4 4 4M15 8l4 4-4 4"/>',
+	layers: '<path d="M12 4 3 9l9 5 9-5-9-5Z"/><path d="m3 14 9 5 9-5"/>',
+	rocket:
+		'<path d="M12 2.5c2 2 3 5 3 8 0 2-1 4-3 6-2-2-3-4-3-6 0-3 1-6 3-8Z"/><path d="m8.3 15-2.8 3.7 3.7-1M15.7 15l2.8 3.7-3.7-1"/>',
+};
+
+const stageMeta = [
+	{ label: 'Problem', desc: 'A real challenge to solve.', icon: 'bulb' },
+	{ label: 'Question', desc: 'Dig deeper, find the right one.', icon: 'search' },
+	{ label: 'Idea', desc: 'Turn insights into possibilities.', icon: 'spark' },
+	{ label: 'Prototype', desc: 'Build, test, learn fast.', icon: 'code' },
+	{ label: 'System', desc: 'Make it work in the real world.', icon: 'layers' },
+	{ label: 'Something real', desc: 'Create impact, not just output.', icon: 'rocket' },
+];
+
+// The arc is a partial circle CONCENTRIC with the main circle — same
+// center, larger radius — not an independent bulge. Everything here is
+// worked out in a fixed reference box (VISUAL_W × VISUAL_H) and then
+// expressed as percentages of that box, so the circle, arc, nodes and
+// cards all share one coordinate system and stay locked together.
+const VISUAL_W = 700;
+const VISUAL_H = 550;
+const CIRCLE_R = 125;
+const CIRCLE_CX = CIRCLE_R; // circle sits flush against the box's left edge
+const CIRCLE_CY = VISUAL_H / 2;
+const ARC_R = CIRCLE_R + 95; // the orbit's radius — bigger than the circle
+const CARD_GAP = 14; // px (ref space) — card's pointed tip sits right at its node
+// -90°/90° = due up/down exactly — the tangent there is perfectly
+// horizontal, so the arc's top and bottom tips flatten out straight
+// instead of arriving at a diagonal.
+const ANGLE_START = -90;
+const ANGLE_END = 90;
+
+const toRad = (deg: number) => (deg * Math.PI) / 180;
+const toDeg = (rad: number) => (rad * 180) / Math.PI;
+// used for the visible curve: uniform angle steps trace a smooth, evenly
+// "dense" circular arc.
+const angleAt = (t: number) => ANGLE_START + t * (ANGLE_END - ANGLE_START);
+// used for the 6 stage nodes/cards: spacing them evenly by *angle* bunches
+// them together near the ±90° tips (sine flattens out there) and spreads
+// them apart near the middle. Spacing evenly by Y-projection instead keeps
+// a consistent gap between cards top to bottom.
+const angleAtEvenY = (t: number) => toDeg(Math.asin(-1 + t * 2));
+const pointAt = (angleDeg: number, radius: number) => {
+	const rad = toRad(angleDeg);
+	return {
+		x: CIRCLE_CX + radius * Math.cos(rad),
+		y: CIRCLE_CY + radius * Math.sin(rad),
+	};
+};
+
+const stages = stageMeta.map((s, i) => {
+	const t = stageMeta.length === 1 ? 0 : i / (stageMeta.length - 1);
+	const node = pointAt(angleAtEvenY(t), ARC_R);
+	return {
+		...s,
+		idx: `0${i + 1}`,
+		nodeXPct: (node.x / VISUAL_W) * 100,
+		nodeYPct: (node.y / VISUAL_H) * 100,
+		cardLeftPct: ((node.x + CARD_GAP) / VISUAL_W) * 100,
+		cardTopPct: (node.y / VISUAL_H) * 100,
+	};
+});
+
+const arcPath = (() => {
+	const steps = 48;
+	let d = '';
+	for (let i = 0; i <= steps; i++) {
+		const p = pointAt(angleAt(i / steps), ARC_R);
+		const x = ((p.x / VISUAL_W) * 100).toFixed(2);
+		const y = ((p.y / VISUAL_H) * 100).toFixed(2);
+		d += `${i === 0 ? 'M' : 'L'} ${x} ${y} `;
+	}
+	return d.trim();
+})();
+---
+
+<section class="hero" id="hero">
+	<div class="hero-inner">
+		<div class="hero-content">
+			<div class="tag-row">
+				{tags.map((tag) => <span class="tag">{tag}</span>)}
+			</div>
+
+			<h1 class="headline">
+				<span class="line">We build things.</span>
+				<span class="line line--dim">Sometimes we don't know what they'll become.</span>
+			</h1>
+
+			<div class="cta-row">
+				<a href="#contact" class="cta-btn">
+					<span>Bring us a problem</span>
+					<span class="cta-arrow">&rarr;</span>
+				</a>
+				<span class="cta-hint">Not &ldquo;Contact us.&rdquo;</span>
+			</div>
+		</div>
+
+		<div class="hero-visual" id="pipeline" aria-label="How an idea becomes something real">
+			<div class="hero-circle" aria-hidden="true"></div>
+
+			<svg class="arc-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+				<path d={arcPath} class="arc-base"></path>
+			</svg>
+
+			{stages.map((s, i) => (
+				<span class="node" data-index={i} style={`left:${s.nodeXPct}%; top:${s.nodeYPct}%;`}></span>
+			))}
+
+			{stages.map((s, i) => (
+				<button
+					type="button"
+					class="stage-card"
+					data-index={i}
+					aria-pressed="false"
+					style={`left:${s.cardLeftPct}%; top:${s.cardTopPct}%;`}
+				>
+					<div class="card-head">
+						<span class="card-idx">{s.idx}</span>
+						<svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" set:html={icons[s.icon]}></svg>
+					</div>
+					<span class="card-label">{s.label}</span>
+					<span class="card-desc">{s.desc}</span>
+				</button>
+			))}
+		</div>
+	</div>
+</section>
+
+<style>
+	.hero {
+		--ink: #f3f3f1;
+		--muted: #8b929d;
+		--ink-faint: rgba(139, 146, 157, 0.75);
+		--border: rgba(255, 255, 255, 0.12);
+		--border-soft: rgba(255, 255, 255, 0.1);
+		--accent: #6d28d9;
+		--accent-hover: #5b21b6;
+		--bg: #07080b;
+		--circle-bg: #0b0c11;
+		--card-bg: #0d1018;
+
+		position: relative;
+		background: var(--bg);
+		color: var(--ink);
+		font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+	}
+
+	.hero-inner {
+		position: relative;
+		display: flex;
+		align-items: center;
+		gap: clamp(0.5rem, 2vw, 1.5rem);
+		max-width: 1320px;
+		margin: 0 auto;
+		padding: 96px clamp(20px, 4vw, 32px) 64px;
+		/* .hero-visual is position:absolute, so it doesn't contribute to
+		   this row's height on its own — without this, centering it via
+		   top:50%/translateY(-50%) is measured against the much shorter
+		   .hero-content column and overshoots upward, off the top of the
+		   section. Matching its own height here keeps that math correct. */
+		min-height: calc(clamp(480px, 50vw, 630px) + 160px);
+	}
+
+	/* ---------- left column ---------- */
+	.hero-content {
+		position: relative;
+		z-index: 2;
+		flex: 0 1 680px;
+	}
+
+	.tag-row {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		margin-bottom: 1.75rem;
+	}
+
+	.tag {
+		font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+		font-size: 0.68rem;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--muted);
+		border: 1px solid var(--border-soft);
+		border-radius: 6px;
+		padding: 0.3rem 0.7rem;
+	}
+
+	.headline {
+		margin: 0 0 1.75rem;
+		font-weight: 700;
+		letter-spacing: -0.015em;
+		line-height: 1.02;
+	}
+
+	.headline .line {
+		display: block;
+		font-size: clamp(2rem, 1.3vw + 1.9rem, 3rem);
+		color: var(--ink);
+	}
+
+	.headline .line--dim {
+		color: var(--muted);
+		font-weight: 600;
+		margin-top: 0.3rem;
+	}
+
+	.cta-row {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 1rem;
+	}
+
+	.cta-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.55em;
+		padding: 0.85rem 1.5rem;
+		background: var(--accent);
+		color: #ffffff;
+		border-radius: 999px;
+		text-decoration: none;
+		font-size: 0.95rem;
+		font-weight: 600;
+		white-space: nowrap;
+		transition: background-color 0.15s ease;
+	}
+
+	.cta-btn:hover,
+	.cta-btn:focus-visible {
+		background: var(--accent-hover);
+	}
+
+	.cta-arrow {
+		transition: transform 0.2s ease;
+	}
+
+	.cta-btn:hover .cta-arrow {
+		transform: translateX(3px);
+	}
+
+	.cta-hint {
+		font-size: 0.85rem;
+		color: var(--muted);
+	}
+
+	/* ---------- central circle ---------- */
+	/* ---------- circle + orbit + cards: one shared coordinate system ---------- */
+	.hero-visual {
+		position: absolute;
+		left: clamp(400px, calc(44vw - 160px), 480px);
+		top: 50%;
+		transform: translateY(-50%);
+		width: clamp(560px, 52vw, 720px);
+		height: clamp(480px, 50vw, 630px);
+		z-index: 1;
+	}
+
+	.hero-circle {
+		position: absolute;
+		left: 0;
+		top: 50%;
+		transform: translateY(-50%);
+		width: clamp(230px, 17vw, 260px);
+		height: clamp(230px, 17vw, 260px);
+		border-radius: 50%;
+		background: var(--circle-bg);
+		border: 1px solid var(--border);
+		box-shadow: 0 24px 48px rgba(0, 0, 0, 0.35);
+		pointer-events: none;
+	}
+
+	.arc-svg {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		overflow: visible;
+		pointer-events: none;
+	}
+
+	.arc-base {
+		fill: none;
+		stroke: var(--accent);
+		stroke-width: 0.35;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+		vector-effect: non-scaling-stroke;
+	}
+
+	/* plain HTML dots, not SVG — an SVG circle inside a non-square
+	   viewBox stretched with preserveAspectRatio="none" renders as an
+	   oval, not a circle, so nodes live outside the distorted SVG */
+	.node {
+		position: absolute;
+		width: 9px;
+		height: 9px;
+		border-radius: 50%;
+		background: var(--bg);
+		border: 1px solid rgba(255, 255, 255, 0.4);
+		transform: translate(-50%, -50%);
+		transition: background-color 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+		pointer-events: none;
+	}
+
+	.node.is-current {
+		background: var(--accent);
+		border-color: var(--accent);
+		transform: translate(-50%, -50%) scale(1.6);
+	}
+
+	.stage-card {
+		position: absolute;
+		transform: translateY(-50%);
+		width: clamp(150px, 15vw, 190px);
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+		background: var(--card-bg);
+		border: 1px solid var(--border-soft);
+		border-radius: 12px;
+		/* left edge angles inward to a point at mid-height, like a flag
+		   pointing back toward the node it connects to — not just a
+		   single corner cut. */
+		clip-path: polygon(22px 0, 100% 0, 100% 100%, 22px 100%, 0 50%);
+		padding: 0.65rem 0.8rem 0.8rem 1.1rem;
+		text-align: left;
+		cursor: pointer;
+		font-family: inherit;
+		transition: border-color 0.3s ease, background-color 0.3s ease;
+		box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
+	}
+
+	.card-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+	}
+
+	.card-idx {
+		font-size: 0.66rem;
+		color: var(--ink-faint);
+	}
+
+	.card-icon {
+		width: 16px;
+		height: 16px;
+		color: var(--accent);
+		flex-shrink: 0;
+	}
+
+	.card-label {
+		font-size: 0.92rem;
+		font-weight: 600;
+		color: var(--ink);
+		transition: color 0.25s ease;
+	}
+
+	.card-desc {
+		font-size: 0.74rem;
+		line-height: 1.35;
+		color: var(--ink-faint);
+	}
+
+	.stage-card.is-current {
+		border-color: var(--accent);
+		background: rgba(109, 40, 217, 0.14);
+	}
+
+	/* ---------- responsive ---------- */
+	@media (max-width: 1080px) {
+		.hero-inner {
+			flex-direction: column;
+			align-items: flex-start;
+		}
+
+		.hero-content {
+			flex-basis: auto;
+			max-width: 560px;
+		}
+
+		.hero-visual {
+			position: relative;
+			left: auto;
+			top: auto;
+			transform: none;
+			width: 100%;
+			max-width: 640px;
+			height: clamp(460px, 80vw, 600px);
+			margin-top: 1.5rem;
+		}
+	}
+
+	@media (max-width: 680px) {
+		.hero-inner {
+			padding-top: 104px;
+		}
+
+		.headline .line {
+			font-size: clamp(1.85rem, 8vw, 2.3rem);
+		}
+
+		.hero-circle {
+			display: none;
+		}
+
+		.hero-visual {
+			height: clamp(560px, 130vw, 720px);
+		}
+
+		.stage-card {
+			width: clamp(130px, 46vw, 170px);
+			padding: 0.55rem 0.65rem;
+		}
+
+		.card-desc {
+			display: none;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.node,
+		.card-label,
+		.stage-card,
+		.cta-btn,
+		.cta-arrow {
+			transition: none;
+		}
+	}
+</style>
+
+<script>
+	const stageCards = Array.from(document.querySelectorAll('.stage-card')) as HTMLButtonElement[];
+	const nodeEls = Array.from(document.querySelectorAll('.node')) as HTMLElement[];
+	const pipeline = document.getElementById('pipeline');
+	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+	let current = 0;
+	let timer: ReturnType<typeof setTimeout> | null = null;
+
+	const render = () => {
+		stageCards.forEach((el, i) => {
+			el.classList.toggle('is-current', i === current);
+			el.setAttribute('aria-pressed', String(i === current));
+		});
+		nodeEls.forEach((el, i) => {
+			el.classList.toggle('is-current', i === current);
+		});
+	};
+
+	const scheduleNext = () => {
+		if (reduceMotion) return;
+		const atEnd = current === stageCards.length - 1;
+		timer = setTimeout(
+			() => {
+				current = atEnd ? 0 : current + 1;
+				render();
+				scheduleNext();
+			},
+			atEnd ? 2600 : 1500,
+		);
+	};
+
+	const start = () => {
+		if (!timer) scheduleNext();
+	};
+
+	const stop = () => {
+		if (timer) {
+			clearTimeout(timer);
+			timer = null;
+		}
+	};
+
+	stageCards.forEach((btn) => {
+		const setFromButton = () => {
+			current = Number(btn.dataset.index);
+			render();
+		};
+		btn.addEventListener('mouseenter', setFromButton);
+		btn.addEventListener('focus', setFromButton);
+		btn.addEventListener('click', setFromButton);
+	});
+
+	pipeline?.addEventListener('pointerenter', stop);
+	pipeline?.addEventListener('pointerleave', start);
+
+	pipeline?.addEventListener('focusout', (event) => {
+		const next = (event as FocusEvent).relatedTarget as Node | null;
+		if (!pipeline.contains(next)) start();
+	});
+
+	render();
+	start();
+</script>

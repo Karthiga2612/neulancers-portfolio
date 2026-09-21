@@ -1,11 +1,40 @@
 ---
-import Welcome from '../components/Welcome.astro';
+import Header from '../components/Header.astro';
+import Hero from '../components/Hero.astro';
+import ProblemWall from '../components/ProblemWall.astro';
+import Work from '../components/Work.astro';
+import Method from '../components/Method.astro';
 import Layout from '../layouts/Layout.astro';
-
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
 ---
 
 <Layout>
-	<Welcome />
+	<Header />
+	<Hero />
+	<ProblemWall />
+	<Work />
+	<Method />
+	<main class="preview-stage">
+		<p class="preview-note">Remaining page sections (Lab, Journal, Studio) are not built yet.</p>
+	</main>
 </Layout>
+
+<style>
+	.preview-stage {
+		min-height: 60vh;
+		display: flex;
+		align-items: flex-start;
+		justify-content: center;
+		padding-top: 20vh;
+		background: #0b0b0c;
+	}
+
+	.preview-note {
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.8rem;
+		letter-spacing: 0.05em;
+		color: rgba(245, 244, 240, 0.4);
+		text-align: center;
+		max-width: 32ch;
+		padding: 0 1.5rem;
+	}
+</style>
