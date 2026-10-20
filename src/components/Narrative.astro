@@ -1,0 +1,231 @@
+---
+const steps = [
+	'Businesses have problems.',
+	'We ask better questions.',
+	'We experiment.',
+	'We build.',
+	'We connect technology to the real world.',
+	'Something new exists.',
+];
+---
+
+<section class="narrative" id="narrative">
+	<div class="narrative-inner">
+		<div class="narrative-label reveal" style="--reveal-order: 0">
+			<span class="label-line" aria-hidden="true"></span>
+			<span>The Brand Narrative</span>
+			<span class="label-line" aria-hidden="true"></span>
+		</div>
+
+		<ol class="narrative-flow" id="narrativeFlow">
+			{steps.map((step, i) => (
+				<li class="flow-step reveal" style={`--reveal-order: ${i + 1}`}>
+					<span class="step-text">{step}</span>
+					{i < steps.length - 1 && (
+						<span class="step-connector" aria-hidden="true">
+							<span class="connector-line"></span>
+							<span class="connector-pulse"></span>
+						</span>
+					)}
+				</li>
+			))}
+		</ol>
+
+		<p class="narrative-close reveal" style={`--reveal-order: ${steps.length + 1}`}>
+			And that becomes the identity of Neulancers.
+		</p>
+	</div>
+</section>
+
+<style>
+	.narrative {
+		--ink: #f3f3f1;
+		--muted: #8b929d;
+		--ink-faint: rgba(139, 146, 157, 0.75);
+		--border-soft: rgba(255, 255, 255, 0.1);
+		--accent: #a78bfa;
+		--bg: #0a0a0d;
+
+		position: relative;
+		background: var(--bg);
+		color: var(--ink);
+		font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+		border-top: 1px solid var(--border-soft);
+	}
+
+	.narrative-inner {
+		max-width: 640px;
+		margin: 0 auto;
+		padding: clamp(80px, 11vw, 140px) clamp(20px, 4vw, 32px);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+	}
+
+	/* ---------- scroll-in reveal ---------- */
+	.reveal {
+		opacity: 0;
+		transform: translateY(14px);
+		transition:
+			opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+			transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+		transition-delay: calc(var(--reveal-order, 0) * 140ms);
+	}
+
+	.narrative.is-visible .reveal {
+		opacity: 1;
+		transform: translateY(0);
+	}
+
+	.narrative-label {
+		display: flex;
+		align-items: center;
+		gap: 0.85rem;
+		margin-bottom: clamp(2.5rem, 5vw, 3.5rem);
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.75rem;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--muted);
+	}
+
+	.label-line {
+		width: 28px;
+		height: 1px;
+		background: var(--border-soft);
+	}
+
+	/* ---------- vertical flow ---------- */
+	.narrative-flow {
+		list-style: none;
+		margin: 0 0 clamp(2rem, 4vw, 2.75rem);
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		width: 100%;
+	}
+
+	.flow-step {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+	}
+
+	.step-text {
+		font-size: clamp(1.15rem, 1.2vw + 0.9rem, 1.55rem);
+		font-weight: 600;
+		letter-spacing: -0.01em;
+		text-align: center;
+		color: var(--ink);
+		padding: 0.5rem 0;
+	}
+
+	/* each line gets a little heavier as the story builds toward its close */
+	.flow-step:nth-child(1) .step-text {
+		color: var(--muted);
+		font-weight: 500;
+	}
+
+	.flow-step:last-child .step-text {
+		color: #ffffff;
+		font-weight: 700;
+	}
+
+	.step-connector {
+		position: relative;
+		width: 1px;
+		height: clamp(28px, 4vw, 40px);
+		margin: 0.15rem 0;
+	}
+
+	.connector-line {
+		position: absolute;
+		inset: 0;
+		background: var(--border-soft);
+	}
+
+	.connector-pulse {
+		position: absolute;
+		top: 0;
+		left: 50%;
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background: var(--accent);
+		box-shadow: 0 0 8px 1px rgba(167, 139, 250, 0.7);
+		transform: translate(-50%, -50%);
+		opacity: 0;
+	}
+
+	.narrative.is-visible .connector-pulse {
+		animation: pulse-descend 5.4s ease-in-out infinite;
+	}
+
+	@keyframes pulse-descend {
+		0% {
+			top: 0;
+			opacity: 0;
+		}
+		8% {
+			opacity: 1;
+		}
+		92% {
+			opacity: 1;
+		}
+		100% {
+			top: 100%;
+			opacity: 0;
+		}
+	}
+
+	.narrative-close {
+		margin: 0;
+		text-align: center;
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.9rem;
+		color: var(--accent);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.reveal {
+			transition: none;
+		}
+
+		.connector-pulse {
+			animation: none !important;
+			opacity: 0 !important;
+		}
+	}
+</style>
+
+<noscript>
+	<style>
+		.narrative .reveal {
+			opacity: 1 !important;
+			transform: none !important;
+		}
+	</style>
+</noscript>
+
+<script>
+	const section = document.getElementById('narrative');
+	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+	if (reduceMotion || !('IntersectionObserver' in window)) {
+		section?.classList.add('is-visible');
+	} else {
+		const revealObserver = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					if (entry.isIntersecting) {
+						section?.classList.add('is-visible');
+						revealObserver.disconnect();
+					}
+				});
+			},
+			{ threshold: 0.2 },
+		);
+		if (section) revealObserver.observe(section);
+	}
+</script>

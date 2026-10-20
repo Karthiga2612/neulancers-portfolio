@@ -1,0 +1,909 @@
+---
+const query = 'Find the pending work from this week.';
+const summary = "I've found 7 items.";
+
+const findings = [
+	{ count: 3, label: 'require documents' },
+	{ count: 2, label: 'require client action' },
+	{ count: 1, label: 'is waiting for approval' },
+	{ count: 1, label: 'is ready to close' },
+];
+
+const scanTargets = ['Calendar', 'Email', 'Documents', 'Task system'];
+
+const flow = ['Talk', 'Think', 'Act'];
+---
+
+<section class="ai" id="ai">
+	<div class="ai-inner">
+		<div class="ai-head">
+			<div class="ai-eyebrow reveal" style="--reveal-order: 0">
+				<span class="eyebrow-idx">06</span>
+				<span class="eyebrow-dot" aria-hidden="true">&bull;</span>
+				<span class="eyebrow-label">The AI Section</span>
+			</div>
+
+			<h2 class="ai-heading reveal" style="--reveal-order: 1">What happens when software can think?</h2>
+		</div>
+
+		<div class="ai-demo reveal" id="aiDemo" style="--reveal-order: 2">
+			<div class="demo-bar">
+				<span class="demo-dot"></span>
+				<span class="demo-dot"></span>
+				<span class="demo-dot"></span>
+				<span class="demo-title">neulancers &mdash; agent</span>
+
+				<span class="demo-status" id="demoStatus">
+					<span class="status-dot" id="statusDot" aria-hidden="true"></span>
+					<span class="status-text" id="statusText">Agent active</span>
+				</span>
+
+				<button type="button" class="demo-replay" id="demoReplay" aria-label="Replay demo">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<path d="M1 4v6h6"></path>
+						<path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+					</svg>
+				</button>
+			</div>
+
+			<div class="demo-body" id="demoBody">
+				<div class="msg msg--you" id="msgYou">
+					<span class="msg-role">You</span>
+					<p class="msg-text"><span id="typedQuery"></span><span class="caret" id="queryCaret"></span></p>
+				</div>
+
+				<div class="msg msg--ai" id="msgAi">
+					<span class="msg-role">Agent</span>
+
+					<div class="agent-progress" id="agentProgress" aria-hidden="true">
+						<span class="progress-label">Thinking</span>
+						<span class="progress-track"><span class="progress-fill" id="progressFill"></span></span>
+						<span class="progress-label">Acting</span>
+					</div>
+
+					<div class="msg-thinking" id="msgThinking">
+						<span></span><span></span><span></span>
+					</div>
+
+					<div class="msg-scan" id="msgScan">
+						<p class="scan-label">Scanning connected systems&hellip;</p>
+						<ul class="scan-list" id="scanList">
+							{scanTargets.map((t) => (
+								<li class="scan-item">
+									<span class="scan-check" aria-hidden="true">&check;</span>
+									<span class="scan-name">{t}</span>
+								</li>
+							))}
+						</ul>
+					</div>
+
+					<div class="msg-reply" id="msgReply">
+						<p class="reply-summary" id="replySummary">{summary}</p>
+						<ul class="reply-list" id="replyList">
+							{findings.map((f) => (
+								<li class="reply-item">
+									<span class="item-count">{f.count}</span>
+									<span class="item-label">{f.label}</span>
+									<span class="item-arrow" aria-hidden="true">&rarr;</span>
+								</li>
+							))}
+						</ul>
+						<button type="button" class="reply-action" id="replyAction">
+							<span>Take action</span>
+							<span class="action-arrow" aria-hidden="true">&rarr;</span>
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="ai-philosophy reveal" style="--reveal-order: 3">
+			<p class="philosophy-lede">We&rsquo;re interested in AI that doesn&rsquo;t stop at conversation.</p>
+
+			<div class="philosophy-flow" aria-hidden="true">
+				{flow.map((step, i) => (
+					<>
+						<span class="flow-step">{step}</span>
+						{i < flow.length - 1 && <span class="flow-arrow">&rarr;</span>}
+					</>
+				))}
+			</div>
+
+			<p class="philosophy-footer">That becomes a Neulancers philosophy.</p>
+		</div>
+	</div>
+</section>
+
+<style>
+	.ai {
+		--ink: #f3f3f1;
+		--muted: #8b929d;
+		--ink-faint: rgba(139, 146, 157, 0.75);
+		--border-soft: rgba(255, 255, 255, 0.1);
+		--accent: #6d28d9;
+		--accent-hover: #5b21b6;
+		--accent-bright: #a78bfa;
+		--bg: #0a0a0d;
+		--panel-bg: #0d1018;
+
+		position: relative;
+		background: var(--bg);
+		color: var(--ink);
+		font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+		border-top: 1px solid var(--border-soft);
+	}
+
+	.ai-inner {
+		max-width: 1320px;
+		margin: 0 auto;
+		padding: clamp(64px, 9vw, 112px) clamp(20px, 4vw, 32px);
+	}
+
+	/* ---------- scroll-in reveal ---------- */
+	.reveal {
+		opacity: 0;
+		transform: translateY(18px);
+		transition:
+			opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+			transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+		transition-delay: calc(var(--reveal-order, 0) * 90ms);
+	}
+
+	.ai.is-visible .reveal {
+		opacity: 1;
+		transform: translateY(0);
+	}
+
+	.ai-head {
+		max-width: 620px;
+		margin: 0 auto clamp(24px, 3vw, 32px);
+		text-align: center;
+	}
+
+	.ai-eyebrow {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+		margin-bottom: 1.1rem;
+	}
+
+	.eyebrow-idx,
+	.eyebrow-label {
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.75rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--muted);
+	}
+
+	.eyebrow-dot {
+		color: var(--accent);
+		font-size: 0.6rem;
+	}
+
+	.ai-heading {
+		margin: 0;
+		font-size: clamp(2rem, 1.8vw + 1.6rem, 2.9rem);
+		font-weight: 700;
+		letter-spacing: -0.015em;
+		line-height: 1.15;
+	}
+
+	/* ---------- demo terminal: the centerpiece ---------- */
+	.ai-demo {
+		width: 100%;
+		max-width: 1120px;
+		margin: 0 auto;
+		background: var(--panel-bg);
+		border: 1px solid var(--border-soft);
+		border-radius: 18px;
+		overflow: hidden;
+		box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+	}
+
+	.demo-bar {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.85rem 1.1rem;
+		border-bottom: 1px solid var(--border-soft);
+		background: rgba(255, 255, 255, 0.02);
+	}
+
+	.demo-dot {
+		width: 9px;
+		height: 9px;
+		border-radius: 50%;
+		background: rgba(255, 255, 255, 0.14);
+	}
+
+	.demo-title {
+		margin-left: 0.5rem;
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.72rem;
+		letter-spacing: 0.04em;
+		color: var(--ink-faint);
+	}
+
+	/* ---------- agent status pill ---------- */
+	.demo-status {
+		margin-left: auto;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.45rem;
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.65rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--ink-faint);
+	}
+
+	.status-dot {
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background: var(--accent-bright);
+		box-shadow: 0 0 0 0 rgba(167, 139, 250, 0.55);
+		animation: statusPulse 1.7s ease-in-out infinite;
+	}
+
+	.demo-status.is-ready .status-dot {
+		animation: none;
+		background: var(--ink);
+		box-shadow: none;
+	}
+
+	.demo-status.is-ready {
+		color: var(--ink-faint);
+	}
+
+	@keyframes statusPulse {
+		0%,
+		100% {
+			box-shadow: 0 0 0 0 rgba(167, 139, 250, 0.45);
+		}
+		50% {
+			box-shadow: 0 0 0 4px rgba(167, 139, 250, 0);
+		}
+	}
+
+	.demo-replay {
+		margin-left: 0.85rem;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 26px;
+		height: 26px;
+		padding: 0;
+		flex-shrink: 0;
+		background: none;
+		border: 1px solid var(--border-soft);
+		border-radius: 999px;
+		color: var(--ink-faint);
+		cursor: pointer;
+		transition: color 0.2s ease, border-color 0.2s ease;
+	}
+
+	.demo-replay svg {
+		width: 13px;
+		height: 13px;
+	}
+
+	.demo-replay:hover {
+		color: var(--ink);
+		border-color: rgba(255, 255, 255, 0.22);
+	}
+
+	.demo-body {
+		padding: clamp(1.5rem, 3vw, 2.25rem);
+		display: flex;
+		flex-direction: column;
+		gap: 1.6rem;
+	}
+
+	.msg {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 0.5rem;
+	}
+
+	.msg-role {
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.68rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--ink-faint);
+	}
+
+	.msg--you .msg-text {
+		margin: 0;
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: clamp(0.92rem, 0.3vw + 0.85rem, 1rem);
+		color: var(--ink);
+	}
+
+	.caret {
+		display: inline-block;
+		width: 2px;
+		height: 1em;
+		margin-left: 2px;
+		background: var(--accent);
+		vertical-align: -0.15em;
+		animation: caret-blink 0.9s step-end infinite;
+	}
+
+	.caret.is-done {
+		display: none;
+	}
+
+	@keyframes caret-blink {
+		0%,
+		100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0;
+		}
+	}
+
+	/* ---------- ai response ---------- */
+	.msg--ai {
+		width: 100%;
+		opacity: 0;
+		transition: opacity 0.4s ease;
+	}
+
+	.msg--ai.is-active {
+		opacity: 1;
+	}
+
+	/* ---------- thinking → acting indicator ----------
+	   Extremely subtle: a thin track with a small fill that advances as the
+	   agent moves from reading the request to returning a result. */
+	.agent-progress {
+		display: none;
+		align-items: center;
+		gap: 0.5rem;
+		margin: 0.15rem 0 0.9rem;
+	}
+
+	.msg--ai.is-active .agent-progress {
+		display: flex;
+	}
+
+	.progress-label {
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.6rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--ink-faint);
+	}
+
+	.progress-track {
+		position: relative;
+		flex: 1;
+		max-width: 160px;
+		height: 2px;
+		background: var(--border-soft);
+		border-radius: 2px;
+		overflow: hidden;
+	}
+
+	.progress-fill {
+		display: block;
+		height: 100%;
+		width: 8%;
+		background: linear-gradient(to right, var(--accent), var(--accent-bright));
+		border-radius: 2px;
+		transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+	}
+
+	.msg-thinking {
+		display: none;
+		gap: 5px;
+		height: 1.2rem;
+		align-items: center;
+	}
+
+	.msg--ai.is-thinking .msg-thinking {
+		display: flex;
+	}
+
+	.msg-thinking span {
+		width: 5px;
+		height: 5px;
+		border-radius: 50%;
+		background: var(--ink-faint);
+		animation: think-bounce 1.1s ease-in-out infinite;
+	}
+
+	.msg-thinking span:nth-child(2) {
+		animation-delay: 0.15s;
+	}
+
+	.msg-thinking span:nth-child(3) {
+		animation-delay: 0.3s;
+	}
+
+	@keyframes think-bounce {
+		0%,
+		60%,
+		100% {
+			transform: translateY(0);
+			opacity: 0.5;
+		}
+		30% {
+			transform: translateY(-4px);
+			opacity: 1;
+		}
+	}
+
+	/* ---------- scanning phase ---------- */
+	.msg-scan {
+		display: none;
+		flex-direction: column;
+		gap: 0.6rem;
+		width: 100%;
+		opacity: 0;
+		transition: opacity 0.3s ease;
+	}
+
+	.msg--ai.is-scanning .msg-scan {
+		display: flex;
+		opacity: 1;
+	}
+
+	.scan-label {
+		margin: 0;
+		font-size: 0.85rem;
+		color: var(--muted);
+	}
+
+	.scan-list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem 1.25rem;
+	}
+
+	.scan-item {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.78rem;
+		color: var(--ink-faint);
+		opacity: 0;
+		transform: translateY(4px);
+		transition: opacity 0.3s ease, transform 0.3s ease;
+	}
+
+	.scan-item.is-shown {
+		opacity: 1;
+		transform: translateY(0);
+	}
+
+	.scan-check {
+		color: var(--accent-bright);
+		font-weight: 700;
+	}
+
+	.msg-reply {
+		display: none;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 0.9rem;
+		width: 100%;
+	}
+
+	.msg--ai.is-replying .msg-reply {
+		display: flex;
+	}
+
+	.reply-summary {
+		margin: 0;
+		font-size: clamp(0.98rem, 0.3vw + 0.9rem, 1.08rem);
+		font-weight: 600;
+		color: var(--ink);
+	}
+
+	.reply-list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.55rem;
+		width: 100%;
+	}
+
+	/* ---------- interactive result rows ---------- */
+	.reply-item {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		padding: 0.65rem 0.9rem;
+		background: rgba(255, 255, 255, 0.03);
+		border: 1px solid var(--border-soft);
+		border-radius: 10px;
+		font-size: 0.9rem;
+		color: var(--muted);
+		opacity: 0;
+		transform: translateX(-6px);
+		transition:
+			opacity 0.35s ease,
+			transform 0.3s ease,
+			background-color 0.25s ease,
+			border-color 0.25s ease;
+		cursor: default;
+	}
+
+	.reply-item.is-shown {
+		opacity: 1;
+		transform: translateX(0);
+	}
+
+	.reply-item.is-shown:hover {
+		background: rgba(255, 255, 255, 0.06);
+		border-color: rgba(255, 255, 255, 0.18);
+	}
+
+	.item-count {
+		flex-shrink: 0;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 22px;
+		height: 22px;
+		padding: 0 0.3rem;
+		background: rgba(109, 40, 217, 0.16);
+		border-radius: 999px;
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.75rem;
+		font-weight: 700;
+		color: #c4b5fd;
+		transition: color 0.25s ease, background-color 0.25s ease;
+	}
+
+	.reply-item.is-shown:hover .item-count {
+		color: #e9d8fd;
+		background: rgba(109, 40, 217, 0.28);
+	}
+
+	.item-label {
+		flex: 1;
+	}
+
+	.item-arrow {
+		flex-shrink: 0;
+		color: var(--ink-faint);
+		opacity: 0;
+		transform: translateX(-3px);
+		transition: opacity 0.25s ease, transform 0.25s ease, color 0.25s ease;
+	}
+
+	.reply-item.is-shown:hover .item-arrow {
+		opacity: 1;
+		transform: translateX(2px);
+		color: var(--accent-bright);
+	}
+
+	/* ---------- CTA, integrated with the terminal ---------- */
+	.reply-action {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin-top: 0.3rem;
+		padding: 0.6rem 1.2rem;
+		background: var(--accent);
+		border: 1px solid rgba(167, 139, 250, 0.4);
+		border-radius: 999px;
+		color: #ffffff;
+		font-size: 0.85rem;
+		font-weight: 600;
+		cursor: pointer;
+		opacity: 0;
+		transform: translateY(4px);
+		transition:
+			opacity 0.35s ease,
+			transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+			background-color 0.15s ease,
+			box-shadow 0.25s ease;
+	}
+
+	.reply-action.is-shown {
+		opacity: 1;
+		transform: translateY(0);
+	}
+
+	.reply-action:hover,
+	.reply-action:focus-visible {
+		background: var(--accent-hover);
+		transform: translateY(-2px);
+		box-shadow: 0 10px 24px -6px rgba(109, 40, 217, 0.6);
+	}
+
+	.action-arrow {
+		transition: transform 0.25s ease;
+	}
+
+	.reply-action:hover .action-arrow {
+		transform: translateX(3px);
+	}
+
+	/* ---------- philosophy ---------- */
+	.ai-philosophy {
+		margin-top: clamp(2.25rem, 4.5vw, 3.25rem);
+		text-align: center;
+	}
+
+	.philosophy-lede {
+		margin: 0 0 clamp(1.75rem, 3vw, 2.25rem);
+		font-size: clamp(1.1rem, 0.8vw + 0.95rem, 1.4rem);
+		font-weight: 600;
+		letter-spacing: -0.01em;
+		max-width: 34ch;
+		margin-inline: auto;
+	}
+
+	.philosophy-flow {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: clamp(0.75rem, 2vw, 1.5rem);
+		margin-bottom: clamp(1.75rem, 3vw, 2.25rem);
+	}
+
+	.flow-step {
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: clamp(1rem, 1vw + 0.8rem, 1.3rem);
+		font-weight: 700;
+		letter-spacing: 0.02em;
+		color: var(--ink);
+		padding: 0.5rem 1.1rem;
+		border: 1px solid var(--border-soft);
+		border-radius: 999px;
+	}
+
+	.flow-arrow {
+		color: var(--accent);
+		font-size: 1.2rem;
+	}
+
+	.philosophy-footer {
+		margin: 0;
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.85rem;
+		color: var(--ink-faint);
+	}
+
+	@media (max-width: 640px) {
+		.demo-status .status-text {
+			display: none;
+		}
+
+		.philosophy-flow {
+			gap: 0.5rem;
+		}
+
+		.flow-step {
+			font-size: 0.95rem;
+			padding: 0.45rem 0.85rem;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.reveal,
+		.msg--ai,
+		.msg-scan,
+		.scan-item,
+		.reply-item,
+		.reply-action,
+		.progress-fill,
+		.demo-replay {
+			transition: none;
+		}
+
+		.caret,
+		.msg-thinking span,
+		.status-dot {
+			animation: none;
+		}
+	}
+</style>
+
+<noscript>
+	<style>
+		.ai .reveal {
+			opacity: 1 !important;
+			transform: none !important;
+		}
+
+		/* no JS means no typing/reveal sequencing — show the finished
+		   exchange immediately rather than leaving it stuck mid-animation */
+		.caret {
+			display: none !important;
+		}
+
+		.msg--ai {
+			opacity: 1 !important;
+		}
+
+		.agent-progress,
+		.msg-thinking,
+		.msg-scan {
+			display: none !important;
+		}
+
+		.msg-reply {
+			display: flex !important;
+		}
+
+		.reply-item,
+		.reply-action,
+		.scan-item {
+			opacity: 1 !important;
+			transform: none !important;
+		}
+
+		.demo-replay {
+			display: none !important;
+		}
+
+		.demo-status {
+			display: none !important;
+		}
+	</style>
+</noscript>
+
+<script define:vars={{ query }}>
+	const section = document.getElementById('ai');
+	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+	const typedQuery = document.getElementById('typedQuery');
+	const queryCaret = document.getElementById('queryCaret');
+	const msgAi = document.getElementById('msgAi');
+	const progressFill = document.getElementById('progressFill');
+	const scanItems = Array.from(document.querySelectorAll('.scan-item'));
+	const replyItems = Array.from(document.querySelectorAll('.reply-item'));
+	const replyAction = document.getElementById('replyAction');
+	const replay = document.getElementById('demoReplay');
+	const demo = document.getElementById('aiDemo');
+	const demoStatus = document.getElementById('demoStatus');
+	const statusText = document.getElementById('statusText');
+
+	if (reduceMotion || !('IntersectionObserver' in window)) {
+		section?.classList.add('is-visible');
+	}
+
+	let timers = [];
+
+	const clearTimers = () => {
+		timers.forEach((t) => clearTimeout(t));
+		timers = [];
+	};
+
+	const setProgress = (pct) => {
+		if (progressFill) progressFill.style.width = `${pct}%`;
+	};
+
+	const setStatus = (ready) => {
+		demoStatus?.classList.toggle('is-ready', ready);
+		if (statusText) statusText.textContent = ready ? 'Ready' : 'Agent active';
+	};
+
+	const reset = () => {
+		clearTimers();
+		if (typedQuery) typedQuery.textContent = '';
+		queryCaret?.classList.remove('is-done');
+		msgAi?.classList.remove('is-active', 'is-thinking', 'is-scanning', 'is-replying');
+		scanItems.forEach((item) => item.classList.remove('is-shown'));
+		replyItems.forEach((item) => item.classList.remove('is-shown'));
+		replyAction?.classList.remove('is-shown');
+		setProgress(8);
+		setStatus(false);
+	};
+
+	const play = () => {
+		reset();
+
+		if (reduceMotion) {
+			if (typedQuery) typedQuery.textContent = query;
+			queryCaret?.classList.add('is-done');
+			msgAi?.classList.add('is-active', 'is-replying');
+			scanItems.forEach((item) => item.classList.add('is-shown'));
+			replyItems.forEach((item) => item.classList.add('is-shown'));
+			replyAction?.classList.add('is-shown');
+			setProgress(100);
+			setStatus(true);
+			return;
+		}
+
+		let i = 0;
+		const typeStep = () => {
+			if (typedQuery) typedQuery.textContent = query.slice(0, i);
+			i += 1;
+			if (i <= query.length) {
+				timers.push(setTimeout(typeStep, 26));
+			} else {
+				queryCaret?.classList.add('is-done');
+				timers.push(setTimeout(showThinking, 350));
+			}
+		};
+
+		const showThinking = () => {
+			msgAi?.classList.add('is-active', 'is-thinking');
+			setProgress(15);
+			timers.push(setTimeout(showScan, 650));
+		};
+
+		const showScan = () => {
+			msgAi?.classList.remove('is-thinking');
+			msgAi?.classList.add('is-scanning');
+			setProgress(45);
+			scanItems.forEach((item, idx) => {
+				timers.push(
+					setTimeout(() => {
+						item.classList.add('is-shown');
+						setProgress(45 + ((idx + 1) / scanItems.length) * 30);
+					}, idx * 140),
+				);
+			});
+			timers.push(setTimeout(showReply, scanItems.length * 140 + 350));
+		};
+
+		const showReply = () => {
+			msgAi?.classList.remove('is-scanning');
+			msgAi?.classList.add('is-replying');
+			setProgress(100);
+			setStatus(true);
+			replyItems.forEach((item, idx) => {
+				timers.push(setTimeout(() => item.classList.add('is-shown'), idx * 160));
+			});
+			timers.push(
+				setTimeout(() => replyAction?.classList.add('is-shown'), replyItems.length * 160 + 150),
+			);
+		};
+
+		timers.push(setTimeout(typeStep, 250));
+	};
+
+	replay?.addEventListener('click', play);
+
+	if (demo) {
+		if (reduceMotion || !('IntersectionObserver' in window)) {
+			play();
+		} else {
+			// plays once on first entry; if the section is scrolled fully out
+			// of view afterward, it's allowed to replay on the next entry —
+			// it never loops while still on screen
+			let hasEntered = false;
+			let hasLeftSinceEntering = false;
+
+			const playObserver = new IntersectionObserver(
+				(entries) => {
+					entries.forEach((entry) => {
+						if (entry.intersectionRatio >= 0.4) {
+							if (!hasEntered) {
+								hasEntered = true;
+								section?.classList.add('is-visible');
+								play();
+							} else if (hasLeftSinceEntering) {
+								hasLeftSinceEntering = false;
+								play();
+							}
+						} else if (entry.intersectionRatio === 0 && hasEntered) {
+							hasLeftSinceEntering = true;
+						}
+					});
+				},
+				{ threshold: [0, 0.4] },
+			);
+			playObserver.observe(demo);
+		}
+	}
+</script>

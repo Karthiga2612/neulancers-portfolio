@@ -1,0 +1,318 @@
+---
+const layers = ['Python', 'Django', 'APIs', 'AI', 'Automation', 'Data', 'Infrastructure'];
+const tags = ['Open source', 'Cloud', 'Local AI', 'APIs', 'Automation', 'Custom software'];
+---
+
+<section class="stack" id="stack">
+	<div class="stack-inner">
+		<div class="stack-head">
+			<div class="stack-eyebrow reveal" style="--reveal-order: 0">
+				<span class="eyebrow-idx">07</span>
+				<span class="eyebrow-dot" aria-hidden="true">&bull;</span>
+				<span class="eyebrow-label">Behind the Build</span>
+			</div>
+
+			<h2 class="stack-heading reveal" style="--reveal-order: 1">Under the hood</h2>
+		</div>
+
+		<div class="stack-pipeline reveal" id="stackPipeline" style="--reveal-order: 2">
+			{layers.map((layer, i) => (
+				<>
+					<span class="layer-node" data-index={i}>{layer}</span>
+					{i < layers.length - 1 && (
+						<span class="layer-connector" aria-hidden="true">
+							<span class="connector-line"></span>
+							<span class="connector-pulse"></span>
+						</span>
+					)}
+				</>
+			))}
+		</div>
+
+		<p class="stack-statement reveal" style="--reveal-order: 3">We use whatever technology solves the problem.</p>
+
+		<div class="stack-tags reveal" style="--reveal-order: 4">
+			{tags.map((tag) => (
+				<span class="stack-tag">{tag}</span>
+			))}
+		</div>
+	</div>
+</section>
+
+<style>
+	.stack {
+		--ink: #f3f3f1;
+		--muted: #8b929d;
+		--ink-faint: rgba(139, 146, 157, 0.75);
+		--border-soft: rgba(255, 255, 255, 0.1);
+		--accent: #6d28d9;
+		--bg: #0a0a0d;
+
+		position: relative;
+		background: var(--bg);
+		color: var(--ink);
+		font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+		border-top: 1px solid var(--border-soft);
+	}
+
+	.stack-inner {
+		max-width: 1000px;
+		margin: 0 auto;
+		padding: clamp(72px, 10vw, 128px) clamp(20px, 4vw, 32px);
+	}
+
+	/* ---------- scroll-in reveal ---------- */
+	.reveal {
+		opacity: 0;
+		transform: translateY(18px);
+		transition:
+			opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+			transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+		transition-delay: calc(var(--reveal-order, 0) * 90ms);
+	}
+
+	.stack.is-visible .reveal {
+		opacity: 1;
+		transform: translateY(0);
+	}
+
+	.stack-head {
+		text-align: center;
+		margin-bottom: clamp(48px, 7vw, 72px);
+	}
+
+	.stack-eyebrow {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+		margin-bottom: 1.1rem;
+	}
+
+	.eyebrow-idx,
+	.eyebrow-label {
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.75rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--muted);
+	}
+
+	.eyebrow-dot {
+		color: var(--accent);
+		font-size: 0.6rem;
+	}
+
+	.stack-heading {
+		margin: 0;
+		font-size: clamp(2rem, 1.6vw + 1.7rem, 2.75rem);
+		font-weight: 700;
+		letter-spacing: -0.01em;
+	}
+
+	/* ---------- pipeline ---------- */
+	.stack-pipeline {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-wrap: wrap;
+		row-gap: 1.5rem;
+		margin-bottom: clamp(48px, 7vw, 72px);
+	}
+
+	.layer-node {
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: clamp(0.85rem, 0.5vw + 0.75rem, 1rem);
+		font-weight: 600;
+		letter-spacing: 0.01em;
+		color: var(--ink);
+		padding: 0.65rem 1.15rem;
+		background: rgba(255, 255, 255, 0.03);
+		border: 1px solid var(--border-soft);
+		border-radius: 999px;
+		white-space: nowrap;
+		transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+	}
+
+	.layer-node.is-current {
+		border-color: var(--accent);
+		background: rgba(109, 40, 217, 0.16);
+		color: #ffffff;
+	}
+
+	.layer-connector {
+		position: relative;
+		width: clamp(24px, 3vw, 48px);
+		height: 1px;
+		margin: 0 0.15rem;
+		flex-shrink: 0;
+	}
+
+	.connector-line {
+		position: absolute;
+		inset: 0;
+		background: var(--border-soft);
+	}
+
+	.connector-pulse {
+		position: absolute;
+		top: 50%;
+		left: 0;
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background: var(--accent);
+		box-shadow: 0 0 8px 1px rgba(109, 40, 217, 0.7);
+		transform: translate(-50%, -50%);
+		opacity: 0;
+	}
+
+	.layer-connector.is-active .connector-pulse {
+		animation: pulse-travel 0.6s ease-in-out forwards;
+	}
+
+	@keyframes pulse-travel {
+		0% {
+			left: 0;
+			opacity: 1;
+		}
+		90% {
+			opacity: 1;
+		}
+		100% {
+			left: 100%;
+			opacity: 0;
+		}
+	}
+
+	/* ---------- statement + tags ---------- */
+	.stack-statement {
+		margin: 0 0 1.5rem;
+		text-align: center;
+		font-size: clamp(1.15rem, 1vw + 0.95rem, 1.5rem);
+		font-weight: 600;
+		letter-spacing: -0.01em;
+	}
+
+	.stack-tags {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+	}
+
+	.stack-tag {
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.72rem;
+		letter-spacing: 0.04em;
+		color: var(--ink-faint);
+	}
+
+	.stack-tag:not(:last-child)::after {
+		content: '\00b7';
+		margin-left: 0.6rem;
+		color: var(--ink-faint);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.reveal,
+		.layer-node {
+			transition: none;
+		}
+
+		.connector-pulse {
+			animation: none !important;
+			opacity: 0 !important;
+		}
+	}
+</style>
+
+<noscript>
+	<style>
+		.stack .reveal {
+			opacity: 1 !important;
+			transform: none !important;
+		}
+	</style>
+</noscript>
+
+<script>
+	const section = document.getElementById('stack');
+	const pipeline = document.getElementById('stackPipeline');
+	const nodes = Array.from(document.querySelectorAll('.layer-node')) as HTMLElement[];
+	const connectors = Array.from(document.querySelectorAll('.layer-connector')) as HTMLElement[];
+	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+	if (reduceMotion || !('IntersectionObserver' in window)) {
+		section?.classList.add('is-visible');
+	} else {
+		const revealObserver = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					if (entry.isIntersecting) {
+						section?.classList.add('is-visible');
+						revealObserver.disconnect();
+					}
+				});
+			},
+			{ threshold: 0.15 },
+		);
+		if (section) revealObserver.observe(section);
+	}
+
+	// once the pipeline is in view, step through each node/connector in
+	// sequence, then loop — echoes the arc-pulse traveling motif from the
+	// hero without needing that section's full coordinate math
+	if (pipeline && nodes.length && !reduceMotion) {
+		let current = 0;
+		let timer: ReturnType<typeof setTimeout> | null = null;
+
+		const setActive = (index: number) => {
+			nodes.forEach((n, i) => n.classList.toggle('is-current', i === index));
+			connectors.forEach((c, i) => {
+				c.classList.remove('is-active');
+				if (i === index) {
+					// restart the pulse animation
+					void c.offsetWidth;
+					c.classList.add('is-active');
+				}
+			});
+		};
+
+		const step = () => {
+			setActive(current);
+			const atLast = current === nodes.length - 1;
+			timer = setTimeout(
+				() => {
+					current = atLast ? 0 : current + 1;
+					step();
+				},
+				atLast ? 2200 : 900,
+			);
+		};
+
+		const start = () => {
+			if (!timer) step();
+		};
+		const stop = () => {
+			if (timer) {
+				clearTimeout(timer);
+				timer = null;
+			}
+			nodes.forEach((n) => n.classList.remove('is-current'));
+			connectors.forEach((c) => c.classList.remove('is-active'));
+		};
+
+		const playObserver = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					if (entry.isIntersecting) start();
+					else stop();
+				});
+			},
+			{ threshold: 0.4 },
+		);
+		playObserver.observe(pipeline);
+	}
+</script>

@@ -1,0 +1,420 @@
+---
+import engineerVisual from '../assets/engineer_visual.svg';
+import builderVisual from '../assets/builder_visual.svg';
+import designerVisual from '../assets/designer_visual.svg';
+import researcherVisual from '../assets/researcher_visual.svg';
+
+const panels = [
+	{ idx: 1, title: 'Engineer', tag: 'Systems', desc: 'Turns ideas into systems.', visual: engineerVisual },
+	{ idx: 2, title: 'Builder', tag: 'Prototypes', desc: 'Makes prototypes real.', visual: builderVisual },
+	{ idx: 3, title: 'Designer', tag: 'Simplicity', desc: 'Makes complicated things feel simple.', visual: designerVisual },
+	{ idx: 4, title: 'Researcher', tag: 'Questions', desc: 'Asks inconvenient questions.', visual: researcherVisual },
+];
+---
+
+<section class="people" id="people">
+	<div class="people-inner">
+		<div class="people-head reveal" style="--reveal-order: 0">
+			<div class="people-eyebrow">
+				<span class="eyebrow-idx">08</span>
+				<span class="eyebrow-dot" aria-hidden="true">&bull;</span>
+				<span class="eyebrow-label">The People</span>
+			</div>
+			<h2 class="people-heading">Small team. Big curiosity.</h2>
+		</div>
+
+		<div class="studio-grid reveal" id="studioGrid" style="--reveal-order: 1">
+			<span class="grid-node reveal" style="--reveal-order: 5" aria-hidden="true"></span>
+
+			{panels.map((p) => (
+				<button type="button" class="panel reveal" data-panel={p.idx} style={`--reveal-order: ${p.idx + 1}`}>
+					<span class="panel-content">
+						<span class="panel-idx">{`0${p.idx}`}</span>
+						<span class="panel-title">{p.title}</span>
+						<span class="panel-tag">{p.tag}</span>
+						<span class="panel-desc">{p.desc}</span>
+						<span class="panel-arrow-ring" aria-hidden="true">
+							<span class="panel-arrow">&rarr;</span>
+						</span>
+					</span>
+
+					<span class="panel-visual">
+						<img src={p.visual.src} width={p.visual.width} height={p.visual.height} alt="" loading="lazy" />
+					</span>
+				</button>
+			))}
+		</div>
+
+		<p class="people-footer reveal" style="--reveal-order: 6">
+			We&rsquo;re not hiring job titles. We&rsquo;re looking for people who like figuring things out.
+		</p>
+	</div>
+</section>
+
+<style>
+	.people {
+		--ink: #f3f3f1;
+		--muted: #8b929d;
+		--ink-faint: rgba(139, 146, 157, 0.75);
+		--border-soft: rgba(255, 255, 255, 0.1);
+		--accent: #6d28d9;
+		--accent-bright: #a78bfa;
+		--accent-brighter: #c4b5fd;
+		--bg: #050506;
+		--bg-hover: #0b0b0e;
+
+		position: relative;
+		background: var(--bg);
+		color: var(--ink);
+		font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+		border-top: 1px solid var(--border-soft);
+	}
+
+	.people-inner {
+		max-width: 1240px;
+		margin: 0 auto;
+		padding: clamp(56px, 8vw, 96px) clamp(20px, 4vw, 32px);
+	}
+
+	/* ---------- scroll-in reveal — kept tight (sub-800ms total) ---------- */
+	.reveal {
+		opacity: 0;
+		transform: translateY(14px);
+		transition:
+			opacity 0.48s cubic-bezier(0.16, 1, 0.3, 1),
+			transform 0.48s cubic-bezier(0.16, 1, 0.3, 1);
+		transition-delay: calc(var(--reveal-order, 0) * 50ms);
+	}
+
+	.people.is-visible .reveal {
+		opacity: 1;
+		transform: translateY(0);
+	}
+
+	.people-head {
+		text-align: center;
+		margin-bottom: clamp(36px, 5.5vw, 56px);
+	}
+
+	.people-eyebrow {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+		margin-bottom: 1rem;
+	}
+
+	.eyebrow-idx,
+	.eyebrow-label {
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.75rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--muted);
+	}
+
+	.eyebrow-dot {
+		color: var(--accent);
+		font-size: 0.6rem;
+	}
+
+	.people-heading {
+		margin: 0;
+		font-size: clamp(2rem, 1.8vw + 1.6rem, 2.75rem);
+		font-weight: 700;
+		letter-spacing: -0.01em;
+	}
+
+	/* ---------- the 2x2 studio grid ----------
+	   dividers are the grid's own background showing through a 1px gap —
+	   one horizontal + one vertical hairline meeting at dead center — the
+	   "four quadrants of one system" look, not four boxed cards. No outer
+	   border or rounding — the composition has no visible boundary, only
+	   the internal cross of dividers. */
+	.studio-grid {
+		position: relative;
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		grid-template-rows: repeat(2, 1fr);
+		gap: 1px;
+		background: var(--border-soft);
+		margin-bottom: clamp(28px, 4vw, 40px);
+	}
+
+	.panel {
+		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: clamp(1rem, 2vw, 2rem);
+		min-height: clamp(240px, 26vw, 320px);
+		padding: clamp(1.75rem, 2.8vw, 2.75rem);
+		background: var(--bg);
+		border: 1px solid transparent;
+		font: inherit;
+		color: inherit;
+		text-align: left;
+		cursor: pointer;
+		transition:
+			border-color 0.3s ease-out,
+			background-color 0.3s ease-out;
+	}
+
+	.panel:hover,
+	.panel:focus-visible {
+		border-color: rgba(167, 139, 250, 0.3);
+		background: var(--bg-hover);
+	}
+
+	/* ---------- left: text ---------- */
+	.panel-content {
+		position: relative;
+		z-index: 2;
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 0.3rem;
+		max-width: 24ch;
+	}
+
+	.panel-idx {
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.85rem;
+		font-weight: 700;
+		color: var(--accent-bright);
+		transition: color 0.3s ease-out;
+	}
+
+	.panel-title {
+		font-size: clamp(1.3rem, 1.4vw + 1rem, 1.75rem);
+		font-weight: 700;
+		letter-spacing: -0.01em;
+		color: var(--ink);
+		transition: color 0.3s ease-out;
+	}
+
+	.panel-tag {
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.66rem;
+		font-weight: 600;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: var(--accent-bright);
+		margin-bottom: 0.2rem;
+	}
+
+	.panel-desc {
+		font-size: 0.88rem;
+		line-height: 1.5;
+		color: var(--muted);
+	}
+
+	.panel-arrow-ring {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 34px;
+		height: 34px;
+		margin-top: 0.6rem;
+		border-radius: 50%;
+		border: 1px solid rgba(167, 139, 250, 0.4);
+		transform: translateX(0);
+		transition:
+			transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+			border-color 0.3s ease-out,
+			background-color 0.3s ease-out;
+	}
+
+	.panel-arrow {
+		color: var(--accent-bright);
+		font-size: 0.95rem;
+		line-height: 1;
+	}
+
+	.panel:hover .panel-idx,
+	.panel:focus-visible .panel-idx {
+		color: var(--accent-brighter);
+	}
+
+	.panel:hover .panel-title,
+	.panel:focus-visible .panel-title {
+		color: #ffffff;
+	}
+
+	.panel:hover .panel-arrow-ring,
+	.panel:focus-visible .panel-arrow-ring {
+		border-color: rgba(167, 139, 250, 0.75);
+		background: rgba(167, 139, 250, 0.1);
+		transform: translateX(4px);
+	}
+
+	/* ---------- right: the actual custom SVG art, aspect-ratio preserved ---------- */
+	.panel-visual {
+		position: relative;
+		z-index: 2;
+		flex: 0 1 auto;
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		width: clamp(220px, 30vw, 380px);
+	}
+
+	.panel-visual img {
+		display: block;
+		width: 100%;
+		height: auto;
+		border-radius: 10px;
+		transform: scale(1);
+		filter: brightness(0.96) drop-shadow(0 0 0 rgba(167, 139, 250, 0));
+		transition:
+			transform 0.3s ease-out,
+			filter 0.3s ease-out;
+	}
+
+	.panel:hover .panel-visual img,
+	.panel:focus-visible .panel-visual img {
+		transform: scale(1.025);
+		filter: brightness(1.08) drop-shadow(0 0 22px rgba(167, 139, 250, 0.3));
+	}
+
+	/* ---------- center intersection node ---------- */
+	.grid-node {
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		transform: translate(-50%, -50%);
+		width: 14px;
+		height: 14px;
+		border-radius: 50%;
+		border: 1px solid rgba(167, 139, 250, 0.4);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 5;
+		pointer-events: none;
+	}
+
+	.grid-node::after {
+		content: '';
+		width: 5px;
+		height: 5px;
+		border-radius: 50%;
+		background: var(--accent-bright);
+		box-shadow: 0 0 8px rgba(167, 139, 250, 0.7);
+		animation: node-pulse 3.2s ease-in-out infinite;
+	}
+
+	@keyframes node-pulse {
+		0%,
+		100% {
+			opacity: 0.55;
+			transform: scale(1);
+		}
+		50% {
+			opacity: 1;
+			transform: scale(1.35);
+		}
+	}
+
+	/* ---------- footer ---------- */
+	.people-footer {
+		position: relative;
+		margin: 0 auto;
+		max-width: 44ch;
+		padding-top: 1.25rem;
+		text-align: center;
+		font-size: 1rem;
+		font-weight: 500;
+		line-height: 1.55;
+		color: var(--ink-faint);
+	}
+
+	.people-footer::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 50%;
+		transform: translateX(-50%);
+		width: 40px;
+		height: 1px;
+		background: rgba(167, 139, 250, 0.4);
+	}
+
+	/* ---------- responsive ---------- */
+	@media (max-width: 1024px) {
+		.panel {
+			min-height: clamp(220px, 28vw, 300px);
+		}
+	}
+
+	@media (max-width: 720px) {
+		.studio-grid {
+			grid-template-columns: 1fr;
+			grid-template-rows: repeat(4, auto);
+		}
+
+		.grid-node {
+			display: none;
+		}
+
+		.panel {
+			min-height: 0;
+			padding: 1.5rem;
+		}
+
+		.panel-visual {
+			width: clamp(96px, 30vw, 140px);
+		}
+
+		.panel-content {
+			max-width: none;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.reveal,
+		.panel,
+		.panel-visual img,
+		.panel-idx,
+		.panel-title,
+		.panel-arrow-ring {
+			transition: none;
+		}
+
+		.grid-node::after {
+			animation: none;
+		}
+	}
+</style>
+
+<noscript>
+	<style>
+		.people .reveal {
+			opacity: 1 !important;
+			transform: none !important;
+		}
+	</style>
+</noscript>
+
+<script>
+	const section = document.getElementById('people');
+	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+	if (reduceMotion || !('IntersectionObserver' in window)) {
+		section?.classList.add('is-visible');
+	} else {
+		const revealObserver = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					if (entry.isIntersecting) {
+						section?.classList.add('is-visible');
+						revealObserver.disconnect();
+					}
+				});
+			},
+			{ threshold: 0.15 },
+		);
+		if (section) revealObserver.observe(section);
+	}
+</script>

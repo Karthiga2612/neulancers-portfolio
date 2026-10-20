@@ -25,18 +25,23 @@ const stageMeta = [
 // worked out in a fixed reference box (VISUAL_W × VISUAL_H) and then
 // expressed as percentages of that box, so the circle, arc, nodes and
 // cards all share one coordinate system and stay locked together.
-const VISUAL_W = 700;
-const VISUAL_H = 550;
-const CIRCLE_R = 125;
+// The box's aspect ratio is also applied to .hero-visual directly (via
+// inline style), so the whole system scales fluidly with the grid
+// column instead of being pinned to viewport-width breakpoints.
+const VISUAL_W = 680;
+const VISUAL_H = 560;
+const CIRCLE_R = 92; // kept modest on purpose — a small, soft core, not the focal point
 const CIRCLE_CX = CIRCLE_R; // circle sits flush against the box's left edge
 const CIRCLE_CY = VISUAL_H / 2;
-const ARC_R = CIRCLE_R + 95; // the orbit's radius — bigger than the circle
+const ARC_R = CIRCLE_R + 170; // the orbit's radius — well clear of the circle, filling the box
 const CARD_GAP = 14; // px (ref space) — card's pointed tip sits right at its node
-// -90°/90° = due up/down exactly — the tangent there is perfectly
-// horizontal, so the arc's top and bottom tips flatten out straight
-// instead of arriving at a diagonal.
-const ANGLE_START = -90;
-const ANGLE_END = 90;
+// How far the 6 stages sweep above/below the orbit's horizontal center line.
+// Less than a full ±90° on purpose: pulling the first/last stage in from the
+// due-up/due-down extremes keeps "Something real" feeling like part of the
+// loop rather than a tail hanging off the bottom.
+const NODE_ANGLE_LIMIT = 66;
+const ANGLE_START = -NODE_ANGLE_LIMIT;
+const ANGLE_END = NODE_ANGLE_LIMIT;
 
 const toRad = (deg: number) => (deg * Math.PI) / 180;
 const toDeg = (rad: number) => (rad * 180) / Math.PI;
@@ -44,10 +49,14 @@ const toDeg = (rad: number) => (rad * 180) / Math.PI;
 // "dense" circular arc.
 const angleAt = (t: number) => ANGLE_START + t * (ANGLE_END - ANGLE_START);
 // used for the 6 stage nodes/cards: spacing them evenly by *angle* bunches
-// them together near the ±90° tips (sine flattens out there) and spreads
+// them together near the sweep's tips (sine flattens out there) and spreads
 // them apart near the middle. Spacing evenly by Y-projection instead keeps
-// a consistent gap between cards top to bottom.
-const angleAtEvenY = (t: number) => toDeg(Math.asin(-1 + t * 2));
+// a consistent gap between cards top to bottom, scaled to the same
+// ±NODE_ANGLE_LIMIT sweep as the visible arc.
+const angleAtEvenY = (t: number) => {
+	const limitSin = Math.sin(toRad(NODE_ANGLE_LIMIT));
+	return toDeg(Math.asin((t * 2 - 1) * limitSin));
+};
 const pointAt = (angleDeg: number, radius: number) => {
 	const rad = toRad(angleDeg);
 	return {
@@ -90,11 +99,18 @@ const arcPath = (() => {
 			</div>
 
 			<h1 class="headline">
-				<span class="line reveal" style="--reveal-order: 1">We build things.</span>
-				<span class="line line--dim reveal" style="--reveal-order: 2">Sometimes we don't know what they'll become.</span>
+				<span class="line line--dim reveal" style="--reveal-order: 1">We don't build software.</span>
+				<span class="line reveal" style="--reveal-order: 2">We build possibilities.</span>
 			</h1>
 
-			<div class="cta-row reveal" style="--reveal-order: 3">
+			<div class="flow-hint reveal" style="--reveal-order: 3">
+				<span class="flow-hint-dot" aria-hidden="true"></span>
+				<span>Problem</span>
+				<span class="flow-hint-arrow" aria-hidden="true">&rarr;</span>
+				<span class="flow-hint-strong">Something real</span>
+			</div>
+
+			<div class="cta-row reveal" style="--reveal-order: 4">
 				<a href="#contact" class="cta-btn">
 					<span>Bring us a problem</span>
 					<span class="cta-arrow">&rarr;</span>
@@ -103,11 +119,46 @@ const arcPath = (() => {
 			</div>
 		</div>
 
-		<div class="hero-visual reveal" id="pipeline" aria-label="How an idea becomes something real" style="--reveal-order: 4">
-			<div class="hero-circle" aria-hidden="true"></div>
+		<div
+			class="hero-visual reveal"
+			id="pipeline"
+			aria-label="How an idea becomes something real"
+			style={`--reveal-order: 5; aspect-ratio: ${VISUAL_W} / ${VISUAL_H};`}
+		>
+			<div class="hero-circle" aria-hidden="true">
+				<span class="core-glow"></span>
+				<span class="core-ring"></span>
+				<span class="core-icon-wrap">
+					{stageMeta.map((s, i) => (
+						<svg
+							class={`core-icon${i === 0 ? ' is-current' : ''}`}
+							data-index={i}
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.4"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							set:html={icons[s.icon]}
+						/>
+					))}
+				</span>
+			</div>
 
 			<svg class="arc-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+				<defs>
+					<filter id="heroPulseGlow" x="-200%" y="-200%" width="500%" height="500%">
+						<feGaussianBlur stdDeviation="1.4" result="blur"></feGaussianBlur>
+						<feMerge>
+							<feMergeNode in="blur"></feMergeNode>
+							<feMergeNode in="SourceGraphic"></feMergeNode>
+						</feMerge>
+					</filter>
+				</defs>
 				<path d={arcPath} class="arc-base"></path>
+				<circle class="arc-pulse" r="0.9" filter="url(#heroPulseGlow)">
+					<animateMotion dur="9s" repeatCount="indefinite" path={arcPath}></animateMotion>
+				</circle>
 			</svg>
 
 			{stages.map((s, i) => (
@@ -148,6 +199,12 @@ const arcPath = (() => {
 		--card-bg: #0d1018;
 
 		position: relative;
+		display: flex;
+		align-items: center;
+		/* dvh tracks the real visible viewport on mobile browsers (accounting
+		   for the address bar), falling back to vh where dvh isn't supported */
+		min-height: 100vh;
+		min-height: 100dvh;
 		background: var(--bg);
 		color: var(--ink);
 		font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
@@ -155,18 +212,16 @@ const arcPath = (() => {
 
 	.hero-inner {
 		position: relative;
-		display: flex;
+		width: 100%;
+		display: grid;
+		/* ~45% / ~55% text-to-visual balance on large desktop, with a floor
+		   on each track so neither column gets crushed near the breakpoint. */
+		grid-template-columns: minmax(400px, 45fr) minmax(420px, 55fr);
 		align-items: center;
-		gap: clamp(0.5rem, 2vw, 1.5rem);
+		gap: clamp(24px, 3vw, 56px);
 		max-width: 1320px;
 		margin: 0 auto;
-		padding: 96px clamp(20px, 4vw, 32px) 64px;
-		/* .hero-visual is position:absolute, so it doesn't contribute to
-		   this row's height on its own — without this, centering it via
-		   top:50%/translateY(-50%) is measured against the much shorter
-		   .hero-content column and overshoots upward, off the top of the
-		   section. Matching its own height here keeps that math correct. */
-		min-height: calc(clamp(480px, 50vw, 630px) + 160px);
+		padding: clamp(100px, 14vh, 140px) clamp(20px, 4vw, 32px) clamp(48px, 8vh, 88px);
 	}
 
 	/* ---------- page-load entrance ---------- */
@@ -184,21 +239,10 @@ const arcPath = (() => {
 		transform: translateY(0);
 	}
 
-	/* .hero-visual already carries transform: translateY(-50%) for centering
-	   — the reveal offset has to stack on top of that, not replace it. */
-	.hero-visual.reveal {
-		transform: translateY(-50%) translateY(18px);
-	}
-
-	.hero.is-visible .hero-visual.reveal {
-		transform: translateY(-50%) translateY(0);
-	}
-
 	/* ---------- left column ---------- */
 	.hero-content {
 		position: relative;
 		z-index: 2;
-		flex: 0 1 680px;
 	}
 
 	.tag-row {
@@ -278,15 +322,46 @@ const arcPath = (() => {
 		color: var(--muted);
 	}
 
+	/* ---------- headline-to-workflow connector ---------- */
+	.flow-hint {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: 0.72rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--ink-faint);
+		margin-bottom: 1.4rem;
+	}
+
+	.flow-hint-dot {
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background: var(--accent);
+		box-shadow: 0 0 0 3px rgba(109, 40, 217, 0.18);
+		flex-shrink: 0;
+	}
+
+	.flow-hint-arrow {
+		color: var(--accent);
+	}
+
+	.flow-hint-strong {
+		color: var(--ink);
+		font-weight: 600;
+	}
+
 	/* ---------- central circle ---------- */
-	/* ---------- circle + orbit + cards: one shared coordinate system ---------- */
+	/* ---------- circle + orbit + cards: one shared coordinate system ----------
+	   .hero-visual fills its grid column at width:100% and derives its height
+	   from the VISUAL_W/VISUAL_H aspect-ratio (set inline from the same
+	   constants the frontmatter uses for the arc math), so the reference box
+	   and the rendered box always agree — no viewport-width clamps to keep
+	   in sync by hand. */
 	.hero-visual {
-		position: absolute;
-		left: clamp(400px, calc(44vw - 160px), 480px);
-		top: 50%;
-		transform: translateY(-50%);
-		width: clamp(560px, 52vw, 720px);
-		height: clamp(480px, 50vw, 630px);
+		position: relative;
+		width: 100%;
 		z-index: 1;
 	}
 
@@ -295,13 +370,75 @@ const arcPath = (() => {
 		left: 0;
 		top: 50%;
 		transform: translateY(-50%);
-		width: clamp(230px, 17vw, 260px);
-		height: clamp(230px, 17vw, 260px);
+		width: 27%;
+		aspect-ratio: 1;
 		border-radius: 50%;
 		background: var(--circle-bg);
 		border: 1px solid var(--border);
 		box-shadow: 0 24px 48px rgba(0, 0, 0, 0.35);
 		pointer-events: none;
+		overflow: hidden;
+	}
+
+	.core-glow {
+		position: absolute;
+		inset: 0;
+		background: radial-gradient(circle at 50% 50%, rgba(109, 40, 217, 0.4), transparent 68%);
+		animation: coreGlowPulse 6s ease-in-out infinite;
+	}
+
+	.core-ring {
+		position: absolute;
+		inset: 12%;
+		border-radius: 50%;
+		border: 1px dashed rgba(109, 40, 217, 0.35);
+		animation: coreRingSpin 26s linear infinite;
+	}
+
+	.core-icon-wrap {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.core-icon {
+		position: absolute;
+		width: 32%;
+		height: 32%;
+		color: var(--accent);
+		opacity: 0;
+		transform: scale(0.85);
+		transition:
+			opacity 0.6s ease,
+			transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+	}
+
+	.core-icon.is-current {
+		opacity: 0.9;
+		transform: scale(1);
+	}
+
+	@keyframes coreGlowPulse {
+		0%,
+		100% {
+			opacity: 0.55;
+			transform: scale(0.94);
+		}
+		50% {
+			opacity: 0.9;
+			transform: scale(1.04);
+		}
+	}
+
+	@keyframes coreRingSpin {
+		from {
+			transform: rotate(0deg);
+		}
+		to {
+			transform: rotate(360deg);
+		}
 	}
 
 	.arc-svg {
@@ -320,6 +457,11 @@ const arcPath = (() => {
 		stroke-linecap: round;
 		stroke-linejoin: round;
 		vector-effect: non-scaling-stroke;
+	}
+
+	.arc-pulse {
+		fill: var(--accent);
+		opacity: 0.8;
 	}
 
 	/* plain HTML dots, not SVG — an SVG circle inside a non-square
@@ -341,19 +483,24 @@ const arcPath = (() => {
 	}
 
 	.node.is-current {
-		background: var(--accent);
-		border-color: var(--accent);
+		background: #a78bfa;
+		border-color: #a78bfa;
+		box-shadow:
+			0 0 0 5px rgba(109, 40, 217, 0.22),
+			0 0 14px 2px rgba(167, 139, 250, 0.55);
 		transform: translate(-50%, -50%) scale(1.6);
 	}
 
 	.stage-card {
 		position: absolute;
 		transform: translateY(-50%);
-		width: clamp(150px, 15vw, 190px);
+		width: clamp(158px, 14vw, 205px);
 		display: flex;
 		flex-direction: column;
 		gap: 0.3rem;
-		background: var(--card-bg);
+		background: rgba(13, 16, 24, 0.55);
+		backdrop-filter: blur(14px);
+		-webkit-backdrop-filter: blur(14px);
 		border: 1px solid var(--border-soft);
 		border-radius: 12px;
 		/* left edge angles inward to a point at mid-height, like a flag
@@ -367,6 +514,7 @@ const arcPath = (() => {
 		transition:
 			border-color 0.3s ease,
 			background-color 0.3s ease,
+			box-shadow 0.3s ease,
 			transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 		box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
 	}
@@ -404,57 +552,41 @@ const arcPath = (() => {
 
 	.stage-card.is-current {
 		border-color: var(--accent);
-		background: rgba(109, 40, 217, 0.14);
+		background: rgba(109, 40, 217, 0.18);
+		box-shadow:
+			0 0 0 1px rgba(109, 40, 217, 0.35),
+			0 18px 40px rgba(109, 40, 217, 0.22);
 		transform: translateY(-50%) scale(1.045);
+	}
+
+	.stage-card:hover:not(.is-current) {
+		border-color: rgba(109, 40, 217, 0.3);
+		transform: translateY(-50%) scale(1.015);
 	}
 
 	/* ---------- responsive ---------- */
 	@media (max-width: 1080px) {
 		.hero-inner {
-			flex-direction: column;
-			align-items: flex-start;
+			grid-template-columns: 1fr;
 		}
 
 		.hero-content {
-			flex-basis: auto;
 			max-width: 560px;
 		}
 
 		.hero-visual {
-			position: relative;
-			left: auto;
-			top: auto;
-			transform: none;
-			width: 100%;
 			max-width: 640px;
-			height: clamp(460px, 80vw, 600px);
-			margin-top: 1.5rem;
-		}
-
-		.hero-visual.reveal {
-			transform: translateY(18px);
-		}
-
-		.hero.is-visible .hero-visual.reveal {
-			transform: translateY(0);
+			margin: 1.5rem auto 0;
 		}
 	}
 
 	@media (max-width: 680px) {
-		.hero-inner {
-			padding-top: 104px;
-		}
-
 		.headline .line {
 			font-size: clamp(1.85rem, 8vw, 2.3rem);
 		}
 
 		.hero-circle {
 			display: none;
-		}
-
-		.hero-visual {
-			height: clamp(560px, 130vw, 720px);
 		}
 
 		.stage-card {
@@ -476,8 +608,20 @@ const arcPath = (() => {
 			transition: none;
 		}
 
-		.reveal,
-		.hero-visual.reveal {
+		.reveal {
+			transition: none;
+		}
+
+		.core-glow,
+		.core-ring {
+			animation: none;
+		}
+
+		.arc-pulse {
+			opacity: 0;
+		}
+
+		.core-icon {
 			transition: none;
 		}
 	}
@@ -491,21 +635,9 @@ const arcPath = (() => {
 
 		.hero .tag-row.reveal,
 		.hero .line.reveal,
-		.hero .cta-row.reveal {
-			transform: none !important;
-		}
-
-		/* .hero-visual's transform also handles centering — no-JS fallback
-		   must resolve to that, not a blank transform, or it drifts off
-		   its vertical center. */
+		.hero .cta-row.reveal,
 		.hero .hero-visual.reveal {
-			transform: translateY(-50%) !important;
-		}
-
-		@media (max-width: 1080px) {
-			.hero .hero-visual.reveal {
-				transform: none !important;
-			}
+			transform: none !important;
 		}
 	</style>
 </noscript>
@@ -514,6 +646,7 @@ const arcPath = (() => {
 	const heroSection = document.getElementById('hero');
 	const stageCards = Array.from(document.querySelectorAll('.stage-card')) as HTMLButtonElement[];
 	const nodeEls = Array.from(document.querySelectorAll('.node')) as HTMLElement[];
+	const coreIcons = Array.from(document.querySelectorAll('.core-icon')) as HTMLElement[];
 	const pipeline = document.getElementById('pipeline');
 	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -539,6 +672,9 @@ const arcPath = (() => {
 		nodeEls.forEach((el, i) => {
 			el.classList.toggle('is-current', i === current);
 		});
+		coreIcons.forEach((el, i) => {
+			el.classList.toggle('is-current', i === current);
+		});
 	};
 
 	const scheduleNext = () => {
@@ -550,7 +686,7 @@ const arcPath = (() => {
 				render();
 				scheduleNext();
 			},
-			atEnd ? 2600 : 1500,
+			atEnd ? 2800 : 1700,
 		);
 	};
 

@@ -28,59 +28,104 @@ const questions = [
 ---
 
 <section class="problem" id="problem">
-	<div class="glow glow-a" aria-hidden="true"></div>
-	<div class="glow glow-b" aria-hidden="true"></div>
-
 	<div class="problem-inner">
-		<div class="problem-left">
-			<div class="problem-eyebrow reveal" style="--reveal-order: 0">
-				<span class="eyebrow-idx">02</span>
-				<span class="eyebrow-dot" aria-hidden="true">&bull;</span>
-				<span class="eyebrow-label">The Problem Wall</span>
+		<div class="problem-header">
+			<div class="header-heading-col">
+				<div class="problem-eyebrow reveal" style="--reveal-order: 0">
+					<span class="eyebrow-idx">02</span>
+					<span class="eyebrow-dot" aria-hidden="true">&bull;</span>
+					<span class="eyebrow-label">The Problem Wall</span>
+				</div>
+
+				<h2 class="problem-heading reveal" style="--reveal-order: 1">Things We&rsquo;re Interested In</h2>
 			</div>
 
-			<span class="problem-pill reveal" style="--reveal-order: 1">Problem</span>
+			<div class="header-context-col">
+				<p class="problem-desc reveal" style="--reveal-order: 2">
+					Not a services pitch. Before we build anything, we sit with the questions most
+					companies skip past.
+				</p>
 
-			<h2 class="problem-heading reveal" style="--reveal-order: 2">Things We&rsquo;re<br />Interested In</h2>
-
-			<p class="problem-desc reveal" style="--reveal-order: 3">
-				Not a services pitch. Before we build anything, we sit with the questions most
-				companies skip past.
-			</p>
-
-			<p class="problem-quote reveal" id="problemQuote" aria-live="polite" style="--reveal-order: 4">
-				<span class="quote-default">&ldquo;These guys understand how I think.&rdquo;</span>
-			</p>
+				<p class="problem-quote-accent reveal" style="--reveal-order: 3">
+					&ldquo;These guys understand how I think.&rdquo;
+				</p>
+			</div>
 		</div>
 
-		<div class="problem-right">
-			<ul class="card-stack">
-				{questions.map((q, i) => (
-					<li class:list={['card-item', 'reveal', i % 2 === 1 && 'is-offset']} style={`--reveal-order: ${i + 5}`}>
-						<button
-							type="button"
-							class="problem-card"
-							data-index={i}
-							data-text={q.text}
-							aria-pressed="false"
-						>
-							<span class="card-badge">{`0${i + 1}`}</span>
-							<span class="card-body">
-								<span class="card-title">{q.title}</span>
-								<span class="card-divider" aria-hidden="true"></span>
-								<span class="card-text">{q.text}</span>
-							</span>
-						</button>
-					</li>
-				))}
-			</ul>
+		<div class="problem-grid" id="problemGrid">
+			{questions.map((q, i) => (
+				<button
+					type="button"
+					class="problem-tile reveal"
+					style={`--reveal-order: ${i + 4}`}
+					data-index={i}
+					aria-pressed="false"
+				>
+					<span class="tile-index">{`0${i + 1}`}</span>
+					<span class="tile-title">{q.title}</span>
+					<span class="tile-question">{q.text}</span>
+					<span class="tile-divider" aria-hidden="true"></span>
+					<span class="tile-explore">
+						Explore
+						<span class="explore-arrow" aria-hidden="true">&rarr;</span>
+					</span>
+				</button>
+			))}
 		</div>
 	</div>
 </section>
 
 <script>
 	const section = document.getElementById('problem');
+	const grid = document.getElementById('problemGrid');
+	const tiles = Array.from(document.querySelectorAll<HTMLButtonElement>('.problem-tile'));
 	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+	let activeIndex = 0;
+	let cycleTimer: ReturnType<typeof setInterval> | null = null;
+
+	const render = () => {
+		tiles.forEach((tile, i) => {
+			const isActive = i === activeIndex;
+			tile.classList.toggle('is-active', isActive);
+			tile.setAttribute('aria-pressed', String(isActive));
+		});
+	};
+
+	const activate = (index: number) => {
+		if (index === activeIndex) return;
+		activeIndex = index;
+		render();
+	};
+
+	const stopCycle = () => {
+		if (cycleTimer) {
+			clearInterval(cycleTimer);
+			cycleTimer = null;
+		}
+	};
+
+	const startCycle = () => {
+		if (reduceMotion || cycleTimer) return;
+		cycleTimer = setInterval(() => {
+			activate((activeIndex + 1) % tiles.length);
+		}, 4200);
+	};
+
+	tiles.forEach((tile, i) => {
+		tile.addEventListener('click', () => activate(i));
+		tile.addEventListener('mouseenter', () => activate(i));
+	});
+
+	grid?.addEventListener('pointerenter', stopCycle);
+	grid?.addEventListener('pointerleave', startCycle);
+	grid?.addEventListener('focusin', stopCycle);
+	grid?.addEventListener('focusout', (event) => {
+		const next = (event as FocusEvent).relatedTarget as Node | null;
+		if (!grid.contains(next)) startCycle();
+	});
+
+	render();
 
 	if (section) {
 		if (reduceMotion || !('IntersectionObserver' in window)) {
@@ -91,6 +136,7 @@ const questions = [
 					entries.forEach((entry) => {
 						if (entry.isIntersecting) {
 							section.classList.add('is-visible');
+							startCycle();
 							observer.disconnect();
 						}
 					});
@@ -100,45 +146,6 @@ const questions = [
 			observer.observe(section);
 		}
 	}
-
-	const cards = Array.from(document.querySelectorAll<HTMLButtonElement>('.problem-card'));
-	const quoteEl = document.getElementById('problemQuote');
-	const defaultQuoteHTML = quoteEl?.innerHTML ?? '';
-
-	let activeCard: HTMLButtonElement | null = null;
-
-	const setQuote = (card: HTMLButtonElement | null) => {
-		if (!quoteEl) return;
-		if (!card) {
-			quoteEl.innerHTML = defaultQuoteHTML;
-			quoteEl.classList.remove('is-active');
-			return;
-		}
-		quoteEl.innerHTML = `<span class="quote-prompt">&gt;</span> logged: &ldquo;${card.dataset.text}&rdquo;`;
-		quoteEl.classList.add('is-active');
-	};
-
-	cards.forEach((card) => {
-		card.addEventListener('click', () => {
-			const alreadyActive = card === activeCard;
-
-			cards.forEach((c) => {
-				c.classList.remove('is-active');
-				c.setAttribute('aria-pressed', 'false');
-			});
-
-			if (alreadyActive) {
-				activeCard = null;
-				setQuote(null);
-				return;
-			}
-
-			card.classList.add('is-active');
-			card.setAttribute('aria-pressed', 'true');
-			activeCard = card;
-			setQuote(card);
-		});
-	});
 </script>
 
 <style>
@@ -148,52 +155,23 @@ const questions = [
 		--ink-faint: rgba(139, 146, 157, 0.75);
 		--border-soft: rgba(255, 255, 255, 0.1);
 		--accent: #6d28d9;
-		--accent-soft: rgba(109, 40, 217, 0.16);
+		--accent-bright: #a78bfa;
 		--bg: #0a0a0d;
-		--card-bg: #0d1018;
+		--card-bg: #101319;
 
 		position: relative;
-		overflow: hidden;
 		background: var(--bg);
 		color: var(--ink);
 		font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
 		border-top: 1px solid var(--border-soft);
 	}
 
-	.glow {
-		position: absolute;
-		border-radius: 50%;
-		filter: blur(90px);
-		pointer-events: none;
-		z-index: 0;
-	}
-
-	.glow-a {
-		top: -120px;
-		right: 8%;
-		width: 420px;
-		height: 420px;
-		background: rgba(109, 40, 217, 0.28);
-	}
-
-	.glow-b {
-		bottom: -160px;
-		right: 24%;
-		width: 340px;
-		height: 340px;
-		background: rgba(88, 28, 200, 0.18);
-	}
-
 	.problem-inner {
 		position: relative;
 		z-index: 1;
-		display: grid;
-		grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
-		gap: clamp(2.5rem, 5vw, 4rem);
-		align-items: center;
 		max-width: 1320px;
 		margin: 0 auto;
-		padding: clamp(72px, 10vw, 128px) clamp(20px, 4vw, 32px);
+		padding: clamp(56px, 8vw, 96px) clamp(20px, 4vw, 32px);
 	}
 
 	/* ---------- scroll-in reveal ---------- */
@@ -203,7 +181,7 @@ const questions = [
 		transition:
 			opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
 			transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-		transition-delay: calc(var(--reveal-order, 0) * 80ms);
+		transition-delay: calc(var(--reveal-order, 0) * 60ms);
 	}
 
 	.problem.is-visible .reveal {
@@ -211,22 +189,22 @@ const questions = [
 		transform: translateY(0);
 	}
 
-	/* the alternating card offset has to stack with the reveal's own
-	   translateY rather than replace it */
-	.card-item.is-offset.reveal {
-		transform: translateX(28px) translateY(18px);
+	/* ---------- compact header ---------- */
+	.problem-header {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		gap: clamp(1.5rem, 4vw, 3.5rem);
+		align-items: end;
+		margin-bottom: clamp(1.75rem, 3.5vw, 2.5rem);
+		padding-bottom: clamp(1.25rem, 2.5vw, 1.75rem);
+		border-bottom: 1px solid var(--border-soft);
 	}
 
-	.problem.is-visible .card-item.is-offset.reveal {
-		transform: translateX(28px) translateY(0);
-	}
-
-	/* ---------- left column ---------- */
 	.problem-eyebrow {
 		display: flex;
 		align-items: center;
 		gap: 0.5rem;
-		margin-bottom: 1.5rem;
+		margin-bottom: 0.75rem;
 	}
 
 	.eyebrow-idx,
@@ -243,210 +221,205 @@ const questions = [
 		font-size: 0.6rem;
 	}
 
-	.problem-pill {
-		display: inline-block;
-		margin-bottom: 1.25rem;
-		padding: 0.35rem 0.9rem;
-		background: var(--accent);
-		color: #ffffff;
-		border-radius: 999px;
-		font-size: 0.78rem;
-		font-weight: 600;
+	.problem-heading {
+		margin: 0;
+		font-size: clamp(1.75rem, 1.8vw + 1.3rem, 2.5rem);
+		font-weight: 700;
+		letter-spacing: -0.015em;
+		line-height: 1.08;
 	}
 
-	.problem-heading {
-		margin: 0 0 1.25rem;
-		font-size: clamp(2rem, 2vw + 1.6rem, 3rem);
-		font-weight: 700;
-		letter-spacing: -0.01em;
-		line-height: 1.1;
+	.header-context-col {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
 	}
 
 	.problem-desc {
-		margin: 0 0 1.75rem;
-		max-width: 40ch;
-		font-size: 1rem;
-		line-height: 1.6;
+		margin: 0;
+		font-size: 0.95rem;
+		line-height: 1.55;
 		color: var(--muted);
 	}
 
-	.problem-quote {
+	.problem-quote-accent {
 		margin: 0;
-		min-height: 1.3em;
+		padding-left: 0.9rem;
+		border-left: 2px solid var(--accent);
 		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-		font-size: 0.85rem;
+		font-size: 0.82rem;
+		font-style: italic;
 		color: var(--ink-faint);
-		transition: color 0.2s ease;
 	}
 
-	.problem-quote.is-active {
-		color: var(--ink);
+	/* ---------- the 3x2 grid ---------- */
+	.problem-grid {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		grid-template-rows: repeat(2, 1fr);
+		gap: clamp(1rem, 1.6vw, 1.35rem);
 	}
 
-	.quote-prompt {
-		color: var(--accent);
-		font-weight: 600;
-	}
-
-	/* ---------- right column: card stack ---------- */
-	.card-stack {
-		list-style: none;
-		margin: 0;
-		padding: 0;
+	.problem-tile {
+		position: relative;
+		isolation: isolate;
 		display: flex;
 		flex-direction: column;
-		gap: clamp(0.9rem, 1.6vw, 1.25rem);
-	}
-
-	.card-item {
-		display: block;
-	}
-
-	.problem-card {
-		position: relative;
-		width: 100%;
-		display: flex;
-		align-items: center;
-		gap: 1.1rem;
-		padding: 1rem 1.4rem 1rem 2.4rem;
+		min-height: clamp(200px, 19vw, 250px);
+		padding: clamp(1.5rem, 2vw, 2rem);
 		background: var(--card-bg);
 		border: 1px solid rgba(255, 255, 255, 0.08);
-		border-radius: 16px;
-		box-shadow: 0 16px 34px rgba(0, 0, 0, 0.28);
+		border-radius: 18px;
+		box-shadow: 0 12px 26px rgba(0, 0, 0, 0.22);
 		font: inherit;
 		text-align: left;
 		color: inherit;
 		cursor: pointer;
 		transition:
-			border-color 0.2s ease,
-			background-color 0.2s ease,
-			box-shadow 0.25s ease,
+			border-color 0.3s ease,
+			background 0.35s ease,
+			box-shadow 0.35s ease,
 			transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 	}
 
-	.problem-card:hover {
+	.problem-tile:hover:not(.is-active) {
 		border-color: rgba(255, 255, 255, 0.18);
-		box-shadow: 0 20px 40px rgba(0, 0, 0, 0.32);
-		transform: translateY(-3px);
+		background: #14171f;
 	}
 
-	.problem-card:focus-visible {
+	.problem-tile:focus-visible {
 		outline: 2px solid var(--accent);
 		outline-offset: 2px;
 	}
 
-	.problem-card.is-active {
-		border-color: var(--accent);
-		background: rgba(109, 40, 217, 0.14);
-		box-shadow: 0 16px 34px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(109, 40, 217, 0.4);
-		transform: scale(1.02);
+	/* ---------- active: sophisticated purple gradient + glow ---------- */
+	.problem-tile.is-active {
+		border-color: rgba(167, 139, 250, 0.55);
+		background: linear-gradient(150deg, rgba(139, 92, 246, 0.26), rgba(109, 40, 217, 0.1) 55%, rgba(16, 19, 25, 0.6));
+		box-shadow:
+			0 22px 46px rgba(0, 0, 0, 0.35),
+			0 0 0 1px rgba(109, 40, 217, 0.45),
+			0 0 64px -16px rgba(139, 92, 246, 0.55);
+		transform: translateY(-4px) scale(1.015);
 	}
 
-	.problem-card.is-active:hover {
-		transform: translateY(-3px) scale(1.02);
+	.tile-index {
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.9rem;
+		font-weight: 600;
+		letter-spacing: 0.04em;
+		color: rgba(167, 139, 250, 0.5);
+		margin-bottom: 0.9rem;
+		transition: color 0.3s ease;
 	}
 
-	.problem-card.is-active .card-badge {
-		background: #ffffff;
-		color: var(--accent);
+	.problem-tile.is-active .tile-index {
+		color: #e9d8fd;
 	}
 
-	.card-badge {
-		position: absolute;
-		left: -18px;
-		top: 50%;
-		transform: translateY(-50%);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 36px;
-		height: 36px;
-		flex-shrink: 0;
-		background: var(--accent);
+	.tile-title {
+		margin-bottom: 0.55rem;
+		font-weight: 700;
+		color: var(--ink);
+		font-size: clamp(1.2rem, 0.9vw + 0.95rem, 1.45rem);
+		transition: color 0.3s ease;
+	}
+
+	.problem-tile.is-active .tile-title {
 		color: #ffffff;
-		border-radius: 50%;
+	}
+
+	.tile-question {
+		flex: 1;
+		font-size: 0.92rem;
+		line-height: 1.55;
+		color: rgba(243, 243, 241, 0.58);
+		transition: color 0.3s ease;
+	}
+
+	.problem-tile.is-active .tile-question {
+		color: rgba(243, 243, 241, 0.9);
+	}
+
+	.tile-divider {
+		height: 1px;
+		margin: 1rem 0 0.85rem;
+		background: rgba(255, 255, 255, 0.12);
+		transition: background-color 0.3s ease;
+	}
+
+	.problem-tile.is-active .tile-divider {
+		background: rgba(167, 139, 250, 0.3);
+	}
+
+	.tile-explore {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
 		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 		font-size: 0.72rem;
 		font-weight: 600;
-		box-shadow: 0 6px 16px rgba(109, 40, 217, 0.45);
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		color: var(--accent-bright);
+		opacity: 0;
+		transform: translateY(4px);
+		transition:
+			opacity 0.3s ease,
+			transform 0.3s ease;
 	}
 
-	.card-body {
-		display: flex;
-		align-items: center;
-		gap: 1rem;
-		min-width: 0;
+	.problem-tile:hover .tile-explore,
+	.problem-tile.is-active .tile-explore {
+		opacity: 1;
+		transform: translateY(0);
 	}
 
-	.card-title {
-		flex: 0 0 auto;
-		max-width: 12ch;
-		font-size: 0.95rem;
-		font-weight: 700;
-		line-height: 1.3;
-		color: var(--ink);
+	.explore-arrow {
+		transition: transform 0.3s ease;
 	}
 
-	.card-divider {
-		flex-shrink: 0;
-		align-self: stretch;
-		width: 1px;
-		background: rgba(255, 255, 255, 0.16);
-	}
-
-	.card-text {
-		flex: 1;
-		font-size: 0.86rem;
-		line-height: 1.5;
-		color: rgba(243, 243, 241, 0.72);
+	.problem-tile:hover .explore-arrow {
+		transform: translateX(3px);
 	}
 
 	/* ---------- responsive ---------- */
-	@media (max-width: 900px) {
-		.problem-inner {
+	@media (max-width: 980px) {
+		.problem-header {
 			grid-template-columns: 1fr;
+			align-items: start;
+			gap: 1rem;
 		}
 
-		.problem-desc {
-			max-width: 60ch;
-		}
-
-		.card-item.is-offset {
-			transform: none;
-		}
-
-		.card-item.is-offset.reveal {
-			transform: translateY(18px);
-		}
-
-		.problem.is-visible .card-item.is-offset.reveal {
-			transform: translateY(0);
+		.problem-grid {
+			grid-template-columns: repeat(2, 1fr);
+			grid-template-rows: repeat(3, 1fr);
 		}
 	}
 
-	@media (max-width: 560px) {
-		.card-body {
-			flex-direction: column;
-			align-items: flex-start;
-			gap: 0.4rem;
+	@media (max-width: 620px) {
+		.problem-grid {
+			grid-template-columns: 1fr;
+			grid-template-rows: none;
 		}
 
-		.card-divider {
-			display: none;
-		}
-
-		.card-title {
-			max-width: none;
+		.problem-tile {
+			min-height: 0;
 		}
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.problem-card {
+		.problem-tile,
+		.tile-index,
+		.tile-title,
+		.tile-question,
+		.tile-divider,
+		.tile-explore,
+		.explore-arrow {
 			transition: none;
 		}
 
-		.reveal,
-		.card-item.is-offset.reveal {
+		.reveal {
 			transition: none;
 		}
 	}
@@ -459,14 +432,11 @@ const questions = [
 			transform: none !important;
 		}
 
-		.problem .card-item.is-offset {
-			transform: translateX(28px) !important;
-		}
-
-		@media (max-width: 900px) {
-			.problem .card-item.is-offset {
-				transform: none !important;
-			}
+		/* no JS means no click handling, so every "Explore" stays visible —
+		   readable rather than permanently hidden */
+		.problem .tile-explore {
+			opacity: 1 !important;
+			transform: none !important;
 		}
 	</style>
 </noscript>

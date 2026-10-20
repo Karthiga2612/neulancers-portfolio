@@ -1,0 +1,217 @@
+---
+const fineprint = [
+	"You don't need a specification.",
+	"You don't need a technical document.",
+	"Just tell us what isn't working.",
+];
+---
+
+<section class="final-cta" id="contact">
+	<div class="cta-glow" aria-hidden="true"></div>
+
+	<div class="cta-inner">
+		<div class="cta-eyebrow reveal" style="--reveal-order: 0">
+			<span class="eyebrow-idx">11</span>
+			<span class="eyebrow-dot" aria-hidden="true">&bull;</span>
+			<span class="eyebrow-label">Got a Strange Problem?</span>
+		</div>
+
+		<h2 class="cta-heading reveal" style="--reveal-order: 1">
+			Got a strange problem?
+			<span class="heading-dim">Good. We like those.</span>
+		</h2>
+
+		<a href="mailto:hello@neulancers.com" class="cta-btn reveal" style="--reveal-order: 2">
+			<span>Tell us what you&rsquo;re trying to solve</span>
+			<span class="cta-arrow" aria-hidden="true">&rarr;</span>
+		</a>
+
+		<div class="cta-fineprint reveal" style="--reveal-order: 3">
+			{fineprint.map((line) => (
+				<p>{line}</p>
+			))}
+		</div>
+	</div>
+</section>
+
+<style>
+	.final-cta {
+		--ink: #f3f3f1;
+		--muted: #8b929d;
+		--ink-faint: rgba(139, 146, 157, 0.75);
+		--border-soft: rgba(255, 255, 255, 0.1);
+		--accent: #6d28d9;
+		--accent-hover: #5b21b6;
+		--bg: #0a0a0d;
+
+		position: relative;
+		overflow: hidden;
+		background: var(--bg);
+		color: var(--ink);
+		font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+		border-top: 1px solid var(--border-soft);
+	}
+
+	.cta-glow {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: min(900px, 130vw);
+		aspect-ratio: 1;
+		transform: translate(-50%, -50%);
+		background: radial-gradient(circle, rgba(109, 40, 217, 0.22), transparent 68%);
+		pointer-events: none;
+	}
+
+	.cta-inner {
+		position: relative;
+		z-index: 1;
+		max-width: 780px;
+		margin: 0 auto;
+		padding: clamp(100px, 15vw, 180px) clamp(20px, 4vw, 32px);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+	}
+
+	/* ---------- scroll-in reveal ---------- */
+	.reveal {
+		opacity: 0;
+		transform: translateY(18px);
+		transition:
+			opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+			transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+		transition-delay: calc(var(--reveal-order, 0) * 110ms);
+	}
+
+	.final-cta.is-visible .reveal {
+		opacity: 1;
+		transform: translateY(0);
+	}
+
+	.cta-eyebrow {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+		margin-bottom: clamp(1.5rem, 3vw, 2rem);
+	}
+
+	.eyebrow-idx,
+	.eyebrow-label {
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.75rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--muted);
+	}
+
+	.eyebrow-dot {
+		color: var(--accent);
+		font-size: 0.6rem;
+	}
+
+	.cta-heading {
+		margin: 0 0 clamp(2.5rem, 5vw, 3.5rem);
+		font-size: clamp(2.4rem, 4vw + 1.4rem, 4.5rem);
+		font-weight: 700;
+		letter-spacing: -0.02em;
+		line-height: 1.08;
+	}
+
+	.heading-dim {
+		display: block;
+		margin-top: 0.25em;
+		color: var(--muted);
+	}
+
+	.cta-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.6em;
+		padding: 1.05rem 2rem;
+		background: var(--accent);
+		color: #ffffff;
+		border-radius: 999px;
+		text-decoration: none;
+		font-size: 1.05rem;
+		font-weight: 600;
+		white-space: nowrap;
+		transition: background-color 0.15s ease, transform 0.2s ease;
+	}
+
+	.cta-btn:hover,
+	.cta-btn:focus-visible {
+		background: var(--accent-hover);
+		transform: translateY(-2px);
+	}
+
+	.cta-arrow {
+		transition: transform 0.2s ease;
+	}
+
+	.cta-btn:hover .cta-arrow {
+		transform: translateX(3px);
+	}
+
+	.cta-fineprint {
+		margin-top: clamp(2.5rem, 5vw, 3.5rem);
+	}
+
+	.cta-fineprint p {
+		margin: 0;
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.85rem;
+		line-height: 1.9;
+		color: var(--ink-faint);
+	}
+
+	@media (max-width: 560px) {
+		.cta-btn {
+			padding: 0.95rem 1.5rem;
+			font-size: 0.95rem;
+			text-align: center;
+			white-space: normal;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.reveal,
+		.cta-btn,
+		.cta-arrow {
+			transition: none;
+		}
+	}
+</style>
+
+<noscript>
+	<style>
+		.final-cta .reveal {
+			opacity: 1 !important;
+			transform: none !important;
+		}
+	</style>
+</noscript>
+
+<script>
+	const section = document.getElementById('contact');
+	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+	if (reduceMotion || !('IntersectionObserver' in window)) {
+		section?.classList.add('is-visible');
+	} else {
+		const revealObserver = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					if (entry.isIntersecting) {
+						section?.classList.add('is-visible');
+						revealObserver.disconnect();
+					}
+				});
+			},
+			{ threshold: 0.2 },
+		);
+		if (section) revealObserver.observe(section);
+	}
+</script>

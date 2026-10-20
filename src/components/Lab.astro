@@ -44,7 +44,16 @@ const experiments = [
 		stage: 1,
 		log: "Can a business that's run on paper and phone calls for 20 years get a real nervous system without becoming unrecognizable to the people who built it?",
 	},
-];
+].map((e, idx) => ({
+	...e,
+	idx,
+	kicker: `Lab Notebook · 0${idx + 1}`,
+	// top row (0-3) sits on grid lines 1,3,5,7 of an 8-column track; bottom
+	// row (4-6) sits on 2,4,6 — each one column-line short of its top-row
+	// neighbours, which centers it exactly on the boundary between them
+	colStart: idx < 4 ? idx * 2 + 1 : (idx - 4) * 2 + 2,
+	row: idx < 4 ? 1 : 2,
+}));
 ---
 
 <section class="lab" id="lab">
@@ -71,38 +80,66 @@ const experiments = [
 			))}
 		</div>
 
+		<!-- staggered 4+3 editorial grid on an 8-column track (each card spans
+		     2 of 8, so both rows stay the same width). Every card has a fixed
+		     height and holds two stacked, absolutely-positioned faces
+		     (default / notebook) that cross-fade in place — selecting a card
+		     never changes its box, so the grid geometry never moves. -->
 		<div class="lab-grid reveal" id="labGrid" style="--reveal-order: 4">
-			{experiments.map((e, idx) => (
-				<article class="exp-card" data-stage={stages[e.stage].toLowerCase()}>
+			{experiments.map((e) => (
+				<article
+					class="exp-card"
+					data-stage={stages[e.stage].toLowerCase()}
+					style={`--col-start: ${e.colStart}; --row: ${e.row};`}
+				>
 					<button
 						type="button"
-						class="exp-trigger"
-						id={`exp-trigger-${idx}`}
+						class="exp-trigger exp-face exp-face--default"
+						id={`exp-trigger-${e.idx}`}
 						aria-expanded="false"
-						aria-controls={`exp-log-${idx}`}
+						aria-controls={`exp-notebook-${e.idx}`}
 					>
-						<h3 class="exp-name">{e.name}</h3>
-						<span class="exp-toggle" aria-hidden="true">
-							<span class="toggle-line toggle-line--h"></span>
-							<span class="toggle-line toggle-line--v"></span>
+						<span class="face-top">
+							<span class="exp-name">{e.name}</span>
+							<span class="face-icon" aria-hidden="true">&rarr;</span>
 						</span>
+
+						<span class="exp-tagline">{e.tagline}</span>
+
+						<span class="exp-meter" aria-hidden="true">
+							{stages.map((_, i) => (
+								<span class={`meter-seg${i <= e.stage ? ' is-filled' : ''}${i === e.stage ? ' is-current' : ''}`}></span>
+							))}
+						</span>
+
+						<span class="exp-stage">{stages[e.stage]}</span>
 					</button>
 
-					<p class="exp-tagline">{e.tagline}</p>
+					<div
+						class="exp-face exp-face--notebook"
+						id={`exp-notebook-${e.idx}`}
+						role="region"
+						aria-labelledby={`exp-trigger-${e.idx}`}
+					>
+						<button type="button" class="face-close" data-index={e.idx} aria-label={`Close ${e.name} notebook`}>
+							&times;
+						</button>
 
-					<div class="exp-meter" aria-hidden="true">
-						{stages.map((_, i) => (
-							<span class={`meter-seg${i <= e.stage ? ' is-filled' : ''}${i === e.stage ? ' is-current' : ''}`}></span>
-						))}
-					</div>
+						<p class="notebook-kicker">{e.kicker}</p>
+						<h4 class="notebook-title">{e.name}</h4>
+						<p class="notebook-excerpt">{e.log}</p>
 
-					<span class="exp-stage">{stages[e.stage]}</span>
-
-					<div class="exp-log" id={`exp-log-${idx}`} role="region" aria-labelledby={`exp-trigger-${idx}`}>
-						<div class="exp-log-inner">
-							<p class="log-kicker">Lab notebook</p>
-							<p class="log-text">{e.log}</p>
-						</div>
+						<button
+							type="button"
+							class="notebook-explore"
+							data-kicker={e.kicker}
+							data-name={e.name}
+							data-stage={stages[e.stage]}
+							data-log={e.log}
+						>
+							Explore experiment
+							<span aria-hidden="true">&rarr;</span>
+						</button>
 					</div>
 				</article>
 			))}
@@ -111,6 +148,17 @@ const experiments = [
 		<p class="lab-footer reveal" style="--reveal-order: 5">
 			This makes Neulancers feel like a living technology company, not an agency.
 		</p>
+	</div>
+
+	<div class="lab-modal" id="labModal" aria-hidden="true">
+		<div class="modal-backdrop" data-close="true"></div>
+		<div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+			<button type="button" class="modal-close" data-close="true" aria-label="Close experiment details">&times;</button>
+			<p class="modal-kicker" id="modalKicker">Lab Notebook</p>
+			<h3 class="modal-title" id="modalTitle">Experiment</h3>
+			<span class="modal-stage" id="modalStage">Thinking</span>
+			<p class="modal-text" id="modalText"></p>
+		</div>
 	</div>
 </section>
 
@@ -121,6 +169,7 @@ const experiments = [
 		--ink-faint: rgba(139, 146, 157, 0.75);
 		--border-soft: rgba(255, 255, 255, 0.1);
 		--accent: #6d28d9;
+		--accent-bright: #a78bfa;
 		--bg: #0a0a0d;
 		--card-bg: #0d1018;
 
@@ -134,7 +183,7 @@ const experiments = [
 	.lab-inner {
 		max-width: 1320px;
 		margin: 0 auto;
-		padding: clamp(72px, 10vw, 128px) clamp(20px, 4vw, 32px);
+		padding: clamp(64px, 9vw, 112px) clamp(20px, 4vw, 32px);
 	}
 
 	/* ---------- scroll-in reveal ---------- */
@@ -154,7 +203,7 @@ const experiments = [
 
 	.lab-head {
 		max-width: 560px;
-		margin: 0 auto clamp(40px, 5vw, 56px);
+		margin: 0 auto clamp(32px, 4vw, 44px);
 		text-align: center;
 	}
 
@@ -200,7 +249,7 @@ const experiments = [
 		flex-wrap: wrap;
 		justify-content: center;
 		gap: 0.6rem;
-		margin-bottom: clamp(2.5rem, 5vw, 3.5rem);
+		margin-bottom: clamp(1.75rem, 3.5vw, 2.5rem);
 	}
 
 	.filter-pill {
@@ -226,27 +275,33 @@ const experiments = [
 		color: #ffffff;
 	}
 
-	/* ---------- experiment grid ---------- */
+	/* ---------- experiment grid ----------
+	   an 8-column track lets each card span 2 columns while the bottom row
+	   sits one column-line short of the top row — that's what centers each
+	   bottom card exactly on the boundary between two top cards, using fr
+	   units throughout so it holds at any desktop width (no pixel offsets).
+	   every card also has a fixed height, so a row's track size is fixed
+	   too — selecting a card can never change it, which is what keeps the
+	   whole grid geometrically stable. */
 	.lab-grid {
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+		grid-template-columns: repeat(8, 1fr);
 		gap: 1.25rem;
-		/* without this, grid stretches every card in a row to match the
-		   tallest one — so opening one card's notebook entry left blank
-		   space inside all its neighbors instead of just that card growing */
-		align-items: start;
 	}
 
 	.exp-card {
-		display: flex;
-		flex-direction: column;
-		align-items: flex-start;
-		gap: 0.75rem;
+		position: relative;
+		grid-column: var(--col-start) / span 2;
+		grid-row: var(--row);
+		height: 15.5rem;
 		background: var(--card-bg);
 		border: 1px solid var(--border-soft);
 		border-radius: 16px;
-		padding: 1.5rem;
-		transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease;
+		overflow: hidden;
+		transition:
+			border-color 0.28s ease-out,
+			background-color 0.28s ease-out,
+			box-shadow 0.28s ease-out;
 	}
 
 	.exp-card:hover {
@@ -257,71 +312,92 @@ const experiments = [
 		display: none;
 	}
 
-	.exp-trigger {
+	/* selected: slightly brighter surface, thin purple border, restrained
+	   glow — never a size change */
+	.exp-card.is-open {
+		border-color: var(--accent);
+		background: rgba(109, 40, 217, 0.09);
+		box-shadow:
+			0 0 0 1px rgba(109, 40, 217, 0.3),
+			0 8px 22px rgba(109, 40, 217, 0.14);
+	}
+
+	/* ---------- two stacked faces, cross-fading in place ----------
+	   both faces are absolutely positioned to fill the fixed-height card,
+	   so swapping which one is visible never touches the card's box model. */
+	.exp-face {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 0.75rem;
+		padding: 1.5rem;
+		text-align: left;
+		transition:
+			opacity 0.26s ease-out,
+			transform 0.26s ease-out;
+	}
+
+	.exp-face--default {
+		background: none;
+		border: none;
+		width: 100%;
+		cursor: pointer;
+		font-family: inherit;
+		color: inherit;
+		opacity: 1;
+		transform: translateY(0);
+	}
+
+	.exp-card.is-open .exp-face--default {
+		opacity: 0;
+		transform: translateY(-6px);
+		pointer-events: none;
+	}
+
+	.exp-face--notebook {
+		opacity: 0;
+		transform: translateY(6px);
+		pointer-events: none;
+	}
+
+	.exp-card.is-open .exp-face--notebook {
+		opacity: 1;
+		transform: translateY(0);
+		pointer-events: auto;
+		transition-delay: 60ms;
+	}
+
+	.face-top {
 		display: flex;
 		align-items: flex-start;
 		justify-content: space-between;
 		gap: 0.75rem;
 		width: 100%;
-		padding: 0;
-		background: none;
-		border: none;
-		cursor: pointer;
-		text-align: left;
-		color: inherit;
-		font-family: inherit;
 	}
 
 	.exp-name {
-		margin: 0;
 		font-size: 1.1rem;
 		font-weight: 700;
 		letter-spacing: -0.005em;
+		color: var(--ink);
 	}
 
-	/* same plus → cross toggle used in the Method section, reused here
-	   for a consistent "this expands" affordance across the site */
-	.exp-toggle {
-		position: relative;
+	.face-icon {
 		flex-shrink: 0;
-		width: 15px;
-		height: 15px;
-		margin-top: 0.2rem;
-		transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+		margin-top: 0.1rem;
+		font-size: 0.95rem;
+		color: var(--ink-faint);
+		transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), color 0.25s ease;
 	}
 
-	.toggle-line {
-		position: absolute;
-		background: var(--ink-faint);
-		transition: background-color 0.2s ease;
-	}
-
-	.toggle-line--h {
-		top: 50%;
-		left: 0;
-		width: 100%;
-		height: 1.5px;
-		transform: translateY(-50%);
-	}
-
-	.toggle-line--v {
-		left: 50%;
-		top: 0;
-		width: 1.5px;
-		height: 100%;
-		transform: translateX(-50%);
-	}
-
-	.exp-trigger[aria-expanded='true'] .exp-toggle {
-		transform: rotate(45deg);
-	}
-
-	.exp-trigger[aria-expanded='true'] .toggle-line {
-		background: var(--accent);
+	.exp-face--default:hover .face-icon {
+		color: var(--accent-bright);
+		transform: translateX(3px);
 	}
 
 	.exp-tagline {
-		margin: 0;
 		flex: 1;
 		font-size: 0.88rem;
 		line-height: 1.55;
@@ -333,7 +409,6 @@ const experiments = [
 		display: flex;
 		gap: 4px;
 		width: 100%;
-		margin-top: 0.25rem;
 	}
 
 	.meter-seg {
@@ -369,56 +444,240 @@ const experiments = [
 		color: var(--ink-faint);
 	}
 
-	/* ---------- lab notebook entry (accordion) ---------- */
-	.exp-log {
-		display: grid;
-		grid-template-rows: 0fr;
-		width: 100%;
-		transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+	/* ---------- notebook face ---------- */
+	.face-close {
+		position: absolute;
+		top: 0.9rem;
+		right: 0.9rem;
+		width: 22px;
+		height: 22px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0;
+		background: none;
+		border: 1px solid var(--border-soft);
+		border-radius: 50%;
+		color: var(--ink-faint);
+		font-size: 0.85rem;
+		line-height: 1;
+		cursor: pointer;
+		transition: color 0.2s ease, border-color 0.2s ease;
 	}
 
-	.exp-card.is-open .exp-log {
-		grid-template-rows: 1fr;
+	.face-close:hover {
+		color: var(--ink);
+		border-color: rgba(255, 255, 255, 0.3);
 	}
 
-	.exp-log-inner {
+	.notebook-kicker {
+		margin: 0;
+		padding-right: 1.75rem;
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.64rem;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--accent-bright);
+	}
+
+	.notebook-title {
+		margin: 0;
+		font-size: 1rem;
+		font-weight: 700;
+		color: #ffffff;
+	}
+
+	.notebook-excerpt {
+		flex: 1;
+		margin: 0;
+		font-size: 0.82rem;
+		line-height: 1.5;
+		color: var(--muted);
+		display: -webkit-box;
+		-webkit-line-clamp: 4;
+		-webkit-box-orient: vertical;
 		overflow: hidden;
 	}
 
-	.log-kicker {
-		margin: 0.9rem 0 0.4rem;
+	.notebook-explore {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		padding: 0;
+		background: none;
+		border: none;
 		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-		font-size: 0.62rem;
-		letter-spacing: 0.06em;
+		font-size: 0.68rem;
+		font-weight: 600;
+		letter-spacing: 0.05em;
 		text-transform: uppercase;
-		color: var(--accent);
+		color: var(--accent-bright);
+		cursor: pointer;
+		transition: color 0.2s ease;
 	}
 
-	.log-text {
-		margin: 0;
-		padding-top: 0.6rem;
-		border-top: 1px solid var(--border-soft);
-		font-size: 0.86rem;
-		line-height: 1.6;
-		color: var(--muted);
+	.notebook-explore:hover {
+		color: #ffffff;
 	}
 
 	/* ---------- footer ---------- */
 	.lab-footer {
-		margin: clamp(3rem, 6vw, 4rem) 0 0;
+		margin: clamp(1.5rem, 3vw, 2.25rem) 0 0;
 		text-align: center;
 		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 		font-size: 0.85rem;
 		color: var(--ink-faint);
 	}
 
+	/* ---------- explore-experiment modal ---------- */
+	.lab-modal {
+		position: fixed;
+		inset: 0;
+		z-index: 200;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 1.5rem;
+		opacity: 0;
+		visibility: hidden;
+		transition: opacity 0.25s ease-out, visibility 0s linear 0.25s;
+	}
+
+	.lab-modal.is-open {
+		opacity: 1;
+		visibility: visible;
+		transition: opacity 0.25s ease-out;
+	}
+
+	.modal-backdrop {
+		position: absolute;
+		inset: 0;
+		background: rgba(6, 6, 9, 0.72);
+		backdrop-filter: blur(6px);
+		-webkit-backdrop-filter: blur(6px);
+	}
+
+	.modal-panel {
+		position: relative;
+		width: 100%;
+		max-width: 520px;
+		max-height: 80vh;
+		overflow-y: auto;
+		background: var(--card-bg);
+		border: 1px solid rgba(109, 40, 217, 0.35);
+		border-radius: 20px;
+		padding: clamp(1.75rem, 4vw, 2.5rem);
+		box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5);
+		transform: translateY(10px) scale(0.98);
+		opacity: 0;
+		transition: transform 0.28s ease-out, opacity 0.28s ease-out;
+	}
+
+	.lab-modal.is-open .modal-panel {
+		transform: translateY(0) scale(1);
+		opacity: 1;
+	}
+
+	.modal-close {
+		position: absolute;
+		top: 1.1rem;
+		right: 1.1rem;
+		width: 30px;
+		height: 30px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: none;
+		border: 1px solid var(--border-soft);
+		border-radius: 50%;
+		color: var(--ink-faint);
+		font-size: 1rem;
+		line-height: 1;
+		cursor: pointer;
+		transition: color 0.2s ease, border-color 0.2s ease;
+	}
+
+	.modal-close:hover {
+		color: var(--ink);
+		border-color: rgba(255, 255, 255, 0.3);
+	}
+
+	.modal-kicker {
+		margin: 0 0 0.6rem;
+		padding-right: 2rem;
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.7rem;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--accent-bright);
+	}
+
+	.modal-title {
+		margin: 0 0 0.75rem;
+		font-size: clamp(1.4rem, 1.5vw + 1.1rem, 1.75rem);
+		font-weight: 700;
+		letter-spacing: -0.01em;
+		color: #ffffff;
+	}
+
+	.modal-stage {
+		display: inline-block;
+		margin-bottom: 1.25rem;
+		padding: 0.3rem 0.7rem;
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.68rem;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		color: var(--ink-faint);
+		border: 1px solid var(--border-soft);
+		border-radius: 999px;
+	}
+
+	.modal-text {
+		margin: 0;
+		font-size: 0.98rem;
+		line-height: 1.7;
+		color: var(--muted);
+	}
+
+	/* ---------- responsive ----------
+	   the staggered composition is a desktop-only flourish — below 980px
+	   there isn't room for it to read as intentional rather than cramped,
+	   so it collapses to a plain 2-column track. With 7 cards and normal
+	   row-by-row auto-placement that yields 2+2+2+1, a balanced fallback
+	   rather than a forced, squeezed staggered layout. */
+	@media (max-width: 980px) {
+		.lab-grid {
+			grid-template-columns: repeat(2, 1fr);
+		}
+
+		.exp-card {
+			grid-column: auto;
+			grid-row: auto;
+		}
+	}
+
+	@media (max-width: 640px) {
+		.lab-grid {
+			grid-template-columns: 1fr;
+		}
+
+		.exp-card {
+			height: 14.5rem;
+		}
+	}
+
 	@media (prefers-reduced-motion: reduce) {
 		.reveal,
 		.filter-pill,
 		.exp-card,
-		.exp-toggle,
-		.toggle-line,
-		.exp-log {
+		.exp-face,
+		.face-icon,
+		.face-close,
+		.notebook-explore,
+		.lab-modal,
+		.modal-panel,
+		.modal-close {
 			transition: none;
 		}
 
@@ -439,13 +698,7 @@ const experiments = [
 			display: none !important;
 		}
 
-		/* no click handler without JS — show every log entry open rather
-		   than leaving them permanently collapsed and unreachable */
-		.exp-log {
-			grid-template-rows: 1fr !important;
-		}
-
-		.exp-toggle {
+		.lab-modal {
 			display: none !important;
 		}
 	</style>
@@ -475,25 +728,38 @@ const experiments = [
 	const filterPills = Array.from(document.querySelectorAll('.filter-pill')) as HTMLButtonElement[];
 	const cards = Array.from(document.querySelectorAll('.exp-card')) as HTMLElement[];
 	const triggers = Array.from(document.querySelectorAll('.exp-trigger')) as HTMLButtonElement[];
+	const closeButtons = Array.from(document.querySelectorAll('.face-close')) as HTMLButtonElement[];
+	const exploreButtons = Array.from(document.querySelectorAll('.notebook-explore')) as HTMLButtonElement[];
 
-	triggers.forEach((trigger) => {
+	let openIndex: number | null = null;
+
+	const applyOpenState = () => {
+		cards.forEach((card, i) => {
+			const isOpen = i === openIndex;
+			card.classList.toggle('is-open', isOpen);
+			triggers[i]?.setAttribute('aria-expanded', String(isOpen));
+		});
+	};
+
+	const setOpen = (index: number | null) => {
+		openIndex = index;
+		applyOpenState();
+	};
+
+	triggers.forEach((trigger, i) => {
 		trigger.addEventListener('click', () => {
-			const card = trigger.closest('.exp-card');
-			const isOpen = trigger.getAttribute('aria-expanded') === 'true';
-
-			// only one notebook entry open at a time — close whichever
-			// other card was open before opening this one
-			triggers.forEach((t) => {
-				t.setAttribute('aria-expanded', 'false');
-				t.closest('.exp-card')?.classList.remove('is-open');
-			});
-
-			if (!isOpen) {
-				trigger.setAttribute('aria-expanded', 'true');
-				card?.classList.add('is-open');
-			}
+			setOpen(openIndex === i ? null : i);
 		});
 	});
+
+	closeButtons.forEach((btn, i) => {
+		btn.addEventListener('click', (event) => {
+			event.stopPropagation();
+			if (openIndex === i) setOpen(null);
+		});
+	});
+
+	applyOpenState();
 
 	filterPills.forEach((pill) => {
 		pill.addEventListener('click', () => {
@@ -505,6 +771,54 @@ const experiments = [
 				const matches = filter === 'all' || card.dataset.stage === filter;
 				card.classList.toggle('is-hidden', !matches);
 			});
+
+			// if filtering hides the open card, just close it rather than
+			// guessing which other card should take its place
+			if (openIndex !== null && cards[openIndex]?.classList.contains('is-hidden')) {
+				setOpen(null);
+			}
 		});
+	});
+
+	// ---------- explore-experiment modal ----------
+	const modal = document.getElementById('labModal');
+	const modalKicker = document.getElementById('modalKicker');
+	const modalTitle = document.getElementById('modalTitle');
+	const modalStage = document.getElementById('modalStage');
+	const modalText = document.getElementById('modalText');
+	let lastFocused: HTMLElement | null = null;
+
+	const openModal = (trigger: HTMLButtonElement) => {
+		lastFocused = trigger;
+		if (modalKicker) modalKicker.textContent = trigger.dataset.kicker ?? '';
+		if (modalTitle) modalTitle.textContent = trigger.dataset.name ?? '';
+		if (modalStage) modalStage.textContent = trigger.dataset.stage ?? '';
+		if (modalText) modalText.textContent = trigger.dataset.log ?? '';
+		modal?.classList.add('is-open');
+		modal?.setAttribute('aria-hidden', 'false');
+		document.body.style.overflow = 'hidden';
+		(modal?.querySelector('.modal-close') as HTMLElement | null)?.focus();
+	};
+
+	const closeModal = () => {
+		modal?.classList.remove('is-open');
+		modal?.setAttribute('aria-hidden', 'true');
+		document.body.style.overflow = '';
+		lastFocused?.focus();
+	};
+
+	exploreButtons.forEach((btn) => {
+		btn.addEventListener('click', (event) => {
+			event.stopPropagation();
+			openModal(btn);
+		});
+	});
+
+	modal?.querySelectorAll('[data-close]').forEach((el) => {
+		el.addEventListener('click', closeModal);
+	});
+
+	document.addEventListener('keydown', (event) => {
+		if (event.key === 'Escape' && modal?.classList.contains('is-open')) closeModal();
 	});
 </script>

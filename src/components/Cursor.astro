@@ -1,0 +1,136 @@
+---
+---
+
+<div class="cursor-dot" id="cursorDot" aria-hidden="true"></div>
+<div class="cursor-ring" id="cursorRing" aria-hidden="true"></div>
+
+<style is:global>
+	/* replaces the native pointer everywhere once JS confirms a fine
+	   pointer + hover-capable device — touch devices never get this class,
+	   so they keep their normal (invisible) touch behaviour untouched */
+	html.has-custom-cursor,
+	html.has-custom-cursor * {
+		cursor: none !important;
+	}
+
+	/* ...except over links, buttons and CTAs — the native pointer comes back
+	   there instead of the ring, so clickable things keep the familiar
+	   "you can click this" affordance. Descendants (icons, text spans) are
+	   included too — without them, whichever child element the pointer is
+	   actually over would still resolve to its own inherited `none` from
+	   the blanket rule above, and only the uncovered sliver of the button
+	   (e.g. its bottom padding) would ever show the pointer. */
+	html.has-custom-cursor a,
+	html.has-custom-cursor a *,
+	html.has-custom-cursor button,
+	html.has-custom-cursor button *,
+	html.has-custom-cursor [role='button'],
+	html.has-custom-cursor [role='button'] * {
+		cursor: pointer !important;
+	}
+</style>
+
+<style>
+	.cursor-dot,
+	.cursor-ring {
+		position: fixed;
+		top: 0;
+		left: 0;
+		border-radius: 50%;
+		pointer-events: none;
+		z-index: 9999;
+		opacity: 0;
+		transition:
+			opacity 0.25s ease,
+			width 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+			height 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+			background-color 0.25s ease,
+			border-color 0.25s ease;
+	}
+
+	.cursor-dot {
+		width: 6px;
+		height: 6px;
+		background: #a78bfa;
+		transform: translate(-50%, -50%);
+	}
+
+	.cursor-ring {
+		width: 32px;
+		height: 32px;
+		border: 1px solid rgba(167, 139, 250, 0.5);
+		transform: translate(-50%, -50%);
+	}
+
+	:global(html.has-custom-cursor) .cursor-dot,
+	:global(html.has-custom-cursor) .cursor-ring {
+		opacity: 1;
+	}
+
+	/* over links/buttons/CTAs the native pointer takes over completely —
+	   both the dot and the trailing ring step out of the way */
+	:global(html.cursor-hovering) .cursor-ring,
+	:global(html.cursor-hovering) .cursor-dot {
+		opacity: 0;
+	}
+</style>
+
+<script>
+	const isFinePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+	if (isFinePointer && !reduceMotion) {
+		const root = document.documentElement;
+		const dot = document.getElementById('cursorDot');
+		const ring = document.getElementById('cursorRing');
+
+		let mouseX = 0;
+		let mouseY = 0;
+		let ringX = 0;
+		let ringY = 0;
+		let started = false;
+
+		const hoverSelector = 'a, button, [role="button"]';
+
+		// the ring eases toward the dot's real position every frame, which is
+		// what gives it a soft trailing feel instead of snapping 1:1
+		const tick = () => {
+			ringX += (mouseX - ringX) * 0.18;
+			ringY += (mouseY - ringY) * 0.18;
+			if (ring) ring.style.transform = `translate(${ringX}px, ${ringY}px) translate(-50%, -50%)`;
+			requestAnimationFrame(tick);
+		};
+
+		window.addEventListener('mousemove', (event) => {
+			mouseX = event.clientX;
+			mouseY = event.clientY;
+			if (dot) dot.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
+
+			// don't reveal the cursor (or start the trailing loop) until the
+			// first real position is known — avoids a flash at (0,0) on load
+			if (!started) {
+				started = true;
+				ringX = mouseX;
+				ringY = mouseY;
+				root.classList.add('has-custom-cursor');
+				requestAnimationFrame(tick);
+			}
+		});
+
+		document.addEventListener('mouseover', (event) => {
+			if ((event.target as HTMLElement)?.closest?.(hoverSelector)) {
+				root.classList.add('cursor-hovering');
+			}
+		});
+		document.addEventListener('mouseout', (event) => {
+			if ((event.target as HTMLElement)?.closest?.(hoverSelector)) {
+				root.classList.remove('cursor-hovering');
+			}
+		});
+
+		document.addEventListener('mouseleave', () => root.classList.remove('has-custom-cursor'));
+		document.addEventListener('mouseenter', () => {
+			if (started) root.classList.add('has-custom-cursor');
+		});
+	}
+</script>

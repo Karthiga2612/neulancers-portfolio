@@ -5,6 +5,13 @@ import ProblemWall from '../components/ProblemWall.astro';
 import Work from '../components/Work.astro';
 import Method from '../components/Method.astro';
 import Lab from '../components/Lab.astro';
+import AI from '../components/AI.astro';
+import Stack from '../components/Stack.astro';
+import People from '../components/People.astro';
+import Philosophy from '../components/Philosophy.astro';
+import Journal from '../components/Journal.astro';
+import Narrative from '../components/Narrative.astro';
+import FinalCTA from '../components/FinalCTA.astro';
 import Layout from '../layouts/Layout.astro';
 ---
 
@@ -15,28 +22,11 @@ import Layout from '../layouts/Layout.astro';
 	<Work />
 	<Method />
 	<Lab />
-	<main class="preview-stage">
-		<p class="preview-note">Remaining page sections (Journal, Studio) are not built yet.</p>
-	</main>
+	<AI />
+	<Stack />
+	<People />
+	<Philosophy />
+	<Journal />
+	<Narrative />
+	<FinalCTA />
 </Layout>
-
-<style>
-	.preview-stage {
-		min-height: 60vh;
-		display: flex;
-		align-items: flex-start;
-		justify-content: center;
-		padding-top: 20vh;
-		background: #0b0b0c;
-	}
-
-	.preview-note {
-		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-		font-size: 0.8rem;
-		letter-spacing: 0.05em;
-		color: rgba(245, 244, 240, 0.4);
-		text-align: center;
-		max-width: 32ch;
-		padding: 0 1.5rem;
-	}
-</style>

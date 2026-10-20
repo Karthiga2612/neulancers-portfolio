@@ -1,0 +1,268 @@
+---
+const notes = [
+	{ tag: 'AI Agents', title: 'We tried building an AI agent that actually does the work.' },
+	{ tag: 'Automation', title: 'What happened when we connected WhatsApp to an ERP?' },
+	{ tag: 'Local AI', title: "Why we're experimenting with local AI." },
+	{ tag: 'Case study', title: 'We rebuilt a business workflow from zero.' },
+	{ tag: 'Finveda', title: 'What we learned building Finveda.' },
+	{ tag: 'Philosophy', title: 'Can traditional businesses become software companies?' },
+];
+---
+
+<section class="journal" id="journal">
+	<div class="journal-inner">
+		<div class="journal-head">
+			<div class="journal-eyebrow reveal" style="--reveal-order: 0">
+				<span class="eyebrow-idx">10</span>
+				<span class="eyebrow-dot" aria-hidden="true">&bull;</span>
+				<span class="eyebrow-label">Journal / Experiments</span>
+			</div>
+
+			<h2 class="journal-heading reveal" style="--reveal-order: 1">Lab Notes</h2>
+			<p class="journal-not reveal" style="--reveal-order: 2">Not a blog.</p>
+		</div>
+
+		<div class="journal-grid">
+			{notes.map((note, i) => (
+				<article class="note-card reveal" style={`--reveal-order: ${i + 3}`}>
+					<div class="note-top">
+						<span class="note-idx">{`0${i + 1}`}</span>
+						<span class="note-tag">{note.tag}</span>
+					</div>
+					<p class="note-title">{note.title}</p>
+					<span class="note-hint">
+						Lab notebook
+						<span class="hint-arrow" aria-hidden="true">&rarr;</span>
+					</span>
+				</article>
+			))}
+		</div>
+
+		<p class="journal-footer reveal" style={`--reveal-order: ${notes.length + 3}`}>
+			Content marketing and brand building, at the same time.
+		</p>
+	</div>
+</section>
+
+<style>
+	.journal {
+		--ink: #f3f3f1;
+		--muted: #8b929d;
+		--ink-faint: rgba(139, 146, 157, 0.75);
+		--border-soft: rgba(255, 255, 255, 0.1);
+		--accent: #6d28d9;
+		--bg: #0a0a0d;
+		--card-bg: #0d1018;
+
+		position: relative;
+		background: var(--bg);
+		color: var(--ink);
+		font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+		border-top: 1px solid var(--border-soft);
+	}
+
+	.journal-inner {
+		max-width: 1320px;
+		margin: 0 auto;
+		padding: clamp(72px, 10vw, 128px) clamp(20px, 4vw, 32px);
+	}
+
+	/* ---------- scroll-in reveal ---------- */
+	.reveal {
+		opacity: 0;
+		transform: translateY(18px);
+		transition:
+			opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+			transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+		transition-delay: calc(var(--reveal-order, 0) * 90ms);
+	}
+
+	.journal.is-visible .reveal {
+		opacity: 1;
+		transform: translateY(0);
+	}
+
+	.journal-head {
+		max-width: 640px;
+		margin: 0 auto clamp(48px, 6vw, 72px);
+		text-align: center;
+	}
+
+	.journal-eyebrow {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+		margin-bottom: 1.1rem;
+	}
+
+	.eyebrow-idx,
+	.eyebrow-label {
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.75rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--muted);
+	}
+
+	.eyebrow-dot {
+		color: var(--accent);
+		font-size: 0.6rem;
+	}
+
+	.journal-heading {
+		margin: 0 0 0.6rem;
+		font-size: clamp(2rem, 1.6vw + 1.7rem, 2.75rem);
+		font-weight: 700;
+		letter-spacing: -0.01em;
+	}
+
+	.journal-not {
+		margin: 0;
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.82rem;
+		color: var(--ink-faint);
+	}
+
+	/* ---------- notes grid ---------- */
+	.journal-grid {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: clamp(1rem, 2vw, 1.5rem);
+		margin-bottom: clamp(48px, 7vw, 72px);
+	}
+
+	.note-card {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 1.1rem;
+		min-height: 200px;
+		padding: clamp(1.5rem, 2vw, 2rem);
+		background: var(--card-bg);
+		border: 1px solid var(--border-soft);
+		border-radius: 16px;
+		transition: border-color 0.3s ease, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+	}
+
+	.note-card:hover {
+		border-color: rgba(255, 255, 255, 0.22);
+		transform: translateY(-4px);
+	}
+
+	.note-top {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		width: 100%;
+	}
+
+	.note-idx {
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.75rem;
+		color: rgba(167, 139, 250, 0.5);
+	}
+
+	.note-tag {
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.68rem;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		color: var(--accent);
+		padding: 0.25rem 0.6rem;
+		border: 1px solid rgba(109, 40, 217, 0.35);
+		border-radius: 999px;
+	}
+
+	.note-title {
+		flex: 1;
+		margin: 0;
+		font-size: 1.08rem;
+		font-weight: 600;
+		line-height: 1.45;
+		letter-spacing: -0.005em;
+	}
+
+	.note-hint {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.7rem;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		color: var(--ink-faint);
+	}
+
+	.hint-arrow {
+		transition: transform 0.2s ease;
+	}
+
+	.note-card:hover .hint-arrow {
+		transform: translateX(3px);
+	}
+
+	.journal-footer {
+		margin: 0;
+		text-align: center;
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.85rem;
+		color: var(--ink-faint);
+	}
+
+	/* ---------- responsive ---------- */
+	@media (max-width: 900px) {
+		.journal-grid {
+			grid-template-columns: repeat(2, 1fr);
+		}
+	}
+
+	@media (max-width: 560px) {
+		.journal-grid {
+			grid-template-columns: 1fr;
+		}
+
+		.note-card {
+			min-height: 0;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.reveal,
+		.note-card,
+		.hint-arrow {
+			transition: none;
+		}
+	}
+</style>
+
+<noscript>
+	<style>
+		.journal .reveal {
+			opacity: 1 !important;
+			transform: none !important;
+		}
+	</style>
+</noscript>
+
+<script>
+	const section = document.getElementById('journal');
+	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+	if (reduceMotion || !('IntersectionObserver' in window)) {
+		section?.classList.add('is-visible');
+	} else {
+		const revealObserver = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					if (entry.isIntersecting) {
+						section?.classList.add('is-visible');
+						revealObserver.disconnect();
+					}
+				});
+			},
+			{ threshold: 0.15 },
+		);
+		if (section) revealObserver.observe(section);
+	}
+</script>

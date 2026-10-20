@@ -1,0 +1,162 @@
+---
+const lines = [
+	{ text: 'There are already thousands of tools.', tone: 'muted' },
+	{ text: "We don't need another one.", tone: 'muted' },
+	{ text: 'Unless it solves something differently.', tone: 'accent' },
+	{ text: "That's where we come in.", tone: 'strong' },
+];
+---
+
+<section class="philosophy" id="philosophy">
+	<div class="philosophy-inner">
+		<div class="philosophy-eyebrow reveal" style="--reveal-order: 0">
+			<span class="eyebrow-idx">09</span>
+			<span class="eyebrow-dot" aria-hidden="true">&bull;</span>
+			<span class="eyebrow-label">The Internet Is Full of Software</span>
+		</div>
+
+		<div class="philosophy-lines">
+			{lines.map((line, i) => (
+				<p class={`philosophy-line tone-${line.tone} reveal`} style={`--reveal-order: ${i + 1}`}>{line.text}</p>
+			))}
+		</div>
+
+		<p class="philosophy-footer reveal" style={`--reveal-order: ${lines.length + 1}`}>
+			This separates Neulancers from the &ldquo;we build websites/apps&rdquo; crowd.
+		</p>
+	</div>
+</section>
+
+<style>
+	.philosophy {
+		--ink: #f3f3f1;
+		--muted: #8b929d;
+		--ink-faint: rgba(139, 146, 157, 0.75);
+		--border-soft: rgba(255, 255, 255, 0.1);
+		--accent: #a78bfa;
+		--bg: #0a0a0d;
+
+		position: relative;
+		background: var(--bg);
+		color: var(--ink);
+		font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+		border-top: 1px solid var(--border-soft);
+	}
+
+	.philosophy-inner {
+		max-width: 900px;
+		margin: 0 auto;
+		padding: clamp(96px, 14vw, 168px) clamp(20px, 4vw, 32px);
+		text-align: center;
+	}
+
+	/* ---------- scroll-in reveal ---------- */
+	.reveal {
+		opacity: 0;
+		transform: translateY(18px);
+		transition:
+			opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+			transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+		transition-delay: calc(var(--reveal-order, 0) * 180ms);
+	}
+
+	.philosophy.is-visible .reveal {
+		opacity: 1;
+		transform: translateY(0);
+	}
+
+	.philosophy-eyebrow {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+		margin-bottom: clamp(2.5rem, 6vw, 4rem);
+	}
+
+	.eyebrow-idx,
+	.eyebrow-label {
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.75rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--muted);
+	}
+
+	.eyebrow-dot {
+		color: var(--accent);
+		font-size: 0.6rem;
+	}
+
+	/* ---------- the four-line statement ---------- */
+	.philosophy-lines {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4em;
+		margin-bottom: clamp(2.5rem, 6vw, 4rem);
+	}
+
+	.philosophy-line {
+		margin: 0;
+		font-size: clamp(1.5rem, 2.6vw + 1.1rem, 2.9rem);
+		font-weight: 700;
+		letter-spacing: -0.015em;
+		line-height: 1.2;
+	}
+
+	.tone-muted {
+		color: var(--ink-faint);
+		font-weight: 500;
+	}
+
+	.tone-accent {
+		color: var(--accent);
+	}
+
+	.tone-strong {
+		color: var(--ink);
+	}
+
+	.philosophy-footer {
+		margin: 0;
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.85rem;
+		color: var(--ink-faint);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.reveal {
+			transition: none;
+		}
+	}
+</style>
+
+<noscript>
+	<style>
+		.philosophy .reveal {
+			opacity: 1 !important;
+			transform: none !important;
+		}
+	</style>
+</noscript>
+
+<script>
+	const section = document.getElementById('philosophy');
+	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+	if (reduceMotion || !('IntersectionObserver' in window)) {
+		section?.classList.add('is-visible');
+	} else {
+		const revealObserver = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					if (entry.isIntersecting) {
+						section?.classList.add('is-visible');
+						revealObserver.disconnect();
+					}
+				});
+			},
+			{ threshold: 0.2 },
+		);
+		if (section) revealObserver.observe(section);
+	}
+</script>
