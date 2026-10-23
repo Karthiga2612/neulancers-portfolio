@@ -146,7 +146,7 @@ const experiments = [
 		</div>
 
 		<p class="lab-footer reveal" style="--reveal-order: 5">
-			This makes Neulancers feel like a living technology company, not an agency.
+			Open any card to read the notes. Nothing here is finished, and that's the point.
 		</p>
 	</div>
 
@@ -164,13 +164,7 @@ const experiments = [
 
 <style>
 	.lab {
-		--ink: #f3f3f1;
-		--muted: #8b929d;
-		--ink-faint: rgba(139, 146, 157, 0.75);
-		--border-soft: rgba(255, 255, 255, 0.1);
-		--accent: #6d28d9;
 		--accent-bright: #a78bfa;
-		--bg: #0a0a0d;
 		--card-bg: #0d1018;
 
 		position: relative;
@@ -310,6 +304,13 @@ const experiments = [
 
 	.exp-card.is-hidden {
 		display: none;
+	}
+
+	/* with a stage filter on, the remaining cards would keep their staggered
+	   column slots and leave gaps — let them flow left to right instead */
+	.lab-grid.is-filtered .exp-card {
+		grid-column: auto / span 2;
+		grid-row: auto;
 	}
 
 	/* selected: slightly brighter surface, thin purple border, restrained
@@ -646,12 +647,13 @@ const experiments = [
 	   so it collapses to a plain 2-column track. With 7 cards and normal
 	   row-by-row auto-placement that yields 2+2+2+1, a balanced fallback
 	   rather than a forced, squeezed staggered layout. */
-	@media (max-width: 980px) {
+	@media (max-width: 1100px) {
 		.lab-grid {
 			grid-template-columns: repeat(2, 1fr);
 		}
 
-		.exp-card {
+		.exp-card,
+		.lab-grid.is-filtered .exp-card {
 			grid-column: auto;
 			grid-row: auto;
 		}
@@ -766,6 +768,7 @@ const experiments = [
 			const filter = pill.dataset.filter ?? 'all';
 
 			filterPills.forEach((p) => p.setAttribute('aria-pressed', String(p === pill)));
+			document.getElementById('labGrid')?.classList.toggle('is-filtered', filter !== 'all');
 
 			cards.forEach((card) => {
 				const matches = filter === 'all' || card.dataset.stage === filter;

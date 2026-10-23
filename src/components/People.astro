@@ -1,8 +1,8 @@
 ---
-import engineerVisual from '../assets/engineer_visual.svg';
-import builderVisual from '../assets/builder_visual.svg';
-import designerVisual from '../assets/designer_visual.svg';
-import researcherVisual from '../assets/researcher_visual.svg';
+import engineerVisual from '../assets/engineer.png';
+import builderVisual from '../assets/builder.png';
+import designerVisual from '../assets/designer.png';
+import researcherVisual from '../assets/researcher.png';
 
 const panels = [
 	{ idx: 1, title: 'Engineer', tag: 'Systems', desc: 'Turns ideas into systems.', visual: engineerVisual },
@@ -24,7 +24,6 @@ const panels = [
 		</div>
 
 		<div class="studio-grid reveal" id="studioGrid" style="--reveal-order: 1">
-			<span class="grid-node reveal" style="--reveal-order: 5" aria-hidden="true"></span>
 
 			{panels.map((p) => (
 				<button type="button" class="panel reveal" data-panel={p.idx} style={`--reveal-order: ${p.idx + 1}`}>
@@ -53,11 +52,6 @@ const panels = [
 
 <style>
 	.people {
-		--ink: #f3f3f1;
-		--muted: #8b929d;
-		--ink-faint: rgba(139, 146, 157, 0.75);
-		--border-soft: rgba(255, 255, 255, 0.1);
-		--accent: #6d28d9;
 		--accent-bright: #a78bfa;
 		--accent-brighter: #c4b5fd;
 		--bg: #050506;
@@ -71,7 +65,7 @@ const panels = [
 	}
 
 	.people-inner {
-		max-width: 1240px;
+		max-width: 1320px;
 		margin: 0 auto;
 		padding: clamp(56px, 8vw, 96px) clamp(20px, 4vw, 32px);
 	}
@@ -277,46 +271,6 @@ const panels = [
 		transform: scale(1.025);
 		filter: brightness(1.08) drop-shadow(0 0 22px rgba(167, 139, 250, 0.3));
 	}
-
-	/* ---------- center intersection node ---------- */
-	.grid-node {
-		position: absolute;
-		left: 50%;
-		top: 50%;
-		transform: translate(-50%, -50%);
-		width: 14px;
-		height: 14px;
-		border-radius: 50%;
-		border: 1px solid rgba(167, 139, 250, 0.4);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		z-index: 5;
-		pointer-events: none;
-	}
-
-	.grid-node::after {
-		content: '';
-		width: 5px;
-		height: 5px;
-		border-radius: 50%;
-		background: var(--accent-bright);
-		box-shadow: 0 0 8px rgba(167, 139, 250, 0.7);
-		animation: node-pulse 3.2s ease-in-out infinite;
-	}
-
-	@keyframes node-pulse {
-		0%,
-		100% {
-			opacity: 0.55;
-			transform: scale(1);
-		}
-		50% {
-			opacity: 1;
-			transform: scale(1.35);
-		}
-	}
-
 	/* ---------- footer ---------- */
 	.people-footer {
 		position: relative;
@@ -354,10 +308,6 @@ const panels = [
 			grid-template-rows: repeat(4, auto);
 		}
 
-		.grid-node {
-			display: none;
-		}
-
 		.panel {
 			min-height: 0;
 			padding: 1.5rem;
@@ -380,10 +330,6 @@ const panels = [
 		.panel-title,
 		.panel-arrow-ring {
 			transition: none;
-		}
-
-		.grid-node::after {
-			animation: none;
 		}
 	}
 </style>

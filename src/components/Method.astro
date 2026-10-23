@@ -58,13 +58,6 @@ const steps = [
 
 <style>
 	.method {
-		--ink: #f3f3f1;
-		--muted: #8b929d;
-		--ink-faint: rgba(139, 146, 157, 0.75);
-		--border-soft: rgba(255, 255, 255, 0.1);
-		--accent: #6d28d9;
-		--bg: #0a0a0d;
-
 		position: relative;
 		background: var(--bg);
 		color: var(--ink);
@@ -76,7 +69,7 @@ const steps = [
 		display: grid;
 		grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.3fr);
 		gap: clamp(2rem, 6vw, 5rem);
-		max-width: 1200px;
+		max-width: 1320px;
 		margin: 0 auto;
 		padding: clamp(72px, 10vw, 128px) clamp(20px, 4vw, 32px);
 	}
@@ -357,6 +350,16 @@ const steps = [
 
 		.method-heading {
 			max-width: none;
+		}
+
+		/* the step list below already repeats every label, so the rail
+		   would just show the same seven items twice on a narrow screen */
+		.method-nav {
+			display: none;
+		}
+
+		.method-heading {
+			margin-bottom: 0;
 		}
 
 		.nav-track {

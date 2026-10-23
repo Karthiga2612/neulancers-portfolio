@@ -41,15 +41,9 @@ const tags = ['Open source', 'Cloud', 'Local AI', 'APIs', 'Automation', 'Custom 
 
 <style>
 	.stack {
-		--ink: #f3f3f1;
-		--muted: #8b929d;
-		--ink-faint: rgba(139, 146, 157, 0.75);
-		--border-soft: rgba(255, 255, 255, 0.1);
-		--accent: #6d28d9;
-		--bg: #0a0a0d;
-
 		position: relative;
-		background: var(--bg);
+		/* lifted band: a deliberate change of pace between AI and People */
+		background: #0e1016;
 		color: var(--ink);
 		font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
 		border-top: 1px solid var(--border-soft);
@@ -58,7 +52,9 @@ const tags = ['Open source', 'Cloud', 'Local AI', 'APIs', 'Automation', 'Custom 
 	.stack-inner {
 		max-width: 1000px;
 		margin: 0 auto;
-		padding: clamp(72px, 10vw, 128px) clamp(20px, 4vw, 32px);
+		/* compact on purpose: a quick technical beat between the heavier
+		   AI and People sections, not a full-height stop */
+		padding: clamp(48px, 6vw, 80px) clamp(20px, 4vw, 32px);
 	}
 
 	/* ---------- scroll-in reveal ---------- */
@@ -78,7 +74,7 @@ const tags = ['Open source', 'Cloud', 'Local AI', 'APIs', 'Automation', 'Custom 
 
 	.stack-head {
 		text-align: center;
-		margin-bottom: clamp(48px, 7vw, 72px);
+		margin-bottom: clamp(32px, 4vw, 48px);
 	}
 
 	.stack-eyebrow {
@@ -117,7 +113,7 @@ const tags = ['Open source', 'Cloud', 'Local AI', 'APIs', 'Automation', 'Custom 
 		justify-content: center;
 		flex-wrap: wrap;
 		row-gap: 1.5rem;
-		margin-bottom: clamp(48px, 7vw, 72px);
+		margin-bottom: clamp(32px, 4vw, 48px);
 	}
 
 	.layer-node {

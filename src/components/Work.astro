@@ -7,6 +7,21 @@ const icons: Record<string, string> = {
 	layers: '<path d="M12 4 3 9l9 5 9-5-9-5Z"/><path d="m3 14 9 5 9-5"/>',
 };
 
+// Abstract panel art per project, drawn on a 320x200 grid, stroke only, so
+// each card has its own diagram until real screenshots exist.
+const art: Record<string, string> = {
+	chart:
+		'<path class="a-dim" d="M20 170h280M20 130h280M20 90h280M20 50h280"/><path class="a-dim" d="M60 170V120M110 170V100M160 170V130M210 170V70M260 170V40"/><path class="a-main" d="M60 120 110 100 160 130 210 70 260 40"/><circle class="a-dot" cx="260" cy="40" r="5"/>',
+	document:
+		'<rect class="a-dim" x="70" y="30" width="150" height="150" rx="8"/><rect class="a-dim" x="95" y="20" width="150" height="150" rx="8"/><rect class="a-main" x="120" y="10" width="150" height="150" rx="8"/><path class="a-main" d="M145 50h70M145 78h100M145 106h60"/><path class="a-main" d="m232 120 10 10 20-22"/>',
+	droplet:
+		'<circle class="a-dim" cx="160" cy="100" r="88"/><circle class="a-dim" cx="160" cy="100" r="62"/><circle class="a-main" cx="160" cy="100" r="36"/><circle class="a-dot" cx="160" cy="100" r="6"/><path class="a-dim" d="M10 100h300"/>',
+	spark:
+		'<path class="a-dim" d="M60 50 160 100 60 150M160 100 270 40M160 100 270 100M160 100 270 160"/><circle class="a-main" cx="160" cy="100" r="16"/><circle class="a-dot" cx="60" cy="50" r="6"/><circle class="a-dot" cx="60" cy="150" r="6"/><circle class="a-dot" cx="270" cy="40" r="6"/><circle class="a-dot" cx="270" cy="100" r="6"/><circle class="a-dot" cx="270" cy="160" r="6"/>',
+	layers:
+		'<path class="a-dim" d="M160 120 40 150 160 180 280 150Z"/><path class="a-dim" d="M160 85 40 115 160 145 280 115Z"/><path class="a-main" d="M160 50 40 80 160 110 280 80Z"/><path class="a-dim" d="M160 20v30"/>',
+};
+
 const projects = [
 	{
 		name: 'Finveda',
@@ -70,7 +85,7 @@ const projects = [
 		</div>
 
 		<h2 class="work-heading reveal" style="--reveal-order: 1">What We've Built</h2>
-		<p class="work-not reveal" style="--reveal-order: 2">Not &ldquo;Our Services.&rdquo;</p>
+		<p class="work-not reveal" style="--reveal-order: 2">Systems we built, and are still building.</p>
 	</div>
 
 	<div class="work-list">
@@ -83,6 +98,8 @@ const projects = [
 					</div>
 
 					<h3 class="card-name">{p.name}</h3>
+
+					<p class="card-lead">{p.tagline}</p>
 
 					<p class="card-desc">{p.desc}</p>
 
@@ -102,15 +119,14 @@ const projects = [
 					</div>
 
 					<a href="#contact" class="card-explore">
-						<span>Explore</span>
+						<span>Build something like this</span>
 						<span class="explore-arrow">&rarr;</span>
 					</a>
 				</div>
 
-				<div class="card-right">
-					<span class="visual-letter" aria-hidden="true">{p.name.charAt(0)}</span>
+				<div class="card-right" aria-hidden="true">
+					<svg class="visual-art" viewBox="0 0 320 200" fill="none" set:html={art[p.icon]}></svg>
 					<svg class="visual-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" set:html={icons[p.icon]}></svg>
-					<span class="visual-caption">{p.tagline}</span>
 				</div>
 			</article>
 		))}
@@ -126,13 +142,7 @@ const projects = [
 
 <style>
 	.work {
-		--ink: #f3f3f1;
-		--muted: #8b929d;
-		--ink-faint: rgba(139, 146, 157, 0.75);
-		--border-soft: rgba(255, 255, 255, 0.1);
-		--accent: #6d28d9;
 		--accent-hover: #5b21b6;
-		--bg: #0a0a0d;
 		--visual-bg: #121620;
 
 		position: relative;
@@ -263,6 +273,16 @@ const projects = [
 		letter-spacing: -0.015em;
 	}
 
+	.card-lead {
+		margin: 0;
+		max-width: 28ch;
+		font-size: clamp(1.15rem, 0.9vw + 0.95rem, 1.45rem);
+		font-weight: 600;
+		line-height: 1.3;
+		letter-spacing: -0.01em;
+		color: var(--ink);
+	}
+
 	.card-desc {
 		margin: 0;
 		max-width: 42ch;
@@ -343,12 +363,25 @@ const projects = [
 		text-align: center;
 	}
 
-	.visual-letter {
-		font-size: clamp(4.5rem, 9vw, 6.5rem);
-		font-weight: 800;
-		color: rgba(109, 40, 217, 0.18);
-		line-height: 1;
-		user-select: none;
+	.visual-art {
+		width: min(100%, 360px);
+		height: auto;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+
+	.visual-art :global(.a-dim) {
+		stroke: rgba(167, 139, 250, 0.22);
+		stroke-width: 1.2;
+	}
+
+	.visual-art :global(.a-main) {
+		stroke: #a78bfa;
+		stroke-width: 1.8;
+	}
+
+	.visual-art :global(.a-dot) {
+		fill: #a78bfa;
 	}
 
 	.visual-icon {
@@ -358,12 +391,6 @@ const projects = [
 		width: 26px;
 		height: 26px;
 		color: var(--accent);
-	}
-
-	.visual-caption {
-		font-size: 0.85rem;
-		color: var(--ink-faint);
-		max-width: 26ch;
 	}
 
 	/* ---------- cta ---------- */
@@ -408,6 +435,12 @@ const projects = [
 
 		.card-right {
 			order: -1;
+			min-height: 150px;
+			padding: 1rem;
+		}
+
+		.visual-art {
+			width: min(100%, 220px);
 		}
 	}
 
