@@ -1,0 +1,1575 @@
+---
+const icons: Record<string, string> = {
+	bulb: '<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.5.4.8 1 .8 1.6v.5h5.4v-.5c0-.6.3-1.2.8-1.6A6 6 0 0 0 12 3Z"/>',
+	search: '<circle cx="10.5" cy="10.5" r="6"/><path d="m19.5 19.5-4.3-4.3"/>',
+	spark: '<path d="M12 3l1.6 4.9L18.5 9l-4.9 1.6L12 15.5l-1.6-4.9L5.5 9l4.9-1.6L12 3Z"/>',
+	code: '<path d="m9 8-4 4 4 4M15 8l4 4-4 4"/>',
+	layers: '<path d="M12 4 3 9l9 5 9-5-9-5Z"/><path d="m3 14 9 5 9-5"/>',
+	rocket:
+		'<path d="M12 2.5c2 2 3 5 3 8 0 2-1 4-3 6-2-2-3-4-3-6 0-3 1-6 3-8Z"/><path d="m8.3 15-2.8 3.7 3.7-1M15.7 15l2.8 3.7-3.7-1"/>',
+	check: '<path d="m5 12.5 4.5 4.5L19 7"/>',
+	prev: '<path d="M19 12H5M11 6l-6 6 6 6"/>',
+	next: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+};
+
+const stageMeta = [
+	{
+		label: 'Problem',
+		desc: 'A real challenge to solve.',
+		icon: 'bulb',
+		art: 'problem',
+		title: 'We find the problem worth solving.',
+		text: 'We start inside your operations, talking to the people who do the work and mapping where time, money and patience quietly leak out.',
+		deliverables: ['Discovery workshops', 'Process mapping', 'Opportunity brief'],
+	},
+	{
+		label: 'Question',
+		desc: 'Dig deeper, find the right one.',
+		icon: 'search',
+		art: 'question',
+		title: 'We ask the question behind the brief.',
+		text: 'We reframe the request until it points at an outcome rather than a feature list. Most of a project’s value is decided right here.',
+		deliverables: ['Problem framing', 'User research', 'Success metrics'],
+	},
+	{
+		label: 'Idea',
+		desc: 'Turn insights into possibilities.',
+		icon: 'spark',
+		art: 'idea',
+		title: 'We explore what could exist.',
+		text: 'Concepts across AI, automation and product, sketched fast, compared honestly and narrowed down to the one worth building.',
+		deliverables: ['Concept sprints', 'AI feasibility', 'Solution design'],
+	},
+	{
+		label: 'Prototype',
+		desc: 'Build, test, learn fast.',
+		icon: 'code',
+		art: 'prototype',
+		title: 'We build it to learn.',
+		text: 'Clickable prototypes and working spikes, put in front of real users early so evidence, not opinion, decides what happens next.',
+		deliverables: ['Interactive prototypes', 'Technical spikes', 'User testing'],
+	},
+	{
+		label: 'System',
+		desc: 'Make it work in the real world.',
+		icon: 'layers',
+		art: 'system',
+		title: 'We engineer it for the real world.',
+		text: 'Production software, integrations and AI pipelines that are secure, observable and wired into the tools your team already runs.',
+		deliverables: ['Product engineering', 'Integrations & APIs', 'AI & automation'],
+	},
+	{
+		label: 'Something real',
+		desc: 'Create impact, not just output.',
+		icon: 'rocket',
+		art: 'real',
+		title: 'We ship it, measure it, grow it.',
+		text: 'Launch is the midpoint. We track the outcomes we agreed on at the start and keep improving the product as it scales.',
+		deliverables: ['Launch & rollout', 'Outcome tracking', 'Ongoing iteration'],
+	},
+];
+
+// The orbit is a partial circle CONCENTRIC with the core — same center,
+// larger radius. Everything is worked out in a fixed reference box
+// (VISUAL_W × VISUAL_H). The SVG uses that box as its viewBox and
+// .wwd-visual is locked to the same aspect-ratio, so the SVG scales
+// uniformly (no distortion) and the HTML cards, positioned in percentages
+// of the same box, stay locked to the nodes they point at.
+const VISUAL_W = 680;
+const VISUAL_H = 560;
+const CIRCLE_R = 92; // kept modest on purpose — a small, soft core, not the focal point
+const CIRCLE_CX = CIRCLE_R; // core sits flush against the box's left edge
+const CIRCLE_CY = VISUAL_H / 2;
+const ARC_R = CIRCLE_R + 170; // the orbit's radius — well clear of the core, filling the box
+const CARD_GAP = 14; // ref units — card's pointed tip sits right at its node
+// How far the 6 stages sweep above/below the orbit's horizontal center line.
+// Pulling the first/last stage in from due-up/due-down keeps "Something
+// real" feeling like part of the loop rather than a tail.
+const NODE_ANGLE_LIMIT = 66;
+
+const toRad = (deg: number) => (deg * Math.PI) / 180;
+const toDeg = (rad: number) => (rad * 180) / Math.PI;
+// spacing the stages evenly by Y-projection (rather than by angle) keeps a
+// consistent gap between cards top to bottom
+const angleAtEvenY = (t: number) => toDeg(Math.asin((t * 2 - 1) * Math.sin(toRad(NODE_ANGLE_LIMIT))));
+const pointAt = (angleDeg: number, radius: number) => ({
+	x: CIRCLE_CX + radius * Math.cos(toRad(angleDeg)),
+	y: CIRCLE_CY + radius * Math.sin(toRad(angleDeg)),
+});
+
+const total = String(stageMeta.length).padStart(2, '0');
+const stages = stageMeta.map((s, i) => {
+	const angle = angleAtEvenY(i / (stageMeta.length - 1));
+	const node = pointAt(angle, ARC_R);
+	return {
+		...s,
+		idx: String(i + 1).padStart(2, '0'),
+		angle,
+		node,
+		cardXPct: ((node.x + CARD_GAP) / VISUAL_W) * 100,
+		cardYPct: (node.y / VISUAL_H) * 100,
+	};
+});
+
+const arcStart = pointAt(-NODE_ANGLE_LIMIT, ARC_R);
+const arcEnd = pointAt(NODE_ANGLE_LIMIT, ARC_R);
+// sweep-flag 1: from the top stage clockwise (down) to the bottom stage
+const arcPath = `M ${arcStart.x.toFixed(2)} ${arcStart.y.toFixed(2)} A ${ARC_R} ${ARC_R} 0 0 1 ${arcEnd.x.toFixed(2)} ${arcEnd.y.toFixed(2)}`;
+
+// the client script recomputes the signal's position from these, so the
+// geometry has a single source of truth
+const geom = JSON.stringify({
+	cx: CIRCLE_CX,
+	cy: CIRCLE_CY,
+	r: CIRCLE_R,
+	arcR: ARC_R,
+	angles: stages.map((s) => s.angle),
+});
+
+// ---------- illustration helpers (all drawn in a 360 × 200 box) ----------
+// "Question": a field of possibilities with one picked out under the lens
+const dotField = Array.from({ length: 4 * 11 }, (_, i) => ({
+	x: 40 + (i % 11) * 28,
+	y: 46 + Math.floor(i / 11) * 36,
+}));
+
+// "Idea": connections radiating from a single spark
+const ideaNodes = [-150, -95, -35, 25, 85, 150].map((deg, i) => {
+	const r = i % 2 ? 62 : 80;
+	return { x: 180 + r * Math.cos(toRad(deg)), y: 100 + r * 0.82 * Math.sin(toRad(deg)) };
+});
+
+// "System": three isometric layers stacked into one platform
+const layer = (y: number) => `M95 ${y} L180 ${y - 30} L265 ${y} L180 ${y + 30} Z`;
+---
+
+<section class="wwd" id="what-we-do" aria-labelledby="wwd-title">
+	<div class="wwd-inner">
+		<div class="wwd-header">
+			<div>
+				<div class="wwd-eyebrow reveal" style="--reveal-order: 0">
+					<span class="eyebrow-idx">02</span>
+					<span class="eyebrow-dot" aria-hidden="true">&bull;</span>
+					<span class="eyebrow-label">What We Do</span>
+				</div>
+				<h2 class="wwd-heading reveal" id="wwd-title" style="--reveal-order: 1">From a real problem to something real.</h2>
+			</div>
+			<p class="wwd-desc reveal" style="--reveal-order: 2">
+				Every engagement moves through the same six stages. Follow one idea
+				through them, or jump to the stage you need.
+			</p>
+		</div>
+	</div>
+
+	<div class="wwd-stage">
+		<div
+			class="wwd-visual"
+			role="group"
+			aria-label="The six stages"
+			data-geom={geom}
+			style={`--visual-ratio: ${VISUAL_W} / ${VISUAL_H};`}
+		>
+			<div class="core-wrap" aria-hidden="true">
+				<div class="core">
+					<span class="core-glow"></span>
+					<span class="core-ring"></span>
+					{stages.map((s, i) => (
+						<svg
+							class={`core-icon${i === 0 ? ' is-current' : ''}`}
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.4"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							set:html={icons[s.icon]}
+						/>
+					))}
+				</div>
+			</div>
+
+			<svg class="orbit-svg" viewBox={`0 0 ${VISUAL_W} ${VISUAL_H}`} aria-hidden="true">
+				<defs>
+					<radialGradient id="wwdSignalGlow">
+						<stop offset="0%" stop-color="#a78bfa" stop-opacity="0.55"></stop>
+						<stop offset="45%" stop-color="#6d28d9" stop-opacity="0.22"></stop>
+						<stop offset="100%" stop-color="#6d28d9" stop-opacity="0"></stop>
+					</radialGradient>
+				</defs>
+				<line class="tether" x1={CIRCLE_CX + CIRCLE_R} y1={CIRCLE_CY} x2={arcStart.x} y2={arcStart.y}></line>
+				<path class="arc-track" d={arcPath} pathLength="1"></path>
+				<path class="arc-progress" d={arcPath} pathLength="1"></path>
+				{stages.map((s, i) => (
+					<g class={`node${i === 0 ? ' is-current' : ''}`} transform={`translate(${s.node.x.toFixed(2)} ${s.node.y.toFixed(2)})`}>
+						<circle class="node-halo" r="12"></circle>
+						<circle class="node-dot" r="4.5"></circle>
+					</g>
+				))}
+				<g class="signal" transform={`translate(${arcStart.x.toFixed(2)} ${arcStart.y.toFixed(2)})`}>
+					<circle class="signal-glow" r="30" fill="url(#wwdSignalGlow)"></circle>
+					<circle class="signal-core" r="5.5"></circle>
+				</g>
+			</svg>
+
+			<ol class="stage-list">
+				{stages.map((s, i) => (
+					<li class={`stage${i === 0 ? ' is-current' : ''}`} style={`--x: ${s.cardXPct}%; --y: ${s.cardYPct}%;`}>
+						<button
+							type="button"
+							class="stage-card"
+							data-index={i}
+							aria-controls={`wwd-panel-${i}`}
+							aria-current={i === 0 ? 'step' : undefined}
+						>
+							<span class="card-head">
+								<span class="card-idx">{s.idx}</span>
+								<span class="card-label">{s.label}</span>
+								<svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={icons[s.icon]}></svg>
+							</span>
+							<span class="card-desc">{s.desc}</span>
+						</button>
+					</li>
+				))}
+			</ol>
+		</div>
+
+		<div class="wwd-detail">
+			<span class="timeline-track" aria-hidden="true"><span class="timeline-fill"></span></span>
+
+			<div class="panels">
+				{stages.map((s, i) => (
+					<article class={`panel${i === 0 ? ' is-current' : ''}`} id={`wwd-panel-${i}`} data-index={i} aria-labelledby={`wwd-panel-title-${i}`}>
+						<span class="tl-node" aria-hidden="true"></span>
+
+						<div class="panel-meta">
+							<span class="panel-chip" aria-hidden="true">
+								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" set:html={icons[s.icon]}></svg>
+							</span>
+							<span class="panel-stage">{s.label}</span>
+							<span class="panel-count">
+								<span class="visually-hidden">Stage </span>{s.idx}<span class="panel-count-total"><span aria-hidden="true"> / </span><span class="visually-hidden"> of </span>{total}</span>
+							</span>
+						</div>
+
+						<div class="panel-art" aria-hidden="true">
+							<svg viewBox="0 0 360 200" preserveAspectRatio="xMidYMid meet">
+								{s.art === 'problem' && (
+									<g>
+										<rect class="il-base" x="28" y="34" width="86" height="50" rx="9"></rect>
+										<rect class="il-bar" x="42" y="50" width="44" height="5" rx="2.5"></rect>
+										<rect class="il-bar" x="42" y="62" width="58" height="5" rx="2.5"></rect>
+										<rect class="il-base" x="246" y="26" width="86" height="50" rx="9"></rect>
+										<rect class="il-bar" x="260" y="42" width="52" height="5" rx="2.5"></rect>
+										<rect class="il-bar" x="260" y="54" width="34" height="5" rx="2.5"></rect>
+										<rect class="il-base" x="134" y="132" width="86" height="50" rx="9"></rect>
+										<rect class="il-bar" x="148" y="148" width="40" height="5" rx="2.5"></rect>
+										<rect class="il-bar" x="148" y="160" width="56" height="5" rx="2.5"></rect>
+										<path class="il-dash" d="M114 70 L134 140"></path>
+										<path class="il-dash" d="M246 64 L220 140"></path>
+										<path class="il-draw" pathLength="1" d="M114 52 C 168 22, 132 122, 180 96 S 238 18, 208 104 S 150 138, 246 44"></path>
+										<circle class="il-ring" cx="181" cy="95" r="15"></circle>
+										<circle class="il-dot" cx="181" cy="95" r="4.5"></circle>
+									</g>
+								)}
+								{s.art === 'question' && (
+									<g>
+										{dotField.map((d) => <circle class="il-speck" cx={d.x} cy={d.y} r="2.2"></circle>)}
+										<circle class="il-lens" cx="208" cy="100" r="44"></circle>
+										<circle class="il-draw" pathLength="1" cx="208" cy="100" r="44"></circle>
+										<path class="il-draw" pathLength="1" d="M240 132 L276 168"></path>
+										<circle class="il-ring" cx="208" cy="100" r="13"></circle>
+										<circle class="il-dot" cx="208" cy="100" r="5"></circle>
+									</g>
+								)}
+								{s.art === 'idea' && (
+									<g>
+										<ellipse class="il-base" cx="180" cy="100" rx="122" ry="84"></ellipse>
+										{ideaNodes.map((n) => <path class="il-draw" pathLength="1" d={`M180 100 L${n.x.toFixed(1)} ${n.y.toFixed(1)}`}></path>)}
+										{ideaNodes.map((n) => <circle class="il-node" cx={n.x.toFixed(1)} cy={n.y.toFixed(1)} r="8"></circle>)}
+										<circle class="il-ring" cx="180" cy="100" r="26"></circle>
+										<path class="il-spark" d="M180 78l5.2 15.8L201 99l-15.8 5.2L180 120l-5.2-15.8L159 99l15.8-5.2L180 78Z"></path>
+									</g>
+								)}
+								{s.art === 'prototype' && (
+									<g>
+										<rect class="il-base" x="54" y="24" width="252" height="152" rx="12"></rect>
+										<path class="il-base" d="M54 48 H306"></path>
+										<circle class="il-speck" cx="70" cy="36" r="3"></circle>
+										<circle class="il-speck" cx="82" cy="36" r="3"></circle>
+										<circle class="il-speck" cx="94" cy="36" r="3"></circle>
+										<rect class="il-bar" x="70" y="64" width="54" height="6" rx="3"></rect>
+										<rect class="il-bar" x="70" y="80" width="40" height="6" rx="3"></rect>
+										<rect class="il-bar" x="70" y="96" width="48" height="6" rx="3"></rect>
+										<rect class="il-draw" pathLength="1" x="140" y="62" width="148" height="70" rx="8"></rect>
+										<path class="il-draw" pathLength="1" d="M196 86 l-10 11 10 11 M232 86 l10 11 -10 11 M220 82 l-12 30"></path>
+										<rect class="il-pill" x="140" y="144" width="70" height="18" rx="9"></rect>
+										<path class="il-cursor" d="M214 150 l0 22 6-6 5 10 4-2-5-10 8 0Z"></path>
+									</g>
+								)}
+								{s.art === 'system' && (
+									<g>
+										<path class="il-base" d={layer(132)}></path>
+										<path class="il-layer" d={layer(104)}></path>
+										<path class="il-draw" pathLength="1" d={layer(76)}></path>
+										<path class="il-draw" pathLength="1" d="M95 104 H52 V60 M265 104 H308 V148"></path>
+										<rect class="il-node" x="36" y="40" width="32" height="22" rx="6"></rect>
+										<rect class="il-node" x="292" y="146" width="32" height="22" rx="6"></rect>
+										<circle class="il-dot" cx="180" cy="76" r="4.5"></circle>
+									</g>
+								)}
+								{s.art === 'real' && (
+									<g>
+										<path class="il-grid" d="M40 60 H320 M40 100 H320 M40 140 H320"></path>
+										<path class="il-base" d="M40 172 H320"></path>
+										<path class="il-area" d="M40 160 C 110 156, 140 132, 180 112 S 262 52, 320 42 L320 172 L40 172 Z"></path>
+										<path class="il-draw" pathLength="1" d="M40 160 C 110 156, 140 132, 180 112 S 262 52, 320 42"></path>
+										<circle class="il-ring" cx="320" cy="42" r="14"></circle>
+										<circle class="il-dot" cx="320" cy="42" r="5"></circle>
+										<rect class="il-pill" x="52" y="30" width="62" height="20" rx="10"></rect>
+										<circle class="il-dot il-dot--live" cx="66" cy="40" r="3.5"></circle>
+										<rect class="il-bar" x="76" y="37.5" width="28" height="5" rx="2.5"></rect>
+									</g>
+								)}
+							</svg>
+						</div>
+
+						<h3 class="panel-title" id={`wwd-panel-title-${i}`}>{s.title}</h3>
+						<p class="panel-text">{s.text}</p>
+						<ul class="panel-list" aria-label="What you get">
+							{s.deliverables.map((d) => (
+								<li>
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={icons.check}></svg>
+									{d}
+								</li>
+							))}
+						</ul>
+					</article>
+				))}
+			</div>
+
+			<div class="panel-controls">
+				<button type="button" class="step-btn" data-step="-1" aria-label="Previous stage" disabled>
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={icons.prev}></svg>
+				</button>
+				<span class="step-meter" aria-hidden="true"><span class="step-meter-fill"></span></span>
+				<button type="button" class="step-btn" data-step="1" aria-label="Next stage">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={icons.next}></svg>
+				</button>
+			</div>
+		</div>
+	</div>
+</section>
+
+<style>
+	.wwd {
+		--accent-bright: #a78bfa;
+		--accent-hover: #5b21b6;
+		--border: rgba(255, 255, 255, 0.12);
+		--line: rgba(255, 255, 255, 0.1);
+		--surface: #0d1018;
+		--circle-bg: #0b0c11;
+		--card-bg: rgba(13, 16, 24, 0.94);
+		--ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+		position: relative;
+		background: var(--bg);
+		color: var(--ink);
+		font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+		border-top: 1px solid var(--border-soft);
+	}
+
+	.wwd ::selection {
+		background: rgba(167, 139, 250, 0.35);
+		color: #ffffff;
+	}
+
+	.visually-hidden {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip: rect(0 0 0 0);
+		white-space: nowrap;
+	}
+
+	.wwd-inner {
+		max-width: 1320px;
+		margin: 0 auto;
+		padding: clamp(56px, 8vw, 96px) clamp(20px, 4vw, 32px) 0;
+	}
+
+	/* ---------- scroll-in reveal (matches the other sections) ---------- */
+	.reveal {
+		opacity: 0;
+		transform: translateY(18px);
+		transition:
+			opacity 0.6s var(--ease-out),
+			transform 0.6s var(--ease-out);
+		transition-delay: calc(var(--reveal-order, 0) * 60ms);
+	}
+
+	.wwd.is-visible .reveal {
+		opacity: 1;
+		transform: translateY(0);
+	}
+
+	/* ---------- header ---------- */
+	.wwd-header {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		gap: clamp(1.5rem, 4vw, 3.5rem);
+		align-items: end;
+		padding-bottom: clamp(1.25rem, 2.5vw, 1.75rem);
+		border-bottom: 1px solid var(--border-soft);
+	}
+
+	.wwd-eyebrow {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin-bottom: 0.75rem;
+	}
+
+	.eyebrow-idx,
+	.eyebrow-label {
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.75rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--muted);
+	}
+
+	.eyebrow-dot {
+		color: var(--accent);
+		font-size: 0.6rem;
+	}
+
+	.wwd-heading {
+		margin: 0;
+		font-size: clamp(1.75rem, 1.8vw + 1.3rem, 2.5rem);
+		font-weight: 700;
+		letter-spacing: -0.015em;
+		line-height: 1.08;
+		text-wrap: balance;
+	}
+
+	.wwd-desc {
+		margin: 0;
+		max-width: 34rem;
+		font-size: 0.95rem;
+		line-height: 1.55;
+		color: var(--muted);
+	}
+
+	/* ---------- stage: journey (left) + detail (right) ---------- */
+	.wwd-stage {
+		display: grid;
+		grid-template-columns: minmax(0, 52fr) minmax(0, 48fr);
+		align-items: center;
+		gap: clamp(32px, 4vw, 72px);
+		max-width: 1320px;
+		margin: 0 auto;
+		padding: clamp(40px, 6vw, 72px) clamp(20px, 4vw, 32px) clamp(56px, 8vw, 96px);
+	}
+
+	/* while pinned the stage fills the viewport; the top padding clears the
+	   fixed site header */
+	.wwd.is-pinned .wwd-stage {
+		min-height: 100vh;
+		padding-top: calc(4rem + clamp(16px, 3vh, 32px));
+		padding-bottom: clamp(16px, 3vh, 32px);
+	}
+
+	/* ---------- the journey visual: core + orbit + cards share one box ---------- */
+	.wwd-visual {
+		position: relative;
+		width: 100%;
+		max-width: 680px;
+		aspect-ratio: var(--visual-ratio);
+	}
+
+	.core-wrap {
+		position: absolute;
+		left: 0;
+		top: 50%;
+		width: 27%;
+		aspect-ratio: 1;
+		transform: translateY(-50%);
+		pointer-events: none;
+	}
+
+	.core {
+		position: absolute;
+		inset: 0;
+		border-radius: 50%;
+		background: var(--circle-bg);
+		border: 1px solid var(--border);
+		box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
+		overflow: hidden;
+		transition:
+			border-color 0.6s ease,
+			box-shadow 0.6s ease;
+	}
+
+	.wwd.is-complete .core {
+		border-color: rgba(167, 139, 250, 0.55);
+		box-shadow:
+			0 24px 48px rgba(0, 0, 0, 0.4),
+			0 18px 60px -12px rgba(109, 40, 217, 0.55);
+	}
+
+	.core-glow {
+		position: absolute;
+		inset: 0;
+		background: radial-gradient(circle at 50% 50%, rgba(109, 40, 217, 0.42), transparent 68%);
+		animation: coreGlowPulse 6s ease-in-out infinite;
+	}
+
+	.wwd.is-complete .core-glow {
+		background: radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.62), transparent 72%);
+	}
+
+	/* rotation follows journey progress (set from the script) */
+	.core-ring {
+		position: absolute;
+		inset: 12%;
+		border-radius: 50%;
+		border: 1px dashed rgba(167, 139, 250, 0.35);
+	}
+
+	/* stage icons crossfade through a soft focus pull */
+	.core-icon {
+		position: absolute;
+		inset: 34%;
+		width: 32%;
+		height: 32%;
+		color: var(--accent-bright);
+		opacity: 0;
+		filter: blur(6px);
+		transform: scale(0.75);
+		transition:
+			opacity 0.35s ease,
+			filter 0.35s ease,
+			transform 0.35s ease;
+	}
+
+	.core-icon.is-current {
+		opacity: 1;
+		filter: blur(0);
+		transform: scale(1);
+		transition:
+			opacity 0.5s ease 0.08s,
+			filter 0.5s ease 0.08s,
+			transform 0.6s var(--ease-out) 0.08s;
+	}
+
+	@keyframes coreGlowPulse {
+		0%,
+		100% {
+			opacity: 0.6;
+			transform: scale(0.94);
+		}
+		50% {
+			opacity: 1;
+			transform: scale(1.04);
+		}
+	}
+
+	.orbit-svg {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		overflow: visible;
+		pointer-events: none;
+	}
+
+	/* both paths use pathLength="1", so a dash of 1 is the whole orbit and
+	   dashoffset reads directly as "how much is left to draw" */
+	.arc-track,
+	.arc-progress {
+		fill: none;
+		stroke-linecap: round;
+		stroke-dasharray: 1;
+		stroke-dashoffset: 0;
+	}
+
+	.arc-track {
+		stroke: rgba(255, 255, 255, 0.12);
+		stroke-width: 1.2;
+	}
+
+	.arc-progress {
+		stroke: var(--accent-bright);
+		stroke-width: 2;
+		stroke-dashoffset: 1;
+	}
+
+	/* the tether ties the core to wherever the idea currently is; its dashes
+	   flow outward along it */
+	.tether {
+		stroke: rgba(167, 139, 250, 0.4);
+		stroke-width: 1;
+		stroke-dasharray: 3 6;
+		animation: tetherFlow 1.2s linear infinite;
+	}
+
+	@keyframes tetherFlow {
+		to {
+			stroke-dashoffset: -18;
+		}
+	}
+
+	.node-dot {
+		fill: var(--bg);
+		stroke: rgba(255, 255, 255, 0.38);
+		stroke-width: 1.2;
+		transition:
+			fill 0.3s ease,
+			stroke 0.3s ease;
+	}
+
+	.node-halo {
+		fill: rgba(167, 139, 250, 0.16);
+		transform-box: fill-box;
+		transform-origin: center;
+		transform: scale(0);
+		transition: transform 0.5s var(--ease-out);
+	}
+
+	.node.is-passed .node-dot,
+	.node.is-current .node-dot {
+		fill: var(--accent-bright);
+		stroke: var(--accent-bright);
+	}
+
+	.node.is-current .node-halo {
+		transform: scale(1);
+	}
+
+	.signal-core {
+		fill: #f3f3f1;
+		stroke: var(--accent-bright);
+		stroke-width: 2.5;
+	}
+
+	.signal-glow {
+		transform-box: fill-box;
+		transform-origin: center;
+		animation: signalBreathe 2.4s ease-in-out infinite;
+	}
+
+	@keyframes signalBreathe {
+		0%,
+		100% {
+			transform: scale(0.85);
+			opacity: 0.8;
+		}
+		50% {
+			transform: scale(1.1);
+			opacity: 1;
+		}
+	}
+
+	/* ---------- stage cards on the orbit ---------- */
+	.stage-list {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.stage {
+		position: absolute;
+		left: var(--x);
+		top: var(--y);
+		width: clamp(176px, 14vw, 200px);
+		transform: translateY(-50%);
+	}
+
+	.stage-card {
+		width: 100%;
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+		margin: 0;
+		background: var(--card-bg);
+		border: 1px solid var(--border-soft);
+		border-radius: 12px;
+		/* left edge angles inward to a point at mid-height, like a flag
+		   pointing back toward the node it connects to */
+		clip-path: polygon(22px 0, 100% 0, 100% 100%, 22px 100%, 0 50%);
+		padding: 0.6rem 0.85rem 0.7rem 1.15rem;
+		text-align: left;
+		color: inherit;
+		cursor: pointer;
+		font-family: inherit;
+		box-shadow: 0 10px 22px rgba(0, 0, 0, 0.3);
+		transition:
+			border-color 0.3s ease,
+			background-color 0.3s ease,
+			box-shadow 0.3s ease,
+			transform 0.45s var(--ease-out);
+	}
+
+	/* number, label and icon share one row so a card is one line shorter */
+	.card-head {
+		display: flex;
+		align-items: baseline;
+		gap: 0.55rem;
+	}
+
+	.card-idx {
+		font-size: 0.68rem;
+		font-variant-numeric: tabular-nums;
+		color: var(--muted);
+		transition: color 0.3s ease;
+	}
+
+	.card-label {
+		flex: 1;
+		white-space: nowrap;
+		font-size: 0.9rem;
+		font-weight: 600;
+		color: var(--muted);
+		transition: color 0.3s ease;
+	}
+
+	.card-icon {
+		width: 16px;
+		height: 16px;
+		align-self: center;
+		flex-shrink: 0;
+		color: var(--muted);
+		transition: color 0.3s ease;
+	}
+
+	.card-desc {
+		font-size: 0.75rem;
+		line-height: 1.4;
+		color: var(--muted);
+	}
+
+	/* stages already travelled read as settled */
+	.stage.is-passed .card-label {
+		color: var(--ink);
+	}
+
+	.stage.is-passed .card-icon {
+		color: var(--accent-bright);
+	}
+
+	.stage.is-passed .stage-card {
+		border-color: rgba(167, 139, 250, 0.16);
+	}
+
+	/* where the idea is right now */
+	.stage.is-current .stage-card {
+		border-color: rgba(167, 139, 250, 0.7);
+		background: rgba(46, 24, 92, 0.94);
+		box-shadow: 0 18px 40px -12px rgba(109, 40, 217, 0.55);
+		transform: translateX(8px) scale(1.04);
+	}
+
+	.stage.is-current .card-label {
+		color: var(--ink);
+	}
+
+	.stage.is-current .card-idx,
+	.stage.is-current .card-icon {
+		color: var(--accent-bright);
+	}
+
+	.stage:not(.is-current) .stage-card:hover {
+		border-color: rgba(167, 139, 250, 0.4);
+		transform: translateX(3px);
+	}
+
+	.stage-card:hover .card-label {
+		color: var(--ink);
+	}
+
+	/* clip-path would cut a normal outline, so focus is drawn inside */
+	.stage-card:focus-visible {
+		outline: none;
+		box-shadow: inset 0 0 0 2px var(--accent-bright);
+	}
+
+	/* ---------- detail panels ---------- */
+	.wwd-detail {
+		position: relative;
+		min-width: 0;
+	}
+
+	.timeline-track,
+	.tl-node {
+		display: none;
+	}
+
+	/* every panel sits in the same grid cell, so the column is as tall as
+	   the longest one and switching never shifts the layout */
+	.panels {
+		display: grid;
+	}
+
+	.panel {
+		grid-area: 1 / 1;
+		display: flex;
+		flex-direction: column;
+		min-width: 0;
+		opacity: 0;
+		visibility: hidden;
+		filter: blur(4px);
+		transform: translateY(14px);
+		transition:
+			opacity 0.25s ease,
+			filter 0.25s ease,
+			transform 0.25s ease,
+			visibility 0s linear 0.25s;
+	}
+
+	.panel.is-current {
+		opacity: 1;
+		visibility: visible;
+		filter: blur(0);
+		transform: none;
+		transition:
+			opacity 0.5s var(--ease-out) 0.1s,
+			filter 0.5s var(--ease-out) 0.1s,
+			transform 0.6s var(--ease-out) 0.1s,
+			visibility 0s;
+	}
+
+	.panel-meta {
+		display: flex;
+		align-items: center;
+		gap: 0.7rem;
+		margin-bottom: 1rem;
+	}
+
+	.panel-chip {
+		display: grid;
+		place-items: center;
+		width: 34px;
+		height: 34px;
+		border-radius: 10px;
+		background: rgba(109, 40, 217, 0.18);
+		border: 1px solid rgba(167, 139, 250, 0.35);
+		color: var(--accent-bright);
+	}
+
+	.panel-chip svg {
+		width: 18px;
+		height: 18px;
+	}
+
+	.panel-stage {
+		font-size: 0.8rem;
+		font-weight: 600;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--ink);
+	}
+
+	.panel-count {
+		margin-left: auto;
+		font-size: 0.8rem;
+		font-variant-numeric: tabular-nums;
+		color: var(--accent-bright);
+	}
+
+	.panel-count-total {
+		color: var(--muted);
+	}
+
+	/* the illustration frame: a quiet surface with the same dot texture as
+	   the hero, so the drawings read as diagrams on a shared board */
+	.panel-art {
+		position: relative;
+		height: clamp(150px, 24vh, 220px);
+		margin-bottom: 1.4rem;
+		border-radius: 16px;
+		border: 1px solid var(--border-soft);
+		background:
+			radial-gradient(ellipse 70% 80% at 50% 50%, rgba(109, 40, 217, 0.12), transparent 70%),
+			radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1.5px) 0 0 / 20px 20px,
+			var(--surface);
+		overflow: hidden;
+	}
+
+	.panel-art svg {
+		position: absolute;
+		inset: 6% 4%;
+		width: 92%;
+		height: 88%;
+		overflow: visible;
+	}
+
+	.panel-title {
+		margin: 0 0 0.7rem;
+		font-size: clamp(1.35rem, 0.9vw + 1rem, 1.75rem);
+		font-weight: 700;
+		letter-spacing: -0.015em;
+		line-height: 1.15;
+		text-wrap: balance;
+	}
+
+	.panel-text {
+		margin: 0 0 1.25rem;
+		max-width: 60ch;
+		font-size: 0.98rem;
+		line-height: 1.6;
+		color: var(--muted);
+	}
+
+	.panel-list {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.panel-list li {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.45rem;
+		padding: 0.42rem 0.8rem 0.42rem 0.6rem;
+		border-radius: 999px;
+		border: 1px solid var(--border-soft);
+		background: rgba(255, 255, 255, 0.025);
+		font-size: 0.82rem;
+		font-weight: 500;
+		color: var(--ink);
+		white-space: nowrap;
+	}
+
+	.panel-list svg {
+		width: 14px;
+		height: 14px;
+		color: var(--accent-bright);
+		flex-shrink: 0;
+	}
+
+	/* deliverables arrive just after the panel itself */
+	.panel .panel-list li {
+		opacity: 0;
+		transform: translateY(6px);
+		transition:
+			opacity 0.2s ease,
+			transform 0.2s ease;
+	}
+
+	.panel.is-current .panel-list li,
+	.panel.is-passed .panel-list li {
+		opacity: 1;
+		transform: none;
+		transition:
+			opacity 0.45s var(--ease-out),
+			transform 0.5s var(--ease-out);
+	}
+
+	.panel.is-current .panel-list li:nth-child(1) {
+		transition-delay: 0.3s;
+	}
+
+	.panel.is-current .panel-list li:nth-child(2) {
+		transition-delay: 0.36s;
+	}
+
+	.panel.is-current .panel-list li:nth-child(3) {
+		transition-delay: 0.42s;
+	}
+
+	/* ---------- illustration strokes ---------- */
+	.il-base,
+	.il-dash,
+	.il-grid {
+		fill: none;
+		stroke: rgba(255, 255, 255, 0.2);
+		stroke-width: 1.3;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+
+	.il-base {
+		fill: rgba(255, 255, 255, 0.02);
+	}
+
+	.il-dash {
+		stroke-dasharray: 3 5;
+	}
+
+	.il-grid {
+		stroke: rgba(255, 255, 255, 0.07);
+	}
+
+	.il-bar {
+		fill: rgba(255, 255, 255, 0.12);
+	}
+
+	.il-speck {
+		fill: rgba(255, 255, 255, 0.18);
+	}
+
+	.il-node,
+	.il-layer,
+	.il-pill {
+		fill: rgba(109, 40, 217, 0.14);
+		stroke: rgba(167, 139, 250, 0.45);
+		stroke-width: 1.2;
+	}
+
+	.il-lens {
+		fill: rgba(109, 40, 217, 0.12);
+	}
+
+	.il-area {
+		fill: rgba(109, 40, 217, 0.14);
+	}
+
+	.il-spark,
+	.il-cursor {
+		fill: var(--accent-bright);
+	}
+
+	.il-cursor {
+		stroke: var(--bg);
+		stroke-width: 1.5;
+		stroke-linejoin: round;
+	}
+
+	.il-ring {
+		fill: rgba(167, 139, 250, 0.12);
+		stroke: rgba(167, 139, 250, 0.4);
+		stroke-width: 1;
+	}
+
+	.il-dot {
+		fill: var(--accent-bright);
+	}
+
+	/* accent strokes draw themselves in when their stage is reached */
+	.il-draw {
+		fill: none;
+		stroke: var(--accent-bright);
+		stroke-width: 1.8;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+		stroke-dasharray: 1;
+		stroke-dashoffset: 1;
+		transition: stroke-dashoffset 0.3s ease;
+	}
+
+	.panel.is-current .il-draw,
+	.panel.is-passed .il-draw {
+		stroke-dashoffset: 0;
+		transition: stroke-dashoffset 1.3s cubic-bezier(0.65, 0, 0.35, 1) 0.2s;
+	}
+
+	.il-ring,
+	.il-dot,
+	.il-node,
+	.il-spark,
+	.il-cursor {
+		transform-box: fill-box;
+		transform-origin: center;
+		transform: scale(0.4);
+		opacity: 0;
+		transition:
+			transform 0.3s ease,
+			opacity 0.3s ease;
+	}
+
+	.panel.is-current :is(.il-ring, .il-dot, .il-node, .il-spark, .il-cursor),
+	.panel.is-passed :is(.il-ring, .il-dot, .il-node, .il-spark, .il-cursor) {
+		transform: scale(1);
+		opacity: 1;
+		transition:
+			transform 0.7s var(--ease-out) 0.6s,
+			opacity 0.4s ease 0.6s;
+	}
+
+	.panel.is-current .il-dot--live {
+		animation: livePulse 2s ease-in-out 1.4s infinite;
+	}
+
+	@keyframes livePulse {
+		50% {
+			opacity: 0.35;
+		}
+	}
+
+	/* ---------- prev / next ---------- */
+	.panel-controls {
+		display: flex;
+		align-items: center;
+		gap: 0.85rem;
+		margin-top: 1.75rem;
+	}
+
+	.step-btn {
+		display: grid;
+		place-items: center;
+		width: 44px;
+		height: 44px;
+		flex-shrink: 0;
+		padding: 0;
+		border-radius: 50%;
+		border: 1px solid var(--border);
+		background: transparent;
+		color: var(--ink);
+		cursor: pointer;
+		transition:
+			border-color 0.2s ease,
+			background-color 0.2s ease,
+			color 0.2s ease,
+			transform 0.15s ease;
+	}
+
+	.step-btn svg {
+		width: 18px;
+		height: 18px;
+	}
+
+	.step-btn:hover:not(:disabled) {
+		border-color: rgba(167, 139, 250, 0.6);
+		background: rgba(109, 40, 217, 0.16);
+	}
+
+	.step-btn:active:not(:disabled) {
+		transform: scale(0.94);
+	}
+
+	.step-btn:focus-visible {
+		outline: 2px solid var(--accent-bright);
+		outline-offset: 3px;
+	}
+
+	.step-btn:disabled {
+		opacity: 0.35;
+		cursor: default;
+	}
+
+	.step-meter {
+		position: relative;
+		flex: 1;
+		max-width: 220px;
+		height: 2px;
+		border-radius: 2px;
+		background: var(--line);
+		overflow: hidden;
+	}
+
+	.step-meter-fill {
+		position: absolute;
+		inset: 0;
+		background: var(--accent-bright);
+		transform: scaleX(0);
+		transform-origin: left center;
+	}
+
+	/* loops stop while the section is off screen */
+	.wwd.is-idle .core-glow,
+	.wwd.is-idle .tether,
+	.wwd.is-idle .signal-glow,
+	.wwd.is-idle .il-dot--live {
+		animation-play-state: paused;
+	}
+
+	/* ---------- responsive ---------- */
+	@media (min-width: 1081px) and (max-width: 1279px) {
+		.card-desc {
+			display: none;
+		}
+	}
+
+	/* below two columns the orbit steps aside: the panels themselves become
+	   a vertical timeline that lights up stage by stage while scrolling */
+	@media (max-width: 1080px) {
+		.wwd-header {
+			grid-template-columns: 1fr;
+			align-items: start;
+			gap: 0.9rem;
+		}
+
+		.wwd-stage {
+			grid-template-columns: 1fr;
+			max-width: 680px;
+		}
+
+		.wwd-visual,
+		.panel-controls {
+			display: none;
+		}
+
+		.timeline-track {
+			display: block;
+			position: absolute;
+			left: 16px;
+			top: 18px;
+			bottom: 18px;
+			width: 1px;
+			background: var(--border);
+		}
+
+		.timeline-fill {
+			position: absolute;
+			inset: 0;
+			background: var(--accent-bright);
+			transform: scaleY(0);
+			transform-origin: top center;
+		}
+
+		.panels {
+			gap: clamp(2.5rem, 7vw, 3.5rem);
+			padding-left: 48px;
+		}
+
+		.panel,
+		.panel.is-current {
+			grid-area: auto;
+			position: relative;
+			opacity: 1;
+			visibility: visible;
+			filter: none;
+			transform: none;
+		}
+
+		/* the chip doubles as the timeline node */
+		.tl-node {
+			display: block;
+			position: absolute;
+			left: -36px;
+			top: 12px;
+			width: 9px;
+			height: 9px;
+			border-radius: 50%;
+			background: var(--bg);
+			border: 1px solid rgba(255, 255, 255, 0.38);
+			transition:
+				background-color 0.3s ease,
+				border-color 0.3s ease,
+				box-shadow 0.4s ease;
+		}
+
+		.panel.is-passed .tl-node,
+		.panel.is-current .tl-node {
+			background: var(--accent-bright);
+			border-color: var(--accent-bright);
+		}
+
+		.panel.is-current .tl-node {
+			box-shadow: 0 0 0 5px rgba(167, 139, 250, 0.18);
+		}
+
+		.panel-art {
+			height: auto;
+			aspect-ratio: 360 / 210;
+		}
+	}
+
+	@media (max-width: 520px) {
+		.timeline-track {
+			left: 4px;
+		}
+
+		.panels {
+			padding-left: 26px;
+		}
+
+		.tl-node {
+			left: -26px;
+		}
+
+		.panel-list li {
+			font-size: 0.78rem;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.reveal {
+			transition: none;
+			transform: none;
+		}
+
+		.core-glow,
+		.tether,
+		.signal-glow,
+		.panel.is-current .il-dot--live {
+			animation: none;
+		}
+
+		/* state still changes, it just doesn't travel */
+		.panel,
+		.panel.is-current,
+		.panel .panel-list li,
+		.stage-card,
+		.stage.is-current .stage-card,
+		.stage:not(.is-current) .stage-card:hover,
+		.core-icon,
+		.core-icon.is-current {
+			transform: none;
+			filter: none;
+		}
+
+		.il-draw {
+			transition: none;
+		}
+
+		.il-ring,
+		.il-dot,
+		.il-node,
+		.il-spark,
+		.il-cursor,
+		.node-halo {
+			transform: none;
+		}
+	}
+</style>
+
+<noscript>
+	<style>
+		.wwd .reveal {
+			opacity: 1 !important;
+			transform: none !important;
+		}
+	</style>
+</noscript>
+
+<script>
+	import { gsap } from 'gsap';
+	import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+	gsap.registerPlugin(ScrollTrigger);
+
+	type Geom = { cx: number; cy: number; r: number; arcR: number; angles: number[] };
+
+	const section = document.getElementById('what-we-do');
+	const visual = section?.querySelector<HTMLElement>('.wwd-visual');
+	const stageWrap = section?.querySelector<HTMLElement>('.wwd-stage');
+
+	if (section && visual && stageWrap) {
+		const geom = JSON.parse(visual.dataset.geom ?? '{}') as Geom;
+		const q = <T extends Element>(sel: string) => Array.from(section.querySelectorAll<T>(sel));
+
+		const stageEls = q<HTMLLIElement>('.stage');
+		const cards = q<HTMLButtonElement>('.stage-card');
+		const nodes = q<SVGGElement>('.node');
+		const coreIcons = q<SVGSVGElement>('.core-icon');
+		const panels = q<HTMLElement>('.panel');
+		const [prevBtn, nextBtn] = q<HTMLButtonElement>('.step-btn');
+		const progressPath = section.querySelector<SVGPathElement>('.arc-progress');
+		const signal = section.querySelector<SVGGElement>('.signal');
+		const tether = section.querySelector<SVGLineElement>('.tether');
+		const ring = section.querySelector<HTMLElement>('.core-ring');
+		const meterFill = section.querySelector<HTMLElement>('.step-meter-fill');
+		const timelineFill = section.querySelector<HTMLElement>('.timeline-fill');
+		const panelWrap = section.querySelector<HTMLElement>('.panels');
+
+		const last = stageEls.length - 1;
+		const firstAngle = geom.angles[0];
+		const sweep = geom.angles[last] - firstAngle;
+
+		// ---------- section header reveal ----------
+		const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		if (reduceMotion) {
+			section.classList.add('is-visible');
+		} else {
+			const io = new IntersectionObserver(
+				([entry]) => {
+					if (entry.isIntersecting) {
+						section.classList.add('is-visible');
+						io.disconnect();
+					}
+				},
+				{ threshold: 0.1 },
+			);
+			io.observe(section);
+		}
+
+		// ---------- state ----------
+		let current = -1;
+		// in the two-column layout only the current panel is shown, so the
+		// others are taken out of the accessibility tree and tab order
+		let exclusive = false;
+
+		const setStage = (index: number) => {
+			if (index === current) return;
+			current = index;
+			const mark = (els: Element[]) =>
+				els.forEach((el, i) => {
+					el.classList.toggle('is-current', i === index);
+					el.classList.toggle('is-passed', i < index);
+				});
+			mark(stageEls);
+			mark(nodes);
+			// on the timeline, passed panels stay drawn; in the two-column
+			// layout they reset so their illustration replays on return
+			panels.forEach((el, i) => {
+				el.classList.toggle('is-current', i === index);
+				el.classList.toggle('is-passed', !exclusive && i < index);
+				el.inert = exclusive && i !== index;
+			});
+			coreIcons.forEach((el, i) => el.classList.toggle('is-current', i === index));
+			cards.forEach((el, i) => (i === index ? el.setAttribute('aria-current', 'step') : el.removeAttribute('aria-current')));
+			if (prevBtn) prevBtn.disabled = index === 0;
+			if (nextBtn) nextBtn.disabled = index === last;
+			section.classList.toggle('is-complete', index === last);
+		};
+
+		// p runs 0 → 1 across the whole journey. The signal moves continuously
+		// along the orbit; the "current" stage is whichever node it's nearest.
+		const render = (p: number) => {
+			const s = p * last;
+			const seg = Math.min(Math.floor(s), last - 1);
+			const angle = gsap.utils.interpolate(geom.angles[seg], geom.angles[seg + 1], s - seg);
+			const rad = (angle * Math.PI) / 180;
+			const cos = Math.cos(rad);
+			const sin = Math.sin(rad);
+			const x = geom.cx + geom.arcR * cos;
+			const y = geom.cy + geom.arcR * sin;
+
+			signal?.setAttribute('transform', `translate(${x.toFixed(2)} ${y.toFixed(2)})`);
+			if (tether) {
+				tether.setAttribute('x1', (geom.cx + geom.r * cos).toFixed(2));
+				tether.setAttribute('y1', (geom.cy + geom.r * sin).toFixed(2));
+				tether.setAttribute('x2', x.toFixed(2));
+				tether.setAttribute('y2', y.toFixed(2));
+			}
+			if (progressPath) progressPath.style.strokeDashoffset = String(1 - (angle - firstAngle) / sweep);
+			if (ring) ring.style.transform = `rotate(${p * 270}deg)`;
+			if (meterFill) meterFill.style.transform = `scaleX(${p})`;
+			setStage(Math.round(s));
+		};
+
+		// the orbit assembles itself the first time the section comes into view
+		const intro = (play: boolean) => {
+			if (!play) return;
+			const tl = gsap.timeline({
+				defaults: { ease: 'expo.out' },
+				scrollTrigger: { trigger: visual, start: 'top 80%', once: true },
+			});
+			tl.from(section.querySelector('.core'), { scale: 0.7, filter: 'blur(10px)', autoAlpha: 0, duration: 1.1, clearProps: 'all' })
+				.from(section.querySelector('.arc-track'), { strokeDashoffset: 1, duration: 1.2, ease: 'power3.inOut', clearProps: 'all' }, 0.1)
+				.from(q('.node-dot'), { scale: 0, transformOrigin: '50% 50%', duration: 0.6, stagger: 0.07, ease: 'back.out(2)', clearProps: 'all' }, 0.35)
+				.from(cards, { autoAlpha: 0, x: -14, duration: 0.8, stagger: 0.07, clearProps: 'all' }, 0.45)
+				.from(signal, { autoAlpha: 0, duration: 0.6, ease: 'power1.out' }, 0.9);
+			return tl;
+		};
+
+		const mm = gsap.matchMedia();
+
+		mm.add(
+			{
+				arc: '(min-width: 1081px)',
+				tall: '(min-height: 700px)',
+				reduce: '(prefers-reduced-motion: reduce)',
+			},
+			(ctx) => {
+				const { arc, tall, reduce } = ctx.conditions as Record<string, boolean>;
+				const ac = new AbortController();
+				const opts = { signal: ac.signal };
+				const cleanups: Array<() => void> = [() => ac.abort()];
+
+				exclusive = arc;
+				current = -1;
+
+				if (arc && tall && !reduce) {
+					// pinned scroll story: the stage holds while scrolling carries
+					// the idea from Problem to Something real
+					const proxy = { p: 0 };
+					section.classList.add('is-pinned');
+					const tween = gsap.to(proxy, {
+						p: 1,
+						ease: 'none',
+						onUpdate: () => render(proxy.p),
+						scrollTrigger: {
+							trigger: stageWrap,
+							start: 'top top',
+							end: () => `+=${Math.round(window.innerHeight * 2.4)}`,
+							pin: true,
+							scrub: 0.7,
+							// snap to each stage so the scroll never rests between two
+							snap: { snapTo: 1 / last, duration: { min: 0.2, max: 0.6 }, delay: 0.15, ease: 'power2.inOut' },
+							invalidateOnRefresh: true,
+						},
+					});
+					render(0);
+					intro(true);
+
+					const scrollToStage = (i: number) => {
+						const st = tween.scrollTrigger;
+						if (!st) return;
+						window.scrollTo({ top: st.start + (i / last) * (st.end - st.start) + 1, behavior: 'smooth' });
+					};
+					cards.forEach((card, i) => card.addEventListener('click', () => scrollToStage(i), opts));
+					prevBtn?.addEventListener('click', () => scrollToStage(Math.max(0, current - 1)), opts);
+					nextBtn?.addEventListener('click', () => scrollToStage(Math.min(last, current + 1)), opts);
+
+					cleanups.push(() => {
+						tween.scrollTrigger?.kill();
+						tween.kill();
+						section.classList.remove('is-pinned');
+					});
+				} else if (arc) {
+					// short windows or reduced motion: no pin. The journey follows
+					// hover, focus, click and the prev/next buttons.
+					const proxy = { p: 0 };
+					const goTo = (i: number) => {
+						gsap.to(proxy, {
+							p: i / last,
+							duration: reduce ? 0 : 0.5 + Math.abs(i / last - proxy.p) * 1.1,
+							ease: 'power3.inOut',
+							overwrite: true,
+							onUpdate: () => render(proxy.p),
+						});
+					};
+
+					cards.forEach((card, i) => {
+						const pick = () => goTo(i);
+						card.addEventListener('mouseenter', pick, opts);
+						card.addEventListener('focus', pick, opts);
+						card.addEventListener('click', pick, opts);
+					});
+					prevBtn?.addEventListener('click', () => goTo(Math.max(0, current - 1)), opts);
+					nextBtn?.addEventListener('click', () => goTo(Math.min(last, current + 1)), opts);
+
+					render(0);
+					intro(!reduce);
+					cleanups.push(() => gsap.killTweensOf(proxy));
+				} else {
+					// vertical timeline: each panel lights as it crosses the
+					// reading line, and the track fills as you go
+					setStage(0);
+					const triggers = panels.map((el, i) =>
+						ScrollTrigger.create({
+							trigger: el,
+							start: 'top 65%',
+							onEnter: () => setStage(i),
+							onLeaveBack: () => setStage(Math.max(0, i - 1)),
+						}),
+					);
+					const fill = ScrollTrigger.create({
+						trigger: panelWrap,
+						start: 'top 65%',
+						end: 'bottom 65%',
+						scrub: reduce ? false : 0.4,
+						onUpdate: (self) => {
+							if (timelineFill) timelineFill.style.transform = `scaleY(${self.progress})`;
+						},
+					});
+					cleanups.push(() => {
+						triggers.forEach((t) => t.kill());
+						fill.kill();
+					});
+				}
+
+				return () => cleanups.forEach((fn) => fn());
+			},
+		);
+
+		// ambient loops pause whenever the section isn't on screen
+		new IntersectionObserver(([entry]) => section.classList.toggle('is-idle', !entry.isIntersecting)).observe(section);
+	}
+</script>

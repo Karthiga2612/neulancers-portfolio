@@ -1,287 +1,413 @@
 ---
-const tags = ['AI', 'Software', 'Automation', 'Products', 'Experiments'];
-
 const icons: Record<string, string> = {
-	bulb: '<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.5.4.8 1 .8 1.6v.5h5.4v-.5c0-.6.3-1.2.8-1.6A6 6 0 0 0 12 3Z"/>',
-	search: '<circle cx="10.5" cy="10.5" r="6"/><path d="m19.5 19.5-4.3-4.3"/>',
-	spark: '<path d="M12 3l1.6 4.9L18.5 9l-4.9 1.6L12 15.5l-1.6-4.9L5.5 9l4.9-1.6L12 3Z"/>',
-	code: '<path d="m9 8-4 4 4 4M15 8l4 4-4 4"/>',
-	layers: '<path d="M12 4 3 9l9 5 9-5-9-5Z"/><path d="m3 14 9 5 9-5"/>',
-	rocket:
-		'<path d="M12 2.5c2 2 3 5 3 8 0 2-1 4-3 6-2-2-3-4-3-6 0-3 1-6 3-8Z"/><path d="m8.3 15-2.8 3.7 3.7-1M15.7 15l2.8 3.7-3.7-1"/>',
+	arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+	down: '<path d="M12 5v14M6 13l6 6 6-6"/>',
+	tangle: '<path d="M4 12c2.5-6 5.5 6 8 0s5.5 6 8 0"/>',
+	check: '<path d="m5 12.5 4.5 4.5L19 7" pathLength="1"/>',
 };
 
-const stageMeta = [
-	{ label: 'Problem', desc: 'A real challenge to solve.', icon: 'bulb' },
-	{ label: 'Question', desc: 'Dig deeper, find the right one.', icon: 'search' },
-	{ label: 'Idea', desc: 'Turn insights into possibilities.', icon: 'spark' },
-	{ label: 'Prototype', desc: 'Build, test, learn fast.', icon: 'code' },
-	{ label: 'System', desc: 'Make it work in the real world.', icon: 'layers' },
-	{ label: 'Something real', desc: 'Create impact, not just output.', icon: 'rocket' },
+const brand = 'Neulancers';
+
+const headline = {
+	dim: ['We', 'don’t', 'build', 'software.'],
+	lead: ['We', 'build', 'possibilities.'],
+};
+
+// Each fragment is a problem a team lives with, and what it becomes.
+// sx/sy: where it starts out on load, as % of the hero box, before it
+// falls into the list. r: its tilt there. d: depth, 0 = far (small, soft,
+// dim) → 1 = near (crisp).
+const fragments = [
+	{ problem: 'Manual data entry', outcome: 'Automated intake', sx: 12, sy: 19, r: -6, d: 0.55 },
+	{ problem: 'Re-typed invoices', outcome: 'Invoices filed by AI', sx: 33, sy: 12, r: 4, d: 1 },
+	{ problem: 'Five disconnected tools', outcome: 'One connected system', sx: 67, sy: 13, r: -3, d: 0.8 },
+	{ problem: 'Legacy system', outcome: 'A modern platform', sx: 88, sy: 23, r: 7, d: 0.45 },
+	{ problem: 'Spreadsheet chaos', outcome: 'Live dashboards', sx: 9, sy: 42, r: 5, d: 1 },
+	{ problem: 'Two-day support wait', outcome: 'Instant answers', sx: 91, sy: 44, r: -5, d: 0.9 },
+	{ problem: 'Nobody trusts the numbers', outcome: 'One source of truth', sx: 12, sy: 66, r: -4, d: 0.7 },
+	{ problem: 'An idea stuck in a deck', outcome: 'A prototype in users’ hands', sx: 88, sy: 66, r: 6, d: 0.6 },
+	{ problem: 'Copy-paste workflows', outcome: 'Workflows that run themselves', sx: 21, sy: 30, r: 3, d: 0.9 },
+	{ problem: 'Data silos', outcome: 'A shared data layer', sx: 50, sy: 8, r: -7, d: 0.5 },
+	{ problem: 'Approval bottlenecks', outcome: 'One-click approvals', sx: 78, sy: 34, r: 5, d: 1 },
+	{ problem: 'Unanswered inboxes', outcome: 'Inboxes triaged by AI', sx: 6, sy: 84, r: -3, d: 0.7 },
 ];
-
-// The arc is a partial circle CONCENTRIC with the main circle — same
-// center, larger radius — not an independent bulge. Everything here is
-// worked out in a fixed reference box (VISUAL_W × VISUAL_H) and then
-// expressed as percentages of that box, so the circle, arc, nodes and
-// cards all share one coordinate system and stay locked together.
-// The box's aspect ratio is also applied to .hero-visual directly (via
-// inline style), so the whole system scales fluidly with the grid
-// column instead of being pinned to viewport-width breakpoints.
-const VISUAL_W = 680;
-const VISUAL_H = 560;
-const CIRCLE_R = 92; // kept modest on purpose — a small, soft core, not the focal point
-const CIRCLE_CX = CIRCLE_R; // circle sits flush against the box's left edge
-const CIRCLE_CY = VISUAL_H / 2;
-const ARC_R = CIRCLE_R + 170; // the orbit's radius — well clear of the circle, filling the box
-const CARD_GAP = 14; // px (ref space) — card's pointed tip sits right at its node
-// How far the 6 stages sweep above/below the orbit's horizontal center line.
-// Less than a full ±90° on purpose: pulling the first/last stage in from the
-// due-up/due-down extremes keeps "Something real" feeling like part of the
-// loop rather than a tail hanging off the bottom.
-const NODE_ANGLE_LIMIT = 66;
-const ANGLE_START = -NODE_ANGLE_LIMIT;
-const ANGLE_END = NODE_ANGLE_LIMIT;
-
-const toRad = (deg: number) => (deg * Math.PI) / 180;
-const toDeg = (rad: number) => (rad * 180) / Math.PI;
-// used for the visible curve: uniform angle steps trace a smooth, evenly
-// "dense" circular arc.
-const angleAt = (t: number) => ANGLE_START + t * (ANGLE_END - ANGLE_START);
-// used for the 6 stage nodes/cards: spacing them evenly by *angle* bunches
-// them together near the sweep's tips (sine flattens out there) and spreads
-// them apart near the middle. Spacing evenly by Y-projection instead keeps
-// a consistent gap between cards top to bottom, scaled to the same
-// ±NODE_ANGLE_LIMIT sweep as the visible arc.
-const angleAtEvenY = (t: number) => {
-	const limitSin = Math.sin(toRad(NODE_ANGLE_LIMIT));
-	return toDeg(Math.asin((t * 2 - 1) * limitSin));
-};
-const pointAt = (angleDeg: number, radius: number) => {
-	const rad = toRad(angleDeg);
-	return {
-		x: CIRCLE_CX + radius * Math.cos(rad),
-		y: CIRCLE_CY + radius * Math.sin(rad),
-	};
-};
-
-const stages = stageMeta.map((s, i) => {
-	const t = stageMeta.length === 1 ? 0 : i / (stageMeta.length - 1);
-	const node = pointAt(angleAtEvenY(t), ARC_R);
-	return {
-		...s,
-		idx: `0${i + 1}`,
-		nodeXPct: (node.x / VISUAL_W) * 100,
-		nodeYPct: (node.y / VISUAL_H) * 100,
-		cardLeftPct: ((node.x + CARD_GAP) / VISUAL_W) * 100,
-		cardTopPct: (node.y / VISUAL_H) * 100,
-	};
-});
-
-const arcPath = (() => {
-	const steps = 48;
-	let d = '';
-	for (let i = 0; i <= steps; i++) {
-		const p = pointAt(angleAt(i / steps), ARC_R);
-		const x = ((p.x / VISUAL_W) * 100).toFixed(2);
-		const y = ((p.y / VISUAL_H) * 100).toFixed(2);
-		d += `${i === 0 ? 'M' : 'L'} ${x} ${y} `;
-	}
-	return d.trim();
-})();
 ---
 
-<section class="hero" id="hero">
+<script is:inline>
+	// hide the entrance targets before first paint so the module script can
+	// stage them without a flash; if that script never runs, the class is
+	// dropped and the finished state simply shows
+	if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+		document.documentElement.classList.add('hero-motion');
+		setTimeout(() => document.documentElement.classList.remove('hero-motion'), 3000);
+	}
+</script>
+
+<!-- server-rendered in the finished state (name in place, solutions
+     showing); the script rewinds it for the load + scroll story -->
+<section class="hero view-solution" id="hero" aria-labelledby="hero-title">
+	<div class="hero-bg" aria-hidden="true">
+		<span class="bg-well"></span>
+		<span class="bg-rings"></span>
+		<span class="bg-spot"></span>
+	</div>
+
 	<div class="hero-inner">
-		<div class="hero-content">
-			<h1 class="headline">
-				<span class="line line--dim reveal" style="--reveal-order: 0">We don't build software.</span>
-				<span class="line reveal" style="--reveal-order: 1">We build possibilities.</span>
-			</h1>
+		<div class="hero-copy">
+				<h1 class="headline" id="hero-title">
+					<span class="line line--from">
+						{headline.dim.map((w) => <><span class="word"><span class="word-inner">{w}</span></span>{' '}</>)}
+					</span>
+					<span class="line line--to">
+						{headline.lead.map((w) => <><span class="word"><span class="word-inner">{w}</span></span>{' '}</>)}
+					</span>
+				</h1>
 
-			<div class="flow-hint reveal" style="--reveal-order: 2">
-				<span class="flow-hint-dot" aria-hidden="true"></span>
-				<span>Problem</span>
-				<span class="flow-hint-arrow" aria-hidden="true">&rarr;</span>
-				<span class="flow-hint-strong">Something real</span>
-			</div>
-
-			<div class="cta-row reveal" style="--reveal-order: 3">
-				<a href="#contact" class="cta-btn">
-					<span>Bring us a problem</span>
-					<span class="cta-arrow">&rarr;</span>
-				</a>
-			</div>
-
-			<div class="tag-row reveal" style="--reveal-order: 4">
-				{tags.map((tag) => <span class="tag">{tag}</span>)}
-			</div>
-		</div>
-
-		<div
-			class="hero-visual reveal"
-			id="pipeline"
-			aria-label="How an idea becomes something real"
-			style={`--reveal-order: 5; aspect-ratio: ${VISUAL_W} / ${VISUAL_H};`}
-		>
-			<div class="hero-circle" aria-hidden="true">
-				<span class="core-glow"></span>
-				<span class="core-ring"></span>
-				<span class="core-icon-wrap">
-					{stageMeta.map((s, i) => (
-						<svg
-							class={`core-icon${i === 0 ? ' is-current' : ''}`}
-							data-index={i}
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="1.4"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							set:html={icons[s.icon]}
-						/>
-					))}
+			<p class="wordmark" aria-label={brand}>
+				<span class="wordmark-logo-wrap" aria-hidden="true">
+					<span class="wordmark-ring"></span>
+					<img src="/logo.png" alt="" class="wordmark-logo" width="30" height="27" />
 				</span>
+				<span class="wordmark-text" aria-hidden="true">
+					{brand.split('').map((ch) => <span class="ch">{ch}</span>)}
+				</span>
+			</p>
+
+			<div class="copy-sub">
+				<p class="lede" data-enter>
+					Bring us the messy, real-world problems. We turn them into AI,
+					software and automation that people actually use.
+				</p>
+
+				<div class="cta-row" data-enter>
+					<a href="#contact" class="cta-btn">
+						<span>Bring us a problem</span>
+						<svg class="cta-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={icons.arrow} />
+					</a>
+					<a href="#what-we-do" class="cta-link">
+						<span>See what we do</span>
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={icons.down} />
+					</a>
+				</div>
 			</div>
-
-			<svg class="arc-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-				<path d={arcPath} class="arc-base"></path>
-			</svg>
-
-			{stages.map((s, i) => (
-				<span class="node" data-index={i} style={`left:${s.nodeXPct}%; top:${s.nodeYPct}%;`}></span>
-			))}
-
-			{stages.map((s, i) => (
-				<button
-					type="button"
-					class="stage-card"
-					data-index={i}
-					aria-pressed="false"
-					style={`left:${s.cardLeftPct}%; top:${s.cardTopPct}%;`}
-				>
-					<div class="card-head">
-						<span class="card-idx">{s.idx}</span>
-						<span class="card-label">{s.label}</span>
-						<svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" set:html={icons[s.icon]}></svg>
-					</div>
-					<span class="card-desc">{s.desc}</span>
-				</button>
-			))}
 		</div>
+
+		<div class="frags-wrap">
+			<ul class="frags" aria-label="Problems and what we turn them into">
+				{fragments.map((f, i) => (
+					<li class="frag" data-sx={f.sx} data-sy={f.sy} data-r={f.r} data-d={f.d} data-i={i}>
+						<span class="chip is-solved">
+							<span class="face face--problem" aria-hidden="true">
+								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={icons.tangle} />
+								<span class="face-text">{f.problem}</span>
+							</span>
+							<span class="face face--outcome" aria-hidden="true">
+								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" set:html={icons.check} />
+								<span class="face-text">{f.outcome}</span>
+							</span>
+							<span class="visually-hidden">{f.problem}, solved as: {f.outcome}</span>
+						</span>
+					</li>
+				))}
+			</ul>
+		</div>
+
+		<a href="#what-we-do" class="scroll-cue">
+			<span>Scroll down</span>
+			<span class="scroll-cue-line" aria-hidden="true"></span>
+		</a>
 	</div>
 </section>
 
 <style>
 	.hero {
-		--border: rgba(255, 255, 255, 0.12);
+		--border: rgba(255, 255, 255, 0.14);
+		--line: rgba(255, 255, 255, 0.1);
 		--accent-hover: #5b21b6;
+		--accent-bright: #a78bfa;
 		--bg: #07080b;
-		--circle-bg: #0b0c11;
-		--card-bg: #0d1018;
+		--ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 
 		position: relative;
-		display: flex;
-		align-items: center;
-		/* dvh tracks the real visible viewport on mobile browsers (accounting
-		   for the address bar), falling back to vh where dvh isn't supported */
-		min-height: 100vh;
-		min-height: 100dvh;
+		overflow: hidden;
 		background: var(--bg);
 		color: var(--ink);
 		font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
 	}
 
+	.hero ::selection {
+		background: rgba(167, 139, 250, 0.35);
+		color: #ffffff;
+	}
+
+	.visually-hidden {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip: rect(0 0 0 0);
+		white-space: nowrap;
+	}
+
+	/* ---------- backdrop: a gravity well that brightens once solved ---------- */
+	.hero-bg {
+		position: absolute;
+		inset: 0;
+		overflow: hidden;
+		pointer-events: none;
+	}
+
+	.bg-well,
+	.bg-rings {
+		position: absolute;
+		left: 50%;
+		top: 78%;
+		aspect-ratio: 1.6;
+		translate: -50% -50%;
+		transition:
+			opacity 1.2s ease,
+			scale 1.6s var(--ease-out);
+	}
+
+	.bg-well {
+		width: min(110vw, 1300px);
+		background: radial-gradient(ellipse at center, rgba(109, 40, 217, 0.26), rgba(109, 40, 217, 0.07) 38%, transparent 66%);
+		opacity: 0.5;
+		scale: 0.8;
+	}
+
+	.bg-rings {
+		width: min(140vw, 1700px);
+		border-radius: 50%;
+		background: repeating-radial-gradient(ellipse at center, transparent 0 78px, rgba(255, 255, 255, 0.035) 78px 79px);
+		mask-image: radial-gradient(ellipse at center, #000 10%, transparent 62%);
+		-webkit-mask-image: radial-gradient(ellipse at center, #000 10%, transparent 62%);
+		opacity: 0.5;
+		scale: 1.15;
+	}
+
+	.hero.view-solution .bg-well {
+		opacity: 1;
+		scale: 1.1;
+	}
+
+	.hero.view-solution .bg-rings {
+		opacity: 1;
+		scale: 0.95;
+	}
+
+	.bg-spot {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 560px;
+		height: 560px;
+		margin: -280px 0 0 -280px;
+		background: radial-gradient(circle, rgba(167, 139, 250, 0.08), transparent 62%);
+		opacity: 0;
+		transition: opacity 0.5s ease;
+	}
+
+	.hero.has-pointer .bg-spot {
+		opacity: 1;
+	}
+
+	/* ---------- layout: copy centered in the space, the list on the floor ---------- */
 	.hero-inner {
 		position: relative;
-		width: 100%;
-		display: grid;
-		/* the text column is the wider one: it has to hold "We don't build
-		   software." on a single line at a headline size that leads the page */
-		grid-template-columns: minmax(0, 54fr) minmax(0, 46fr);
-		align-items: center;
-		gap: clamp(24px, 3vw, 56px);
-		max-width: 1320px;
-		margin: 0 auto;
-		padding: clamp(100px, 14vh, 140px) clamp(20px, 4vw, 32px) clamp(48px, 8vh, 88px);
-	}
-
-	/* ---------- page-load entrance ---------- */
-	.reveal {
-		opacity: 0;
-		transform: translateY(18px);
-		transition:
-			opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
-			transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-		transition-delay: calc(var(--reveal-order, 0) * 90ms);
-	}
-
-	.hero.is-visible .reveal {
-		opacity: 1;
-		transform: translateY(0);
-	}
-
-	/* ---------- left column ---------- */
-	/* container query unit lets the headline size itself to the column it
-	   actually gets, so each sentence stays on one line when there is room */
-	.hero-content {
-		position: relative;
-		z-index: 2;
-		container-type: inline-size;
-	}
-
-	/* sectors sit under the CTA as a quiet footnote, not a kicker above
-	   the headline */
-	.tag-row {
+		z-index: 1;
 		display: flex;
-		flex-wrap: wrap;
-		gap: 0.4rem 1.25rem;
-		max-width: 30rem;
-		margin-top: clamp(2rem, 5vh, 3rem);
-		padding-top: 1.1rem;
-		border-top: 1px solid var(--border-soft);
+		flex-direction: column;
+		align-items: center;
+		/* svh so the list stays on screen when a mobile address bar shows */
+		min-height: 100vh;
+		min-height: 100svh;
+		max-width: 1180px;
+		margin: 0 auto;
+		padding: calc(4rem + clamp(20px, 4vh, 48px)) clamp(20px, 4vw, 32px) clamp(16px, 2.5vh, 28px);
+		text-align: center;
 	}
 
-	.tag {
-		font-size: 0.75rem;
-		font-weight: 500;
-		letter-spacing: 0.08em;
-		text-transform: uppercase;
-		color: var(--muted);
+	.hero-copy {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		margin-block: auto;
+		padding-bottom: clamp(1.5rem, 4vh, 2.5rem);
 	}
 
-	.headline {
-		margin: 0 0 2rem;
+	/* the headline and the copy under it sit above the name in the stacking
+	   order, so while the name looms large it reads as light behind them */
+	.copy-sub {
+		position: relative;
+		z-index: 1;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+	}
+
+	/* ---------- entrance (pre-paint hidden state, see inline script) ---------- */
+	:global(html.hero-motion) .hero .word-inner {
+		transform: translateY(110%);
+	}
+
+	:global(html.hero-motion) .hero [data-enter],
+	:global(html.hero-motion) .hero .frag,
+	:global(html.hero-motion) .hero .wordmark {
+		opacity: 0;
+	}
+
+	/* ---------- the name ---------- */
+	/* sits between the headline and the description */
+	.wordmark {
+		position: relative;
+		z-index: 0;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.6rem;
+		margin: 0.4rem 0 clamp(1rem, 2.5vh, 1.4rem);
+		font-size: clamp(1.45rem, 1.3vw + 1rem, 2.05rem);
 		font-weight: 700;
-		letter-spacing: -0.025em;
-		line-height: 1.04;
+		letter-spacing: -0.02em;
+		line-height: 1;
+		color: var(--ink);
+		transform-origin: 50% 50%;
+	}
+
+	.wordmark-logo-wrap {
+		position: relative;
+		display: grid;
+		place-items: center;
+		width: 1.15em;
+	}
+
+	/* hover uses the individual rotate/scale/translate properties so it
+	   layers on top of the inline transforms the entrance leaves behind */
+	.wordmark-logo {
+		width: 100%;
+		height: auto;
+		transition:
+			rotate 0.6s var(--ease-out),
+			scale 0.6s var(--ease-out);
+	}
+
+	/* the shockwave sent out when the logo lands */
+	.wordmark-ring {
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		width: 2.4em;
+		height: 2.4em;
+		margin: -1.2em 0 0 -1.2em;
+		border-radius: 50%;
+		border: 1px solid rgba(167, 139, 250, 0.7);
+		box-shadow: 0 0 24px rgba(109, 40, 217, 0.45);
+		opacity: 0;
+		pointer-events: none;
+	}
+
+	.wordmark-text {
+		display: inline-flex;
+	}
+
+	/* once landed the name stays touchable: letters lift and light up under
+	   the pointer, and the logo turns */
+	.ch {
+		display: inline-block;
+		transition:
+			translate 0.45s var(--ease-out),
+			color 0.3s ease;
+	}
+
+	.hero.is-named .ch:hover {
+		translate: 0 -0.14em;
+		color: var(--accent-bright);
+	}
+
+	.hero.is-named .wordmark:hover .wordmark-logo {
+		rotate: -12deg;
+		scale: 1.08;
+	}
+
+	/* ---------- headline ---------- */
+	.headline {
+		position: relative;
+		z-index: 1;
+		margin: 0 0 1.4rem;
+		font-weight: 700;
+		letter-spacing: -0.035em;
+		line-height: 1.02;
 	}
 
 	.headline .line {
 		display: block;
-		font-size: clamp(2.2rem, 7.4cqi, 4.25rem);
+		/* capped by height too, so the list still fits on a short laptop */
+		font-size: clamp(2.4rem, min(6.2vw, 9vh), 5.4rem);
 		text-wrap: balance;
+		transition: color 0.8s ease;
+	}
+
+	/* the emphasis follows the list: problems → "We don't build software."
+	   leads; solutions → "We build possibilities." takes over */
+	.line--from {
+		color: var(--ink);
+		font-weight: 600;
+		margin-bottom: 0.08em;
+	}
+
+	.line--to {
+		color: var(--muted);
+	}
+
+	.hero.view-solution .line--from {
+		color: var(--muted);
+	}
+
+	.hero.view-solution .line--to {
 		color: var(--ink);
 	}
 
-	.headline .line--dim {
-		color: var(--muted);
-		font-weight: 600;
-		margin-top: 0.3rem;
+	/* each word rises out of its own mask; the padding/negative margin
+	   pair gives descenders room inside the clip without moving the line */
+	.word {
+		display: inline-block;
+		overflow: hidden;
+		vertical-align: top;
+		padding-bottom: 0.12em;
+		margin-bottom: -0.12em;
 	}
 
+	.word-inner {
+		display: inline-block;
+	}
+
+	.lede {
+		max-width: 36rem;
+		margin: 0 0 1.9rem;
+		font-size: clamp(1.02rem, 0.4vw + 0.92rem, 1.2rem);
+		line-height: 1.6;
+		color: var(--muted);
+		text-wrap: balance;
+	}
+
+	/* ---------- CTAs ---------- */
 	.cta-row {
 		display: flex;
 		align-items: center;
+		justify-content: center;
 		flex-wrap: wrap;
-		gap: 1rem;
+		gap: 0.75rem 1.75rem;
 	}
 
 	.cta-btn {
+		position: relative;
 		display: inline-flex;
 		align-items: center;
-		gap: 0.55em;
-		padding: 0.95rem 1.7rem;
+		gap: 0.6em;
+		min-height: 48px;
+		padding: 0.95rem 1.5rem 0.95rem 1.7rem;
+		overflow: hidden;
+		isolation: isolate;
 		background: var(--accent);
 		color: #ffffff;
 		border-radius: 999px;
@@ -289,437 +415,619 @@ const arcPath = (() => {
 		font-size: 1rem;
 		font-weight: 600;
 		white-space: nowrap;
-		transition: background-color 0.15s ease;
+		box-shadow: 0 12px 28px -10px rgba(109, 40, 217, 0.6);
+		transition:
+			background-color 0.2s ease,
+			box-shadow 0.3s ease;
+	}
+
+	/* a light sweep crosses the button on hover — a one-shot response to the
+	   pointer, not an idle loop */
+	.cta-btn::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, 0.22) 50%, transparent 70%);
+		transform: translateX(-110%);
+		transition: transform 0.7s var(--ease-out);
 	}
 
 	.cta-btn:hover,
 	.cta-btn:focus-visible {
 		background: var(--accent-hover);
+		box-shadow: 0 16px 36px -10px rgba(109, 40, 217, 0.75);
+	}
+
+	.cta-btn:hover::after {
+		transform: translateX(110%);
+	}
+
+	.cta-btn:focus-visible,
+	.cta-link:focus-visible,
+	.scroll-cue:focus-visible {
+		outline: 2px solid var(--accent-bright);
+		outline-offset: 3px;
 	}
 
 	.cta-arrow {
-		transition: transform 0.2s ease;
+		width: 1.1em;
+		height: 1.1em;
+		transition: transform 0.3s var(--ease-out);
 	}
 
-	.cta-btn:hover .cta-arrow {
-		transform: translateX(3px);
+	.cta-btn:hover .cta-arrow,
+	.cta-btn:focus-visible .cta-arrow {
+		transform: translateX(4px);
 	}
 
-	/* ---------- headline-to-workflow connector ---------- */
-	.flow-hint {
+	.cta-link {
 		display: inline-flex;
 		align-items: center;
-		gap: 0.5rem;
-		font-size: 0.8rem;
-		letter-spacing: 0.08em;
-		text-transform: uppercase;
-		color: var(--muted);
-		margin-bottom: 1.75rem;
-	}
-
-	.flow-hint-dot {
-		width: 6px;
-		height: 6px;
-		border-radius: 50%;
-		background: var(--accent);
-		box-shadow: 0 0 0 3px rgba(109, 40, 217, 0.18);
-		flex-shrink: 0;
-	}
-
-	.flow-hint-arrow {
-		color: var(--accent);
-	}
-
-	.flow-hint-strong {
+		gap: 0.5em;
+		min-height: 44px;
 		color: var(--ink);
-		font-weight: 600;
+		font-size: 0.98rem;
+		font-weight: 500;
+		text-decoration: underline;
+		text-decoration-color: rgba(167, 139, 250, 0.4);
+		text-decoration-thickness: 1px;
+		text-underline-offset: 6px;
+		border-radius: 6px;
+		transition: text-decoration-color 0.2s ease;
 	}
 
-	/* ---------- central circle ---------- */
-	/* ---------- circle + orbit + cards: one shared coordinate system ----------
-	   .hero-visual fills its grid column at width:100% and derives its height
-	   from the VISUAL_W/VISUAL_H aspect-ratio (set inline from the same
-	   constants the frontmatter uses for the arc math), so the reference box
-	   and the rendered box always agree — no viewport-width clamps to keep
-	   in sync by hand. */
-	.hero-visual {
-		position: relative;
-		width: 100%;
-		z-index: 1;
+	.cta-link:hover {
+		text-decoration-color: var(--accent-bright);
 	}
 
-	.hero-circle {
-		position: absolute;
-		left: 0;
-		top: 50%;
-		transform: translateY(-50%);
-		width: 27%;
-		aspect-ratio: 1;
-		border-radius: 50%;
-		background: var(--circle-bg);
-		border: 1px solid var(--border);
-		box-shadow: 0 24px 48px rgba(0, 0, 0, 0.35);
-		pointer-events: none;
-		overflow: hidden;
+	.cta-link svg {
+		width: 1em;
+		height: 1em;
+		color: var(--accent-bright);
+		transition: transform 0.3s var(--ease-out);
 	}
 
-	.core-glow {
-		position: absolute;
-		inset: 0;
-		background: radial-gradient(circle at 50% 50%, rgba(109, 40, 217, 0.4), transparent 68%);
-		animation: coreGlowPulse 6s ease-in-out infinite;
+	.cta-link:hover svg {
+		transform: translateY(3px);
 	}
 
-	.core-ring {
-		position: absolute;
-		inset: 12%;
-		border-radius: 50%;
-		border: 1px dashed rgba(109, 40, 217, 0.35);
-		animation: coreRingSpin 26s linear infinite;
-	}
-
-	.core-icon-wrap {
-		position: absolute;
-		inset: 0;
+	/* ---------- the list ---------- */
+	.frags {
 		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 0.6rem 0.65rem;
+		max-width: 1000px;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.frag {
+		position: relative;
+	}
+
+	/* both faces share one cell, so a chip is as wide as its longer text
+	   and turning never reflows the list */
+	.chip {
+		display: grid;
+		padding: 0.5rem 0.95rem 0.5rem 0.75rem;
+		border-radius: 999px;
+		border: 1px solid rgba(255, 255, 255, 0.14);
+		background: rgba(255, 255, 255, 0.03);
+		color: var(--muted);
+		font-size: 0.86rem;
+		font-weight: 500;
+		line-height: 1.2;
+		white-space: nowrap;
+		box-shadow: 0 10px 24px -14px rgba(0, 0, 0, 0.8);
+		transition:
+			border-color 0.45s ease,
+			background-color 0.45s ease,
+			color 0.45s ease,
+			box-shadow 0.6s ease;
+	}
+
+	.chip.is-solved {
+		border-color: rgba(167, 139, 250, 0.42);
+		color: var(--ink);
+		box-shadow:
+			0 10px 24px -14px rgba(0, 0, 0, 0.8),
+			0 8px 22px -12px rgba(109, 40, 217, 0.55);
+	}
+
+	/* the chip is the mask the faces roll through */
+	.face {
+		grid-area: 1 / 1;
+		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-	}
-
-	.core-icon {
-		position: absolute;
-		width: 32%;
-		height: 32%;
-		color: var(--accent);
-		opacity: 0;
-		transform: scale(0.85);
+		gap: 0.45rem;
 		transition:
-			opacity 0.6s ease,
-			transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+			transform 0.65s var(--ease-out),
+			opacity 0.45s ease;
 	}
 
-	.core-icon.is-current {
-		opacity: 0.9;
-		transform: scale(1);
-	}
-
-	@keyframes coreGlowPulse {
-		0%,
-		100% {
-			opacity: 0.55;
-			transform: scale(0.94);
-		}
-		50% {
-			opacity: 0.9;
-			transform: scale(1.04);
-		}
-	}
-
-	@keyframes coreRingSpin {
-		from {
-			transform: rotate(0deg);
-		}
-		to {
-			transform: rotate(360deg);
-		}
-	}
-
-	.arc-svg {
-		position: absolute;
-		inset: 0;
-		width: 100%;
-		height: 100%;
-		overflow: visible;
-		pointer-events: none;
-	}
-
-	.arc-base {
-		fill: none;
-		stroke: var(--accent);
-		stroke-width: 0.35;
-		stroke-linecap: round;
-		stroke-linejoin: round;
-		vector-effect: non-scaling-stroke;
-	}
-
-	/* plain HTML dots, not SVG — an SVG circle inside a non-square
-	   viewBox stretched with preserveAspectRatio="none" renders as an
-	   oval, not a circle, so nodes live outside the distorted SVG */
-	.node {
-		position: absolute;
-		width: 9px;
-		height: 9px;
-		border-radius: 50%;
-		background: var(--bg);
-		border: 1px solid rgba(255, 255, 255, 0.4);
-		transform: translate(-50%, -50%);
-		transition:
-			background-color 0.25s ease,
-			border-color 0.25s ease,
-			transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-		pointer-events: none;
-	}
-
-	.node.is-current {
-		background: #a78bfa;
-		border-color: #a78bfa;
-		box-shadow:
-			0 0 0 5px rgba(109, 40, 217, 0.22),
-			0 0 14px 2px rgba(167, 139, 250, 0.55);
-		transform: translate(-50%, -50%) scale(1.6);
-	}
-
-	.stage-card {
-		position: absolute;
-		transform: translateY(-50%);
-		width: clamp(194px, 15vw, 205px);
-		display: flex;
-		flex-direction: column;
-		gap: 0.3rem;
-		background: rgba(13, 16, 24, 0.55);
-		backdrop-filter: blur(14px);
-		-webkit-backdrop-filter: blur(14px);
-		border: 1px solid var(--border-soft);
-		border-radius: 12px;
-		/* left edge angles inward to a point at mid-height, like a flag
-		   pointing back toward the node it connects to — not just a
-		   single corner cut. */
-		clip-path: polygon(22px 0, 100% 0, 100% 100%, 22px 100%, 0 50%);
-		padding: 0.55rem 0.8rem 0.65rem 1.1rem;
-		text-align: left;
-		cursor: pointer;
-		font-family: inherit;
-		transition:
-			border-color 0.3s ease,
-			background-color 0.3s ease,
-			box-shadow 0.3s ease,
-			transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-		box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
-	}
-
-	/* number, label and icon share one row so a card is one line shorter */
-	.card-head {
-		display: flex;
-		align-items: baseline;
-		gap: 0.55rem;
-	}
-
-	.card-head .card-label {
-		flex: 1;
-		white-space: nowrap;
-	}
-
-	.card-idx {
-		font-size: 0.68rem;
-		color: var(--ink-faint);
-	}
-
-	.card-icon {
-		width: 16px;
-		height: 16px;
-		align-self: center;
-		color: var(--accent);
+	.face svg {
+		width: 15px;
+		height: 15px;
 		flex-shrink: 0;
 	}
 
-	.card-label {
-		font-size: 0.92rem;
+	.face--problem svg {
+		color: rgba(139, 146, 157, 0.8);
+	}
+
+	.face--outcome svg {
+		padding: 1.5px;
+		border-radius: 50%;
+		background: rgba(167, 139, 250, 0.22);
+		color: var(--accent-bright);
+	}
+
+	/* the check draws itself in once the chip is solved */
+	.face--outcome path {
+		stroke-dasharray: 1;
+		stroke-dashoffset: 1;
+	}
+
+	.chip.is-solved .face--outcome path {
+		stroke-dashoffset: 0;
+		transition: stroke-dashoffset 0.4s cubic-bezier(0.65, 0, 0.35, 1) 0.35s;
+	}
+
+	/* problem rolls up and out, solution rolls up into place */
+	.face--outcome {
+		transform: translateY(115%);
+		opacity: 0;
+	}
+
+	.chip.is-solved .face--problem {
+		transform: translateY(-115%);
+		opacity: 0;
+	}
+
+	.chip.is-solved .face--outcome {
+		transform: none;
+		opacity: 1;
+	}
+
+	/* violet fills the chip from left to right as it's solved */
+	.chip {
+		position: relative;
+		overflow: hidden;
+		isolation: isolate;
+	}
+
+	.chip::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		border-radius: inherit;
+		background: linear-gradient(90deg, rgba(109, 40, 217, 0.3), rgba(109, 40, 217, 0.14));
+		transform: scaleX(0);
+		transform-origin: left center;
+		/* timed to fill while the chip is mid-pop */
+		transition: transform 0.55s var(--ease-out) 0.08s;
+	}
+
+	.chip.is-solved::before {
+		transform: scaleX(1);
+	}
+
+	/* ...and pops as it turns: a small squash, a springy lift, then it
+	   settles with a couple of shrinking bounces */
+	.chip.is-solved {
+		animation: chipPop 0.8s ease-in-out both;
+	}
+
+	@keyframes chipPop {
+		0% {
+			transform: scale(1);
+		}
+		16% {
+			transform: scale(0.93);
+		}
+		42% {
+			transform: translateY(-5px) scale(1.11);
+		}
+		62% {
+			transform: translateY(0) scale(0.97);
+		}
+		80% {
+			transform: scale(1.03);
+		}
+		100% {
+			transform: scale(1);
+		}
+	}
+
+	.frags-wrap {
+		display: flex;
+		justify-content: center;
+		width: 100%;
+	}
+
+	/* ---------- scroll prompt: shows once the problems have landed ---------- */
+	.scroll-cue {
+		display: inline-flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.55rem;
+		margin-top: clamp(1rem, 3vh, 1.75rem);
+		padding: 0.25rem 0.75rem;
+		border-radius: 8px;
+		font-size: 0.72rem;
 		font-weight: 600;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: var(--muted);
+		text-decoration: none;
+		transition:
+			opacity 0.6s ease,
+			transform 0.8s var(--ease-out),
+			color 0.2s ease;
+	}
+
+	.scroll-cue:hover {
 		color: var(--ink);
-		transition: color 0.25s ease;
 	}
 
-	.card-desc {
-		font-size: 0.74rem;
-		line-height: 1.35;
-		color: var(--ink-faint);
+	.hero.is-intro .scroll-cue,
+	.hero.is-scrolled .scroll-cue {
+		opacity: 0;
+		transform: translateY(-8px);
+		pointer-events: none;
 	}
 
-	.stage-card.is-current {
-		border-color: var(--accent);
-		background: rgba(109, 40, 217, 0.18);
-		box-shadow:
-			0 0 0 1px rgba(109, 40, 217, 0.35),
-			0 18px 40px rgba(109, 40, 217, 0.22);
-		transform: translateY(-50%) scale(1.045);
+	.scroll-cue-line {
+		position: relative;
+		width: 1px;
+		height: 34px;
+		overflow: hidden;
+		background: var(--line);
 	}
 
-	.stage-card:hover:not(.is-current) {
-		border-color: rgba(109, 40, 217, 0.3);
-		transform: translateY(-50%) scale(1.015);
+	.scroll-cue-line::after {
+		content: '';
+		position: absolute;
+		left: 0;
+		top: 0;
+		width: 1px;
+		height: 40%;
+		background: var(--accent-bright);
+		animation: cueDrop 1.8s var(--ease-out) infinite;
+	}
+
+	@keyframes cueDrop {
+		from {
+			transform: translateY(-100%);
+		}
+		to {
+			transform: translateY(260%);
+		}
+	}
+
+	.hero.is-idle .scroll-cue-line::after {
+		animation-play-state: paused;
 	}
 
 	/* ---------- responsive ---------- */
-	/* narrow two-column desktop: the visual column is ~450–540px, so the
-	   six cards are only ~65–75px apart — drop the descriptions and give
-	   the label room so "Something real" stays on one line */
-	@media (min-width: 1081px) and (max-width: 1279px) {
-		.stage-card {
-			width: 194px;
-		}
-
-		.card-desc {
-			display: none;
-		}
-	}
-
-	@media (max-width: 1080px) {
-		.hero-inner {
-			grid-template-columns: 1fr;
-		}
-
-		.stage-card {
-			width: clamp(194px, 26vw, 210px);
-		}
-
-		.hero-visual {
-			max-width: 640px;
-			margin: 1.5rem auto 0;
-		}
-	}
-
 	@media (max-width: 680px) {
+		.hero-inner {
+			min-height: auto;
+		}
+
 		.headline .line {
-			font-size: clamp(2.1rem, 9vw, 2.7rem);
+			font-size: clamp(2.2rem, 10.5vw, 2.9rem);
 		}
 
-		.hero-circle {
+		.frags {
+			gap: 0.5rem;
+		}
+
+		/* eight fragments are plenty at phone width */
+		.frag:nth-child(n + 9) {
 			display: none;
 		}
 
-		/* the six cards sit ~47px apart at phone width, so each one keeps
-		   only its label */
-		.stage-card {
-			width: clamp(130px, 46vw, 170px);
-			padding: 0.5rem 0.65rem 0.5rem 1.05rem;
-		}
-
-		.card-idx,
-		.card-icon {
-			display: none;
-		}
-
-		.card-desc {
-			display: none;
+		.chip {
+			padding: 0.45rem 0.8rem 0.45rem 0.65rem;
+			font-size: 0.8rem;
 		}
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.node,
-		.card-label,
-		.stage-card,
-		.cta-btn,
-		.cta-arrow {
-			transition: none;
-		}
-
-		.reveal {
-			transition: none;
-		}
-
-		.core-glow,
-		.core-ring {
+		.scroll-cue-line::after,
+		.chip.is-solved {
 			animation: none;
 		}
 
-		.core-icon {
-			transition: none;
+		.cta-btn::after {
+			display: none;
+		}
+
+		/* state still changes, it just doesn't travel */
+		.cta-arrow,
+		.cta-btn:hover .cta-arrow,
+		.cta-link svg,
+		.cta-link:hover svg,
+		.face,
+		.chip.is-solved .face--problem {
+			transform: none;
+		}
+
+		.hero.is-named .ch:hover,
+		.hero.is-named .wordmark:hover .wordmark-logo {
+			translate: none;
+			rotate: none;
+			scale: none;
+		}
+
+		.face,
+		.face--outcome,
+		.chip.is-solved .face--problem {
+			filter: none;
 		}
 	}
 </style>
 
-<noscript>
-	<style>
-		.hero .reveal {
-			opacity: 1 !important;
-		}
-
-		.hero .tag-row.reveal,
-		.hero .line.reveal,
-		.hero .cta-row.reveal,
-		.hero .hero-visual.reveal {
-			transform: none !important;
-		}
-	</style>
-</noscript>
-
 <script>
-	const heroSection = document.getElementById('hero');
-	const stageCards = Array.from(document.querySelectorAll('.stage-card')) as HTMLButtonElement[];
-	const nodeEls = Array.from(document.querySelectorAll('.node')) as HTMLElement[];
-	const coreIcons = Array.from(document.querySelectorAll('.core-icon')) as HTMLElement[];
-	const pipeline = document.getElementById('pipeline');
-	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	import { gsap } from 'gsap';
+	import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-	// page-load entrance: reduced-motion just snaps everything visible;
-	// otherwise wait a frame so the browser paints the hidden state first,
-	// then add the class that triggers the staggered fade/slide-in.
-	if (reduceMotion) {
-		heroSection?.classList.add('is-visible');
-	} else {
-		requestAnimationFrame(() => {
-			requestAnimationFrame(() => heroSection?.classList.add('is-visible'));
-		});
-	}
+	gsap.registerPlugin(ScrollTrigger);
 
-	let current = 0;
-	let timer: ReturnType<typeof setTimeout> | null = null;
+	const hero = document.getElementById('hero');
 
-	const render = () => {
-		stageCards.forEach((el, i) => {
-			el.classList.toggle('is-current', i === current);
-			el.setAttribute('aria-pressed', String(i === current));
-		});
-		nodeEls.forEach((el, i) => {
-			el.classList.toggle('is-current', i === current);
-		});
-		coreIcons.forEach((el, i) => {
-			el.classList.toggle('is-current', i === current);
-		});
-	};
+	if (hero) {
+		const root = document.documentElement;
+		const q = <T extends Element>(sel: string) => Array.from(hero.querySelectorAll<T>(sel));
+		const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
-	const scheduleNext = () => {
-		if (reduceMotion) return;
-		const atEnd = current === stageCards.length - 1;
-		timer = setTimeout(
-			() => {
-				current = atEnd ? 0 : current + 1;
-				render();
-				scheduleNext();
-			},
-			atEnd ? 2800 : 1700,
-		);
-	};
+		const frags = q<HTMLLIElement>('.frag');
+		const chips = q<HTMLElement>('.chip');
+		const wordmark = hero.querySelector<HTMLElement>('.wordmark');
+		const letters = q<HTMLElement>('.ch');
+		const logo = hero.querySelector<HTMLElement>('.wordmark-logo');
+		const ring = hero.querySelector<HTMLElement>('.wordmark-ring');
+		const headlineEl = hero.querySelector<HTMLElement>('.headline');
+		const copySub = hero.querySelector<HTMLElement>('.copy-sub');
 
-	const start = () => {
-		if (!timer) scheduleNext();
-	};
+		const num = (el: HTMLElement, key: string) => Number(el.dataset[key] ?? 0);
 
-	const stop = () => {
-		if (timer) {
-			clearTimeout(timer);
-			timer = null;
-		}
-	};
-
-	stageCards.forEach((btn) => {
-		const setFromButton = () => {
-			current = Number(btn.dataset.index);
-			render();
+		// Chips before position t·n are solved, the rest show their problem.
+		// The roll and fill are CSS transitions, so this is all it takes.
+		const solveTo = (t: number) => {
+			const n = chips.length;
+			chips.forEach((chip, i) => chip.classList.toggle('is-solved', t > i / n));
+			hero.classList.toggle('view-solution', t > 0.6);
 		};
-		btn.addEventListener('mouseenter', setFromButton);
-		btn.addEventListener('focus', setFromButton);
-		btn.addEventListener('click', setFromButton);
-	});
 
-	pipeline?.addEventListener('pointerenter', stop);
-	pipeline?.addEventListener('pointerleave', start);
+		// once the name has landed the problems turn on their own (not tied to
+		// the scroll), one after another in reading order
+		const STEP = 0.09;
+		let wave: gsap.core.Timeline | null = null;
+		const autoSolve = () => {
+			if (wave) return;
+			const shown = chips.filter((chip) => chip.offsetParent !== null);
+			wave = gsap.timeline({ delay: 0.2 });
+			shown.forEach((chip, k) => wave?.call(() => chip.classList.add('is-solved'), [], k * STEP));
+			wave.call(() => solveTo(1), [], shown.length * STEP);
+			wave.call(() => hero.classList.add('view-solution'), [], shown.length * STEP * 0.5);
+		};
+		const resetSolve = () => {
+			wave?.kill();
+			wave = null;
+			solveTo(0);
+		};
 
-	pipeline?.addEventListener('focusout', (event) => {
-		const next = (event as FocusEvent).relatedTarget as Node | null;
-		if (!pipeline.contains(next)) start();
-	});
+		if (reduceMotion) {
+			root.classList.remove('hero-motion');
+			hero.classList.add('is-named');
+		} else {
+			// distance from an element's untransformed layout box to the hero
+			const offsetIn = (el: HTMLElement) => {
+				let x = 0;
+				let y = 0;
+				let node: HTMLElement | null = el;
+				while (node && node !== hero) {
+					x += node.offsetLeft;
+					y += node.offsetTop;
+					node = node.offsetParent as HTMLElement | null;
+				}
+				return { x, y };
+			};
 
-	render();
-	start();
+			// rewind to the opening state: no name, problems showing
+			hero.classList.add('is-intro');
+			solveTo(0);
+
+			// ---------- 1. on load: the problems arrive and settle at the bottom ----------
+			const wide = window.matchMedia('(min-width: 681px)').matches;
+			const scatter = (el: HTMLElement) => {
+				const i = num(el, 'i');
+				// phones have no spare room and the list is below the fold, so
+				// they start as a jumbled pile where the list will form
+				if (!wide) return { x: ((i * 37) % 80) - 40, y: ((i * 53) % 56) - 28 };
+				const pos = offsetIn(el);
+				const w = el.offsetWidth;
+				const h = el.offsetHeight;
+				const box = { w: hero.clientWidth, h: hero.clientHeight };
+				const cx = gsap.utils.clamp(w / 2 + 12, box.w - w / 2 - 12, (num(el, 'sx') / 100) * box.w);
+				const cy = gsap.utils.clamp(h / 2 + 76, box.h - h / 2 - 12, (num(el, 'sy') / 100) * box.h);
+				return { x: cx - (pos.x + w / 2), y: cy - (pos.y + h / 2) };
+			};
+
+			const shown = frags.filter((el) => el.offsetParent !== null);
+			gsap.set(q('.word-inner'), { yPercent: 110 });
+			gsap.set(q('[data-enter]'), { autoAlpha: 0, y: 16 });
+			shown.forEach((el) => {
+				const d = num(el, 'd');
+				const s = scatter(el);
+				gsap.set(el, {
+					x: s.x,
+					y: s.y,
+					rotation: num(el, 'r') * (wide ? 1 : 1.6),
+					scale: 0.82 + d * 0.18,
+					autoAlpha: 0,
+					filter: `blur(${((1 - d) * 2.4).toFixed(2)}px)`,
+				});
+			});
+
+			gsap
+				.timeline({ defaults: { ease: 'expo.out' }, delay: 0.1 })
+				.to(q('.word-inner'), { yPercent: 0, duration: 1.1, stagger: 0.055 }, 0)
+				.to(q('[data-enter]'), { autoAlpha: 1, y: 0, duration: 0.8, stagger: 0.08, clearProps: 'transform' }, 0.45)
+				.to(shown, { autoAlpha: (_, el) => 0.45 + num(el as HTMLElement, 'd') * 0.5, duration: 0.6, stagger: { each: 0.04, from: 'random' }, ease: 'power1.out' }, 0.3)
+				.to(
+					shown,
+					{
+						x: 0,
+						y: 0,
+						rotation: 0,
+						scale: 1,
+						autoAlpha: 1,
+						filter: 'blur(0px)',
+						duration: 1.3,
+						ease: 'power4.inOut',
+						stagger: { each: 0.05, from: 'random' },
+						clearProps: 'transform,filter,opacity,visibility',
+					},
+					1.4,
+				)
+				// then the page asks to be scrolled
+				.call(() => hero.classList.remove('is-intro'), [], 3);
+
+			// ---------- 2. on scroll: the name arrives, then the problems turn ----------
+			// The name first looms huge, soft and spread out behind the headline,
+			// then condenses into its place just above the description — the same
+			// chaos → order move the problems just made. The logo lands last and
+			// sends out a pulse.
+			const mid = (letters.length - 1) / 2;
+			const nameIntro = (tl: gsap.core.Timeline, at: number, span: number) => {
+				if (!wordmark || !headlineEl || !copySub) return;
+				// headline and description start closed up as if the name weren't
+				// there, and part to make room for it as it lands
+				const room = () => (wordmark.offsetHeight + parseFloat(getComputedStyle(wordmark).marginTop) + parseFloat(getComputedStyle(wordmark).marginBottom)) / 2;
+				// from its slot up to the middle of the headline
+				const toCentre = () => headlineEl.offsetTop + headlineEl.offsetHeight / 2 - (wordmark.offsetTop + wordmark.offsetHeight / 2);
+
+				tl.fromTo(
+					wordmark,
+					{ autoAlpha: 0, scale: wide ? 3.6 : 2.2, y: toCentre, filter: 'blur(14px)' },
+					{ autoAlpha: 0.22, scale: wide ? 3.1 : 1.9, filter: 'blur(10px)', duration: span * 0.3, ease: 'power1.out' },
+					at,
+				)
+					.to(wordmark, { autoAlpha: 1, scale: 1, y: 0, filter: 'blur(0px)', duration: span * 0.55, ease: 'expo.inOut' }, at + span * 0.3)
+					.fromTo(letters, { x: (i) => (i - mid) * (wide ? 26 : 12) }, { x: 0, duration: span * 0.85, ease: 'expo.inOut' }, at)
+					.fromTo(headlineEl, { y: () => room() }, { y: 0, duration: span * 0.5, ease: 'expo.inOut' }, at + span * 0.35)
+					.fromTo(copySub, { y: () => -room() }, { y: 0, duration: span * 0.5, ease: 'expo.inOut' }, at + span * 0.35)
+					.fromTo(logo, { rotation: -220, scale: 0, autoAlpha: 0 }, { rotation: 0, scale: 1, autoAlpha: 1, duration: span * 0.3, ease: 'back.out(1.8)' }, at + span * 0.62)
+					.fromTo(ring, { scale: 0.4, autoAlpha: 0.9 }, { scale: 2.6, autoAlpha: 0, duration: span * 0.3, ease: 'power2.out', immediateRender: false }, at + span * 0.85);
+			};
+
+			const mm = gsap.matchMedia();
+
+			mm.add(
+				{
+					story: '(min-width: 681px) and (min-height: 600px)',
+					phone: '(max-width: 680px), (max-height: 599px)',
+				},
+				(ctx) => {
+					const { story } = ctx.conditions as Record<string, boolean>;
+
+					if (story) {
+						// pinned: the scroll plays the name in, forwards and back. The
+						// moment it lands the problems turn on their own; scrolling all
+						// the way back up resets them so the moment can replay.
+						const tl = gsap.timeline({
+							defaults: { ease: 'none' },
+							scrollTrigger: {
+								trigger: hero,
+								start: 'top top',
+								end: () => `+=${Math.round(window.innerHeight * 0.9)}`,
+								pin: true,
+								scrub: 0.8,
+								invalidateOnRefresh: true,
+								refreshPriority: 1,
+								onUpdate: (self) => {
+									hero.classList.toggle('is-scrolled', self.progress > 0.02);
+									if (self.progress > 0.01) hero.classList.remove('is-intro');
+								},
+							},
+						});
+						nameIntro(tl, 0, 1);
+						tl.call(() => {
+							// the playhead passes here in both directions
+							const forward = (tl.scrollTrigger?.direction ?? 1) > 0;
+							hero.classList.toggle('is-named', forward);
+							if (forward) autoSolve();
+						}, [], 0.96);
+						tl.call(() => resetSolve(), [], 0.2);
+						tl.to({}, { duration: 0.2 }); // hold the finished hero a beat
+						return () => {
+							hero.classList.remove('is-scrolled');
+							wave?.kill();
+							solveTo(1);
+						};
+					}
+
+					// phones and short windows: no pin. The first scroll sets the name
+					// off as a one-shot, and the problems turn as soon as it lands.
+					const tl = gsap.timeline({
+						paused: true,
+						defaults: { ease: 'none' },
+						onComplete: () => {
+							hero.classList.add('is-named');
+							autoSolve();
+						},
+					});
+					nameIntro(tl, 0, 1.4);
+					const go = ScrollTrigger.create({ start: 8, once: true, onEnter: () => tl.play() });
+					return () => {
+						go.kill();
+						wave?.kill();
+						solveTo(1);
+					};
+				},
+			);
+
+			root.classList.remove('hero-motion');
+		}
+
+		// ---------- pointer: spotlight + magnetic CTA ----------
+		if (finePointer && !reduceMotion) {
+			const spot = hero.querySelector<HTMLElement>('.bg-spot');
+			if (spot) {
+				const toX = gsap.quickTo(spot, 'x', { duration: 0.8, ease: 'power3.out' });
+				const toY = gsap.quickTo(spot, 'y', { duration: 0.8, ease: 'power3.out' });
+				hero.addEventListener('pointermove', (e) => {
+					const box = hero.getBoundingClientRect();
+					hero.classList.add('has-pointer');
+					toX(e.clientX - box.left);
+					toY(e.clientY - box.top);
+				});
+				hero.addEventListener('pointerleave', () => hero.classList.remove('has-pointer'));
+			}
+
+			const cta = hero.querySelector<HTMLElement>('.cta-btn');
+			if (cta) {
+				const toX = gsap.quickTo(cta, 'x', { duration: 0.5, ease: 'power3.out' });
+				const toY = gsap.quickTo(cta, 'y', { duration: 0.5, ease: 'power3.out' });
+				cta.addEventListener('pointermove', (e) => {
+					const box = cta.getBoundingClientRect();
+					toX((e.clientX - (box.left + box.width / 2)) * 0.22);
+					toY((e.clientY - (box.top + box.height / 2)) * 0.3);
+				});
+				cta.addEventListener('pointerleave', () => (toX(0), toY(0)));
+			}
+		}
+
+		// the scroll prompt's loop pauses while the hero is off screen
+		new IntersectionObserver(([entry]) => hero.classList.toggle('is-idle', !entry.isIntersecting)).observe(hero);
+	}
 </script>
