@@ -1,153 +1,378 @@
 ---
-const questions = [
+// each step: a short label (it fills its slot), the question, a studio-voice
+// answer and a line drawing. Drawings are built from shapes that carry
+// pathLength="1" so GSAP can draw them with a single dash offset.
+const p = (d: string, extra = '') => `<path data-d pathLength="1" d="${d}" ${extra}/>`;
+const r = (x: number, y: number, w: number, h: number, rx: number, extra = '') =>
+	`<rect data-d pathLength="1" x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" ${extra}/>`;
+const c = (cx: number, cy: number, rad: number, extra = '') =>
+	`<circle data-d pathLength="1" cx="${cx}" cy="${cy}" r="${rad}" ${extra}/>`;
+
+const steps = [
 	{
 		title: 'Disappearing process',
 		text: 'What if this entire process could disappear?',
+		answer:
+			'Most processes exist to move information between people and tools. We map where it actually travels, then remove the steps that only exist to carry it.',
+		art: [
+			r(30, 92, 56, 56, 14),
+			r(150, 92, 56, 56, 14),
+			r(270, 92, 56, 56, 14, 'opacity=".55"'),
+			r(380, 92, 30, 56, 14, 'opacity=".3"'),
+			p('M86 120H150'),
+			p('M206 120H270', 'opacity=".6"'),
+			p('M326 120H352', 'opacity=".35"'),
+		].join(''),
 	},
 	{
 		title: 'Manual work',
 		text: 'Why does someone still do this manually?',
+		answer:
+			'Usually because nobody had time to automate it. We watch the work first, then automate the repetitive parts so people keep the judgment calls.',
+		art: [
+			r(40, 40, 30, 30, 7),
+			p('M47 55l6 6 11-14'),
+			p('M92 55H330'),
+			r(40, 100, 30, 30, 7),
+			p('M47 115l6 6 11-14'),
+			p('M92 115H290'),
+			r(40, 160, 30, 30, 7, 'opacity=".55"'),
+			p('M92 175H240', 'opacity=".55"'),
+			p('M330 200l34-34 18 18-34 34-26 8z'),
+		].join(''),
 	},
 	{
 		title: 'Disconnected systems',
 		text: 'Why are these five systems not talking to each other?',
+		answer:
+			'They were bought at different times for different jobs. We connect them through APIs, so data is entered once and available everywhere.',
+		art: [
+			r(30, 40, 70, 52, 12),
+			r(170, 30, 70, 52, 12),
+			r(300, 60, 70, 52, 12),
+			r(90, 140, 70, 52, 12),
+			r(250, 160, 70, 52, 12),
+			p('M100 66H116', 'opacity=".5"'),
+			p('M205 82L190 104', 'opacity=".5"'),
+			p('M240 56H256', 'opacity=".5"'),
+			p('M335 112L326 130', 'opacity=".5"'),
+		].join(''),
 	},
 	{
 		title: 'AI in action',
 		text: 'Can an AI actually do this instead of just answering?',
+		answer:
+			'Yes, when it can reach your documents, records and tools. We build agents that check, update and close the loop, and hand the decision to a person when it matters.',
+		art: [
+			r(20, 40, 150, 62, 16, 'opacity=".6"'),
+			p('M44 71H130', 'opacity=".6"'),
+			p('M190 71H236M222 58l16 13-16 13'),
+			r(256, 30, 130, 34, 9),
+			p('M270 47l8 8 14-16'),
+			r(256, 78, 130, 34, 9),
+			p('M270 95l8 8 14-16'),
+			r(256, 126, 130, 34, 9, 'opacity=".5"'),
+		].join(''),
 	},
 	{
 		title: 'Rebuilt from scratch',
 		text: 'What would happen if we rebuilt this from scratch?',
+		answer:
+			'Sometimes a rebuild is cheaper than patching. We prototype the new version beside the old one, so you can compare before you switch.',
+		art: [
+			p('M30 40H390M30 100H390M30 160H390M30 220H390M90 20V235M200 20V235M310 20V235', 'opacity=".3"'),
+			p('M90 220V100H200V160H310V40'),
+			c(90, 220, 6),
+			c(310, 40, 6),
+		].join(''),
 	},
 	{
 		title: 'A real product',
 		text: 'Can this idea become a real product?',
+		answer:
+			'Some can. We test the idea with a small prototype first, then build what survives into something other people can use.',
+		art: [
+			c(90, 120, 50, 'opacity=".6"'),
+			p('M160 120H220M206 106l16 14-16 14'),
+			r(250, 40, 120, 160, 20),
+			p('M276 84H344M276 116H324'),
+			c(342, 168, 7),
+		].join(''),
 	},
 ];
+
+const total = String(steps.length).padStart(2, '0');
 ---
 
-<section class="problem" id="problem">
-	<div class="problem-inner">
-		<div class="problem-header">
-			<div class="header-heading-col">
-				<div class="problem-eyebrow reveal" style="--reveal-order: 0">
+<section class="pw" id="problem" aria-labelledby="pw-title">
+	<div class="pw-stage">
+		<div class="pw-top">
+			<div class="pw-heading-col">
+				<div class="pw-eyebrow">
 					<span class="eyebrow-idx">03</span>
 					<span class="eyebrow-dot" aria-hidden="true">&bull;</span>
 					<span class="eyebrow-label">The Problem Wall</span>
 				</div>
-
-				<h2 class="problem-heading reveal" style="--reveal-order: 1">Things We&rsquo;re Interested In</h2>
+				<h2 class="pw-heading" id="pw-title">Things We&rsquo;re Interested In</h2>
 			</div>
 
-			<div class="header-context-col">
-				<p class="problem-desc reveal" style="--reveal-order: 2">
-					Before we build anything, we sit with the questions most
-					companies skip past.
-				</p>
+			<div class="pw-meter" aria-hidden="true">
+				<span class="pw-readout"><b class="pw-cur">01</b> / {total}</span>
+				<span class="pw-progress"><span class="pw-progress-fill"></span></span>
 			</div>
 		</div>
 
-		<div class="problem-grid" id="problemGrid">
-			{questions.map((q, i) => (
-				<button
-					type="button"
-					class="problem-tile reveal"
-					style={`--reveal-order: ${i + 4}`}
-					data-index={i}
-					aria-pressed="false"
-				>
-					<span class="tile-index">{`0${i + 1}`}</span>
-					<span class="tile-title">{q.title}</span>
-					<span class="tile-question">{q.text}</span>
-					<span class="tile-divider" aria-hidden="true"></span>
-					<span class="tile-explore">
-						Explore
-						<span class="explore-arrow" aria-hidden="true">&rarr;</span>
-					</span>
-				</button>
+		<div class="pw-main">
+			<span class="pw-count" aria-hidden="true"><span class="pw-count-num">01</span></span>
+
+			<div class="pw-items">
+				{steps.map((s, i) => (
+					<article class="pw-item" data-index={i}>
+						<svg class="pw-art" viewBox="0 0 420 240" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={s.art} />
+						<p class="pw-tag">
+							<span>{`0${i + 1}`}</span>
+							<span class="pw-tag-sep" aria-hidden="true">/</span>
+							<span>{s.title}</span>
+						</p>
+						<h3 class="pw-q" data-text={s.text}>
+							<span class="pw-sr">{s.text}</span>
+							<span class="pw-q-vis" aria-hidden="true">{s.text}</span>
+						</h3>
+						<p class="pw-a">{s.answer}</p>
+					</article>
+				))}
+
+				<div class="pw-final" data-index={steps.length}>
+					<p class="pw-tag">
+						<span>07</span>
+						<span class="pw-tag-sep" aria-hidden="true">/</span>
+						<span>Yours</span>
+					</p>
+					<h3 class="pw-q pw-q--final">Got one we haven&rsquo;t listed?</h3>
+					<p class="pw-a">Say it in a line. We&rsquo;ll take it from there.</p>
+
+					<form class="pw-form" id="pwForm" autocomplete="off">
+						<label class="pw-sr" for="pwInput">Describe your problem in one line</label>
+						<div class="pw-field">
+							<input id="pwInput" class="pw-input" type="text" maxlength="60" placeholder="Describe it in a line…" />
+							<span class="pw-chars" aria-hidden="true"><span id="pwChars">00</span>/60</span>
+						</div>
+						<a class="pw-cta" id="pwCta" href="mailto:hello@neulancers.com?subject=A%20problem%20for%20Neulancers">
+							<span>Bring us yours</span>
+							<span class="pw-cta-arrow" aria-hidden="true">&rarr;</span>
+						</a>
+					</form>
+				</div>
+			</div>
+		</div>
+
+		<ol class="pw-slots" aria-label="Questions">
+			{steps.map((s, i) => (
+				<li>
+					<button type="button" class="pw-slot" data-index={i} aria-label={`Go to question ${i + 1}: ${s.title}`}>
+						<span class="slot-bar" aria-hidden="true"></span>
+						<span class="slot-n">{`0${i + 1}`}</span>
+						<span class="slot-ph" aria-hidden="true">-- --</span>
+						<span class="slot-title" aria-hidden="true">{s.title}</span>
+					</button>
+				</li>
 			))}
-		</div>
+		</ol>
 	</div>
 </section>
 
 <script>
-	const section = document.getElementById('problem');
-	const grid = document.getElementById('problemGrid');
-	const tiles = Array.from(document.querySelectorAll<HTMLButtonElement>('.problem-tile'));
-	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	import { gsap } from 'gsap';
+	import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-	let activeIndex = 0;
-	let cycleTimer: ReturnType<typeof setInterval> | null = null;
+	gsap.registerPlugin(ScrollTrigger);
 
-	const render = () => {
-		tiles.forEach((tile, i) => {
-			const isActive = i === activeIndex;
-			tile.classList.toggle('is-active', isActive);
-			tile.setAttribute('aria-pressed', String(isActive));
+	const root = document.getElementById('problem');
+
+	if (root) {
+		const stage = root.querySelector<HTMLElement>('.pw-stage')!;
+		const items = Array.from(root.querySelectorAll<HTMLElement>('.pw-item'));
+		const finalPanel = root.querySelector<HTMLElement>('.pw-final')!;
+		const slots = Array.from(root.querySelectorAll<HTMLButtonElement>('.pw-slot'));
+		const countNum = root.querySelector<HTMLElement>('.pw-count-num')!;
+		const cur = root.querySelector<HTMLElement>('.pw-cur')!;
+		const fill = root.querySelector<HTMLElement>('.pw-progress-fill')!;
+		const input = root.querySelector<HTMLInputElement>('#pwInput')!;
+		const chars = root.querySelector<HTMLElement>('#pwChars')!;
+		const cta = root.querySelector<HTMLAnchorElement>('#pwCta')!;
+		const form = root.querySelector<HTMLFormElement>('#pwForm')!;
+
+		const N = items.length; // six questions; step N is the "yours" panel
+		const STEPS = N + 1;
+		const pad = (n: number) => String(n).padStart(2, '0');
+
+		// ---------- the "bring us yours" input (works in every mode) ----------
+		const mailto = () =>
+			`mailto:hello@neulancers.com?subject=${encodeURIComponent('A problem for Neulancers')}&body=${encodeURIComponent(input.value)}`;
+		input.addEventListener('input', () => {
+			chars.textContent = pad(input.value.length);
+			cta.href = mailto();
 		});
-	};
+		form.addEventListener('submit', (event) => {
+			event.preventDefault();
+			window.location.href = mailto();
+		});
 
-	const activate = (index: number) => {
-		if (index === activeIndex) return;
-		activeIndex = index;
-		render();
-	};
+		// split each question into words so they can arrive one at a time; the
+		// real sentence stays in .pw-sr for screen readers
+		const wordsOf = (item: HTMLElement) => Array.from(item.querySelectorAll<HTMLElement>('.pw-w'));
+		items.forEach((item) => {
+			const vis = item.querySelector<HTMLElement>('.pw-q-vis')!;
+			const text = item.querySelector<HTMLElement>('.pw-q')!.dataset.text ?? '';
+			vis.textContent = '';
+			text.split(' ').forEach((word, k, all) => {
+				const span = document.createElement('span');
+				span.className = 'pw-w';
+				span.textContent = word;
+				vis.append(span);
+				if (k < all.length - 1) vis.append(' ');
+			});
+		});
 
-	const stopCycle = () => {
-		if (cycleTimer) {
-			clearInterval(cycleTimer);
-			cycleTimer = null;
-		}
-	};
+		const mm = gsap.matchMedia();
 
-	const startCycle = () => {
-		if (reduceMotion || cycleTimer) return;
-		cycleTimer = setInterval(() => {
-			activate((activeIndex + 1) % tiles.length);
-		}, 4200);
-	};
+		// ============ pinned console: desktop, motion allowed ============
+		mm.add('(min-width: 861px) and (min-height: 560px) and (prefers-reduced-motion: no-preference)', () => {
+			root.classList.add('is-pinned');
+			const ac = new AbortController();
 
-	tiles.forEach((tile, i) => {
-		tile.addEventListener('click', () => activate(i));
-		tile.addEventListener('mouseenter', () => activate(i));
-	});
+			let current = -1;
+			let tl: gsap.core.Timeline | null = null;
+			let st: ScrollTrigger;
 
-	grid?.addEventListener('pointerenter', stopCycle);
-	grid?.addEventListener('pointerleave', startCycle);
-	grid?.addEventListener('focusin', stopCycle);
-	grid?.addEventListener('focusout', (event) => {
-		const next = (event as FocusEvent).relatedTarget as Node | null;
-		if (!grid.contains(next)) startCycle();
-	});
+			gsap.set([...items, finalPanel], { autoAlpha: 0 });
+			gsap.set(fill, { scaleX: 0 });
+			gsap.set(root.querySelectorAll('.slot-bar'), { scaleX: 0 });
 
-	render();
+			const restoreText = () => items.forEach((item) => gsap.set(wordsOf(item), { clearProps: 'opacity,visibility,transform' }));
 
-	if (section) {
-		if (reduceMotion || !('IntersectionObserver' in window)) {
-			section.classList.add('is-visible');
-		} else {
-			const observer = new IntersectionObserver(
-				(entries) => {
-					entries.forEach((entry) => {
-						if (entry.isIntersecting) {
-							section.classList.add('is-visible');
-							startCycle();
-							observer.disconnect();
-						}
-					});
-				},
-				{ threshold: 0.15 },
+			const setStep = (i: number) => {
+				if (i === current) return;
+				const prev = current;
+				const dir = i >= prev ? 1 : -1;
+				current = i;
+
+				tl?.kill();
+				restoreText();
+				tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+
+				const leaving = prev === -1 ? null : prev >= N ? finalPanel : items[prev];
+				const entering = i >= N ? finalPanel : items[i];
+
+				// a fast scroll cancels the previous step's fade-out half way, so
+				// anything that isn't entering or leaving is snapped hidden here
+				const panels = [...items, finalPanel];
+				gsap.killTweensOf(panels);
+				panels.forEach((el) => {
+					if (el !== entering && el !== leaving) gsap.set(el, { autoAlpha: 0 });
+				});
+
+				// leave the previous panel
+				if (leaving) tl.to(leaving, { autoAlpha: 0, y: -24 * dir, duration: 0.25, ease: 'power2.in' }, 0);
+
+				// enter the new one
+				tl.fromTo(entering, { autoAlpha: 0, y: 28 * dir }, { autoAlpha: 1, y: 0, duration: 0.5 }, 0.2);
+
+				if (i < N) {
+					const shapes = entering.querySelectorAll('[data-d]');
+					tl.fromTo(shapes, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.9, stagger: 0.07, ease: 'power2.out' }, 0.2);
+					tl.fromTo(
+						wordsOf(entering),
+						{ autoAlpha: 0, y: '0.45em' },
+						{ autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.07, ease: 'power3.out' },
+						0.25,
+					);
+					tl.fromTo(entering.querySelector('.pw-a'), { autoAlpha: 0, y: 14 }, { autoAlpha: 1, y: 0, duration: 0.5 }, 0.55);
+					tl.fromTo(entering.querySelector('.pw-tag'), { autoAlpha: 0, x: -12 }, { autoAlpha: 1, x: 0, duration: 0.4 }, 0.25);
+				} else {
+					tl.fromTo(finalPanel.children, { autoAlpha: 0, y: 16 }, { autoAlpha: 1, y: 0, duration: 0.45, stagger: 0.08 }, 0.25);
+				}
+
+				// giant counter rolls like an odometer
+				const label = i >= N ? '+' : pad(i + 1);
+				tl.to(countNum, { yPercent: -35, autoAlpha: 0, duration: 0.18, ease: 'power2.in' }, 0)
+					.call(() => {
+						countNum.textContent = label;
+						cur.textContent = i >= N ? pad(N) : label;
+					}, undefined, 0.18)
+					.fromTo(countNum, { yPercent: 35, autoAlpha: 0 }, { yPercent: 0, autoAlpha: 1, duration: 0.45 }, 0.18);
+
+				// progress line and slots
+				tl.to(fill, { scaleX: (i + 1) / STEPS, duration: 0.6 }, 0);
+				slots.forEach((slot, k) => {
+					const filled = i >= N || k <= i;
+					slot.classList.toggle('is-filled', filled);
+					slot.classList.toggle('is-current', k === i);
+					slot.setAttribute('aria-current', k === i ? 'step' : 'false');
+					tl!.to(slot.querySelector('.slot-bar'), { scaleX: filled ? 1 : 0, duration: 0.5 }, 0.05 + k * 0.03);
+				});
+			};
+
+			st = ScrollTrigger.create({
+				trigger: stage,
+				start: 'top top',
+				end: () => `+=${Math.round(window.innerHeight * 5.2)}`,
+				pin: true,
+				anticipatePin: 1,
+				invalidateOnRefresh: true,
+				onUpdate: (self) => setStep(Math.min(STEPS - 1, Math.floor(self.progress * STEPS))),
+			});
+
+			// first reveal as the section approaches, before the pin engages
+			ScrollTrigger.create({
+				trigger: root,
+				start: 'top 75%',
+				once: true,
+				onEnter: () => setStep(0),
+			});
+
+			// the slots are shortcuts: scroll to the middle of that step's band
+			slots.forEach((slot, k) =>
+				slot.addEventListener(
+					'click',
+					() => window.scrollTo({ top: st.start + ((k + 0.5) / STEPS) * (st.end - st.start), behavior: 'smooth' }),
+					{ signal: ac.signal },
+				),
 			);
-			observer.observe(section);
-		}
+
+			return () => {
+				ac.abort();
+				tl?.kill();
+				root.classList.remove('is-pinned');
+				restoreText();
+				gsap.set([...items, finalPanel, fill, countNum, ...root.querySelectorAll('.slot-bar, [data-d], .pw-a, .pw-tag')], { clearProps: 'all' });
+				finalPanel.querySelectorAll('*').forEach((el) => gsap.set(el, { clearProps: 'all' }));
+				slots.forEach((s) => s.classList.remove('is-filled', 'is-current'));
+				countNum.textContent = '01';
+				cur.textContent = '01';
+			};
+		});
+
+		// ============ flat list: phones, short screens, reduced motion ============
+		mm.add('(max-width: 860px), (max-height: 559px), (prefers-reduced-motion: reduce)', () => {
+			if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+			[...items, finalPanel].forEach((el) => {
+				gsap.from(el, {
+					autoAlpha: 0,
+					y: 28,
+					duration: 0.7,
+					ease: 'power3.out',
+					scrollTrigger: { trigger: el, start: 'top 88%', once: true },
+				});
+			});
+		});
 	}
 </script>
 
 <style>
-	.problem {
+	.pw {
 		--accent-bright: #a78bfa;
-		--card-bg: #101319;
+		--mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
 		position: relative;
 		background: var(--bg);
@@ -156,267 +381,455 @@ const questions = [
 		border-top: 1px solid var(--border-soft);
 	}
 
-	.problem-inner {
+	.pw-sr {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		margin: -1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+
+	/* ---------- stage ---------- */
+	.pw-stage {
 		position: relative;
-		z-index: 1;
+		display: flex;
+		flex-direction: column;
+		gap: clamp(1.5rem, 3vw, 2.5rem);
 		max-width: 1320px;
 		margin: 0 auto;
-		padding: clamp(56px, 8vw, 96px) clamp(20px, 4vw, 32px);
+		padding: clamp(56px, 7vw, 88px) clamp(20px, 4vw, 32px);
 	}
 
-	/* ---------- scroll-in reveal ---------- */
-	.reveal {
-		opacity: 0;
-		transform: translateY(18px);
-		transition:
-			opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
-			transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-		transition-delay: calc(var(--reveal-order, 0) * 60ms);
-	}
-
-	.problem.is-visible .reveal {
-		opacity: 1;
-		transform: translateY(0);
-	}
-
-	/* ---------- compact header ---------- */
-	.problem-header {
-		display: grid;
-		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-		gap: clamp(1.5rem, 4vw, 3.5rem);
-		align-items: end;
-		margin-bottom: clamp(1.75rem, 3.5vw, 2.5rem);
-		padding-bottom: clamp(1.25rem, 2.5vw, 1.75rem);
-		border-bottom: 1px solid var(--border-soft);
-	}
-
-	.problem-eyebrow {
+	.pw-top {
 		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		margin-bottom: 0.75rem;
+		align-items: flex-end;
+		justify-content: space-between;
+		gap: 2rem;
 	}
 
-	.eyebrow-idx,
-	.eyebrow-label {
-		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-		font-size: 0.75rem;
-		letter-spacing: 0.08em;
+	.pw-eyebrow {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.6rem;
+		margin-bottom: 0.9rem;
+		font-family: var(--mono);
+		font-size: 0.72rem;
+		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		color: var(--muted);
 	}
 
 	.eyebrow-dot {
-		color: var(--accent);
-		font-size: 0.6rem;
+		color: var(--accent-bright);
 	}
 
-	.problem-heading {
+	.pw-heading {
 		margin: 0;
-		font-size: clamp(1.75rem, 1.8vw + 1.3rem, 2.5rem);
+		font-size: clamp(1.6rem, 1.6vw + 1.1rem, 2.4rem);
 		font-weight: 700;
-		letter-spacing: -0.015em;
+		letter-spacing: -0.02em;
 		line-height: 1.08;
+		text-wrap: balance;
 	}
 
-	.header-context-col {
-		display: flex;
+	/* progress: counter + a line that fills as you move through */
+	.pw-meter {
+		display: none;
 		flex-direction: column;
-		gap: 0.75rem;
+		align-items: flex-end;
+		gap: 0.6rem;
+		min-width: 180px;
 	}
 
-	.problem-desc {
-		margin: 0;
-		font-size: 0.95rem;
-		line-height: 1.55;
+	.pw-readout {
+		font-family: var(--mono);
+		font-size: 0.8rem;
+		letter-spacing: 0.08em;
 		color: var(--muted);
 	}
 
-	/* ---------- the 3x2 grid ---------- */
-	.problem-grid {
-		display: grid;
-		grid-template-columns: repeat(3, 1fr);
-		grid-template-rows: repeat(2, 1fr);
-		gap: clamp(1rem, 1.6vw, 1.35rem);
+	.pw-readout b {
+		font-weight: 600;
+		color: var(--ink);
 	}
 
-	.problem-tile {
-		position: relative;
-		isolation: isolate;
+	.pw-progress {
+		display: block;
+		width: 100%;
+		height: 2px;
+		background: rgba(255, 255, 255, 0.1);
+		overflow: hidden;
+	}
+
+	.pw-progress-fill {
+		display: block;
+		width: 100%;
+		height: 100%;
+		background: var(--accent-bright);
+		transform-origin: left center;
+		transform: scaleX(0);
+	}
+
+	/* ---------- items ---------- */
+	.pw-main {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.pw-count {
+		display: none;
+	}
+
+	.pw-items {
 		display: flex;
 		flex-direction: column;
-		min-height: clamp(200px, 19vw, 250px);
-		padding: clamp(1.5rem, 2vw, 2rem);
-		background: var(--card-bg);
-		border: 1px solid rgba(255, 255, 255, 0.08);
-		border-radius: 18px;
-		box-shadow: 0 12px 26px rgba(0, 0, 0, 0.22);
-		font: inherit;
-		text-align: left;
-		color: inherit;
-		cursor: pointer;
-		transition:
-			border-color 0.3s ease,
-			background 0.35s ease,
-			box-shadow 0.35s ease,
-			transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+		gap: 0;
 	}
 
-	.problem-tile:hover:not(.is-active) {
-		border-color: rgba(255, 255, 255, 0.18);
-		background: #14171f;
+	.pw-item,
+	.pw-final {
+		display: flex;
+		flex-direction: column;
+		padding: 1.75rem 0;
+		border-top: 1px solid var(--border-soft);
 	}
 
-	.problem-tile:focus-visible {
-		outline: 2px solid var(--accent);
-		outline-offset: 2px;
+	.pw-art {
+		order: 3;
+		width: min(220px, 60%);
+		height: auto;
+		margin-top: 1.25rem;
+		color: var(--accent-bright);
+		opacity: 0.75;
 	}
 
-	/* ---------- active: sophisticated purple gradient + glow ---------- */
-	.problem-tile.is-active {
-		border-color: rgba(167, 139, 250, 0.55);
-		background: linear-gradient(150deg, rgba(139, 92, 246, 0.26), rgba(109, 40, 217, 0.1) 55%, rgba(16, 19, 25, 0.6));
-		box-shadow:
-			0 22px 46px rgba(0, 0, 0, 0.35),
-			0 0 0 1px rgba(109, 40, 217, 0.45),
-			0 0 64px -16px rgba(139, 92, 246, 0.55);
-		transform: translateY(-4px) scale(1.015);
-	}
-
-	.tile-index {
-		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-		font-size: 0.9rem;
-		font-weight: 600;
-		letter-spacing: 0.04em;
-		color: rgba(167, 139, 250, 0.5);
-		margin-bottom: 0.9rem;
-		transition: color 0.3s ease;
-	}
-
-	.problem-tile.is-active .tile-index {
-		color: #e9d8fd;
-	}
-
-	.tile-title {
-		margin-bottom: 0.55rem;
-		font-weight: 700;
-		color: var(--ink);
-		font-size: clamp(1.2rem, 0.9vw + 0.95rem, 1.45rem);
-		transition: color 0.3s ease;
-	}
-
-	.problem-tile.is-active .tile-title {
-		color: #ffffff;
-	}
-
-	.tile-question {
-		flex: 1;
-		font-size: 0.92rem;
-		line-height: 1.55;
-		color: rgba(243, 243, 241, 0.58);
-		transition: color 0.3s ease;
-	}
-
-	.problem-tile.is-active .tile-question {
-		color: rgba(243, 243, 241, 0.9);
-	}
-
-	.tile-divider {
-		height: 1px;
-		margin: 1rem 0 0.85rem;
-		background: rgba(255, 255, 255, 0.12);
-		transition: background-color 0.3s ease;
-	}
-
-	.problem-tile.is-active .tile-divider {
-		background: rgba(167, 139, 250, 0.3);
-	}
-
-	.tile-explore {
-		display: inline-flex;
+	.pw-tag {
+		display: flex;
 		align-items: center;
-		gap: 0.4rem;
-		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-		font-size: 0.72rem;
-		font-weight: 600;
-		letter-spacing: 0.05em;
+		gap: 0.6rem;
+		margin: 0 0 0.85rem;
+		font-family: var(--mono);
+		font-size: 0.74rem;
+		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		color: var(--accent-bright);
-		opacity: 0;
-		transform: translateY(4px);
-		transition:
-			opacity 0.3s ease,
-			transform 0.3s ease;
 	}
 
-	.problem-tile:hover .tile-explore,
-	.problem-tile.is-active .tile-explore {
-		opacity: 1;
-		transform: translateY(0);
+	.pw-tag-sep {
+		color: var(--muted);
 	}
 
-	.explore-arrow {
-		transition: transform 0.3s ease;
+	.pw-w {
+		display: inline-block;
 	}
 
-	.problem-tile:hover .explore-arrow {
+	.pw-q {
+		margin: 0 0 0.9rem;
+		font-size: clamp(1.5rem, 5.4vw, 2.2rem);
+		font-weight: 700;
+		letter-spacing: -0.025em;
+		line-height: 1.08;
+		text-wrap: balance;
+	}
+
+	.pw-a {
+		margin: 0;
+		max-width: 52ch;
+		font-size: 1rem;
+		line-height: 1.6;
+		color: rgba(243, 243, 241, 0.7);
+	}
+
+	/* ---------- "bring us yours" ---------- */
+	.pw-form {
+		display: flex;
+		flex-direction: column;
+		gap: 0.9rem;
+		width: 100%;
+		max-width: 34rem;
+		margin-top: 1.6rem;
+	}
+
+	.pw-field {
+		position: relative;
+	}
+
+	.pw-input {
+		width: 100%;
+		padding: 1rem 4.4rem 1rem 1.1rem;
+		background: rgba(255, 255, 255, 0.04);
+		border: 1px solid rgba(255, 255, 255, 0.16);
+		border-radius: 12px;
+		font: inherit;
+		font-size: 1rem;
+		color: var(--ink);
+		transition: border-color 0.2s ease, background-color 0.2s ease;
+	}
+
+	.pw-input::placeholder {
+		color: var(--muted);
+	}
+
+	.pw-input:focus-visible {
+		outline: none;
+		border-color: var(--accent-bright);
+		background: rgba(167, 139, 250, 0.08);
+	}
+
+	.pw-chars {
+		position: absolute;
+		top: 50%;
+		right: 1rem;
+		transform: translateY(-50%);
+		font-family: var(--mono);
+		font-size: 0.72rem;
+		letter-spacing: 0.06em;
+		color: var(--muted);
+		pointer-events: none;
+	}
+
+	.pw-cta {
+		display: inline-flex;
+		align-items: center;
+		align-self: flex-start;
+		gap: 0.55em;
+		padding: 0.85rem 1.5rem;
+		background: var(--accent);
+		color: #ffffff;
+		border-radius: 999px;
+		text-decoration: none;
+		font-size: 0.95rem;
+		font-weight: 600;
+		transition: background-color 0.15s ease;
+	}
+
+	.pw-cta:hover,
+	.pw-cta:focus-visible {
+		background: #5b21b6;
+	}
+
+	.pw-cta:focus-visible {
+		outline: 2px solid var(--accent-bright);
+		outline-offset: 3px;
+	}
+
+	.pw-cta-arrow {
+		transition: transform 0.2s ease;
+	}
+
+	.pw-cta:hover .pw-cta-arrow {
 		transform: translateX(3px);
 	}
 
-	/* ---------- responsive ---------- */
-	@media (max-width: 980px) {
-		.problem-header {
-			grid-template-columns: 1fr;
-			align-items: start;
-			gap: 1rem;
-		}
-
-		.problem-grid {
-			grid-template-columns: repeat(2, 1fr);
-			grid-template-rows: repeat(3, 1fr);
-		}
+	/* ---------- slots (pinned mode only) ---------- */
+	.pw-slots {
+		display: none;
+		grid-template-columns: repeat(6, minmax(0, 1fr));
+		gap: 14px;
+		margin: 0;
+		padding: 0;
+		list-style: none;
 	}
 
-	@media (max-width: 620px) {
-		.problem-grid {
-			grid-template-columns: 1fr;
-			grid-template-rows: none;
+	.pw-slot {
+		position: relative;
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		align-content: start;
+		gap: 0.4rem;
+		width: 100%;
+		min-height: 5rem;
+		padding: 1rem 0 0;
+		background: none;
+		border: 0;
+		border-top: 1px solid rgba(255, 255, 255, 0.14);
+		text-align: left;
+		font: inherit;
+		color: inherit;
+		cursor: pointer;
+	}
+
+	.slot-bar {
+		position: absolute;
+		top: -1px;
+		left: 0;
+		right: 0;
+		height: 2px;
+		background: var(--accent-bright);
+		transform-origin: left center;
+		transform: scaleX(0);
+	}
+
+	.slot-n {
+		font-family: var(--mono);
+		font-size: 0.7rem;
+		letter-spacing: 0.1em;
+		color: var(--muted);
+		transition: color 0.3s ease;
+	}
+
+	.slot-ph,
+	.slot-title {
+		font-family: var(--mono);
+		font-size: 0.78rem;
+		letter-spacing: 0.04em;
+		line-height: 1.3;
+		transition: opacity 0.35s ease, color 0.35s ease;
+	}
+
+	.slot-ph {
+		color: rgba(139, 146, 157, 0.55);
+	}
+
+	.slot-ph,
+	.slot-title {
+		grid-row: 2;
+		grid-column: 1;
+	}
+
+	.slot-title {
+		opacity: 0;
+		color: var(--ink);
+	}
+
+	.pw-slot.is-filled .slot-ph {
+		opacity: 0;
+	}
+
+	.pw-slot.is-filled .slot-title {
+		opacity: 1;
+		color: var(--muted);
+	}
+
+	.pw-slot.is-current .slot-title,
+	.pw-slot.is-current .slot-n {
+		color: var(--ink);
+	}
+
+	.pw-slot:hover .slot-title {
+		color: var(--ink);
+	}
+
+	.pw-slot:focus-visible {
+		outline: 2px solid var(--accent-bright);
+		outline-offset: 4px;
+		border-radius: 4px;
+	}
+
+	/* ============ pinned console layout ============ */
+	.pw.is-pinned .pw-stage {
+		height: 100vh;
+		height: 100dvh;
+		/* clears the fixed header */
+		padding-top: clamp(84px, 11vh, 104px);
+		padding-bottom: clamp(24px, 4vh, 40px);
+		gap: 0;
+		justify-content: space-between;
+	}
+
+	.pw.is-pinned .pw-meter {
+		display: flex;
+	}
+
+	.pw.is-pinned .pw-main {
+		flex: 1;
+		min-height: 0;
+		grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+		align-items: center;
+		column-gap: clamp(1.5rem, 4vw, 4rem);
+		/* keeps the longest answer clear of the slot row on short screens */
+		padding: clamp(0.75rem, 3vh, 2rem) 0 clamp(1.25rem, 4vh, 2.5rem);
+	}
+
+	/* giant outlined counter, pinned to the left edge */
+	.pw.is-pinned .pw-count {
+		display: block;
+		overflow: hidden;
+		line-height: 0.82;
+	}
+
+	.pw-count-num {
+		display: block;
+		font-size: min(30vh, 20vw);
+		font-weight: 800;
+		letter-spacing: -0.06em;
+		font-variant-numeric: tabular-nums;
+		/* soft gradient fill: an outline would expose the overlapping contours
+		   inside Inter's variable glyphs */
+		background: linear-gradient(180deg, rgba(167, 139, 250, 0.42), rgba(167, 139, 250, 0.04) 90%);
+		-webkit-background-clip: text;
+		background-clip: text;
+		color: transparent;
+		user-select: none;
+	}
+
+	.pw.is-pinned .pw-items {
+		display: grid;
+		align-self: stretch;
+		align-items: center;
+	}
+
+	.pw.is-pinned .pw-item,
+	.pw.is-pinned .pw-final {
+		grid-area: 1 / 1;
+		padding: 0;
+		border-top: 0;
+		justify-content: center;
+	}
+
+	.pw.is-pinned .pw-art {
+		order: 0;
+		width: auto;
+		height: min(22vh, 200px);
+		margin: 0 0 clamp(1rem, 3vh, 1.75rem);
+		align-self: flex-start;
+		opacity: 1;
+	}
+
+	.pw.is-pinned .pw-art :global([data-d]) {
+		stroke-dasharray: 1;
+	}
+
+	.pw.is-pinned .pw-q {
+		margin-bottom: clamp(0.8rem, 2vh, 1.25rem);
+		font-size: clamp(1.6rem, 2.2vw + 1vh + 0.5rem, 3.4rem);
+	}
+
+	.pw.is-pinned .pw-a {
+		font-size: clamp(1rem, 0.5vw + 0.8rem, 1.2rem);
+	}
+
+	.pw.is-pinned .pw-slots {
+		display: grid;
+	}
+
+	.pw.is-pinned .pw-heading {
+		font-size: clamp(1.4rem, 1.2vw + 1rem, 2rem);
+	}
+
+	/* ---------- tablet flat list: two columns of items ---------- */
+	@media (min-width: 640px) and (max-width: 860px) {
+		.pw:not(.is-pinned) .pw-items {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			column-gap: 2rem;
 		}
 
-		.problem-tile {
-			min-height: 0;
+		.pw:not(.is-pinned) .pw-final {
+			grid-column: 1 / -1;
 		}
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.problem-tile,
-		.tile-index,
-		.tile-title,
-		.tile-question,
-		.tile-divider,
-		.tile-explore,
-		.explore-arrow {
-			transition: none;
-		}
-
-		.reveal {
+		.pw-input,
+		.pw-cta,
+		.pw-cta-arrow,
+		.slot-n,
+		.slot-ph,
+		.slot-title {
 			transition: none;
 		}
 	}
 </style>
-
-<noscript>
-	<style>
-		.problem .reveal {
-			opacity: 1 !important;
-			transform: none !important;
-		}
-
-		/* no JS means no click handling, so every "Explore" stays visible —
-		   readable rather than permanently hidden */
-		.problem .tile-explore {
-			opacity: 1 !important;
-			transform: none !important;
-		}
-	</style>
-</noscript>
