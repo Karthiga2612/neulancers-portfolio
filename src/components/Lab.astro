@@ -48,130 +48,342 @@ const experiments = [
 	...e,
 	idx,
 	kicker: `Lab Notebook · 0${idx + 1}`,
-	// top row (0-3) sits on grid lines 1,3,5,7 of an 8-column track; bottom
-	// row (4-6) sits on 2,4,6 — each one column-line short of its top-row
-	// neighbours, which centers it exactly on the boundary between them
-	colStart: idx < 4 ? idx * 2 + 1 : (idx - 4) * 2 + 2,
-	row: idx < 4 ? 1 : 2,
 }));
+
+// ---------- extras for the index layout ----------
+const pad = (n: number) => String(n).padStart(2, '0');
+const total = experiments.length;
+const stageCounts = stages.map((_, si) => experiments.filter((e) => e.stage === si).length);
+
+// faint line drawings, one per experiment (400 x 240, strokes use currentColor)
+const p = (d: string, x = '') => `<path data-d pathLength="1" d="${d}" ${x}/>`;
+const r = (x: number, y: number, w: number, h: number, rx: number, ex = '') =>
+	`<rect data-d pathLength="1" x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" ${ex}/>`;
+const c = (cx: number, cy: number, rad: number, ex = '') => `<circle data-d pathLength="1" cx="${cx}" cy="${cy}" r="${rad}" ${ex}/>`;
+
+const arts = [
+	// AI x Business: a decision that resolves itself
+	[c(70, 120, 22), p('M92 120H150'), p('M150 120C170 120 170 70 200 70H250'), p('M150 120C170 120 170 170 200 170H250'), r(250, 50, 110, 40, 10), r(250, 150, 110, 40, 10, 'opacity=".5"'), p('M268 70l8 8 14-16')].join(''),
+	// AI x Search: a question and the answer behind it
+	[r(40, 40, 320, 46, 23), c(78, 63, 10), p('M86 71l10 10'), p('M120 63H280'), p('M60 120H340', 'opacity=".4"'), r(60, 140, 280, 44, 10), p('M78 162H250'), p('M78 150H150', 'opacity=".5"')].join(''),
+	// AI x Operations: the work as it really moves
+	[r(30, 90, 64, 56, 12), r(168, 90, 64, 56, 12), r(306, 90, 64, 56, 12), p('M94 118H168'), p('M232 118H306'), c(200, 46, 18), p('M200 36V46L208 52')].join(''),
+	// AI x Knowledge: scattered notes pulled into one answer
+	[r(30, 40, 70, 46, 8), r(30, 154, 70, 46, 8), r(130, 96, 70, 46, 8, 'opacity=".5"'), p('M100 63C140 63 150 100 190 110'), p('M100 177C140 177 150 140 190 130'), c(260, 120, 26), p('M286 120H350M330 106l16 14-16 14')].join(''),
+	// Automation x WhatsApp: the chat is the app
+	[r(30, 40, 190, 52, 20), p('M52 66H190'), r(180, 110, 190, 52, 20), p('M202 136H340'), r(30, 180, 130, 40, 18, 'opacity=".5"'), p('M52 200H130', 'opacity=".5"')].join(''),
+	// Data x Decision Making: numbers that push back
+	[p('M40 200H360'), r(60, 130, 36, 70, 4), r(120, 90, 36, 110, 4), r(180, 60, 36, 140, 4), r(240, 110, 36, 90, 4), r(290, 36, 80, 54, 14), p('M312 56h36M312 70h22')].join(''),
+	// Software x Traditional Business: paper that grows a nervous system
+	[r(30, 50, 110, 140, 8), p('M50 80H120M50 104H120M50 128H98'), p('M140 120H190'), c(220, 120, 8), c(290, 70, 8), c(290, 170, 8), c(350, 120, 8), p('M227 116L283 74M227 124L283 166M297 70L343 116M297 170L343 124')].join(''),
+];
+
+
+const rowsData = experiments;
+
+const mail = (subject: string) => `mailto:hello@neulancers.com?subject=${encodeURIComponent(subject)}`;
 ---
 
-<section class="lab" id="lab">
+<section class="lab" id="lab" aria-labelledby="lab-title">
 	<div class="lab-inner">
 		<div class="lab-head">
-			<div class="lab-eyebrow reveal" style="--reveal-order: 0">
-				<span class="eyebrow-idx">06</span>
-				<span class="eyebrow-dot" aria-hidden="true">&bull;</span>
-				<span class="eyebrow-label">The Lab</span>
+			<div class="lab-head-text">
+				<div class="lab-eyebrow reveal" style="--reveal-order: 0">
+					<span class="eyebrow-idx">06</span>
+					<span class="eyebrow-dot" aria-hidden="true">&bull;</span>
+					<span class="eyebrow-label">The Lab</span>
+				</div>
+				<h2 class="lab-heading reveal" id="lab-title" style="--reveal-order: 1">N Lab</h2>
+				<p class="lab-desc reveal" style="--reveal-order: 2">
+					Some ideas are too early to become products. So we experiment with them.
+				</p>
 			</div>
 
-			<h2 class="lab-heading reveal" style="--reveal-order: 1">N Lab</h2>
-			<p class="lab-desc reveal" style="--reveal-order: 2">
-				Some ideas are too early to become products. So we experiment with them.
+			<div class="lab-stats reveal" style="--reveal-order: 3">
+				<p class="stat-big" aria-label={`${total} experiments`}>
+					<span class="stat-num" data-count={total}>{pad(total)}</span>
+					<span class="stat-label">experiments on the bench</span>
+				</p>
+				<ul class="stat-row" aria-label="Experiments by stage">
+					{stages.map((s, si) => (
+						<li>
+							<b data-count={stageCounts[si]}>{pad(stageCounts[si])}</b>
+							<span>{s}</span>
+						</li>
+					))}
+				</ul>
+			</div>
+		</div>
+
+		<div class="lab-main reveal" id="labMain" style="--reveal-order: 5">
+			<div class="idx-col">
+			<p class="idx-hint" id="labHint">
+				<span class="hint-dot" aria-hidden="true"></span>
+				<span id="labHintText">Playing on its own. Hover or tap any row to take over.</span>
 			</p>
-		</div>
+			<ol class="idx" aria-label="Experiments">
+				{rowsData.map((e) => (
+					<li class="item" data-index={e.idx}>
+						<button type="button" class="row" data-index={e.idx} aria-controls="labSpec">
+							<span class="row-n">{pad(e.idx + 1)}</span>
+							<span class="row-name">{e.name}</span>
+							<span class="row-tag">{e.tagline}</span>
+							<span class="row-stage">{stages[e.stage]}</span>
+							<span class="row-arrow" aria-hidden="true"></span>
+							<span class="row-timer" aria-hidden="true"></span>
+						</button>
 
-		<div class="lab-filters reveal" id="labFilters" style="--reveal-order: 3">
-			<button type="button" class="filter-pill" data-filter="all" aria-pressed="true">All</button>
-			{stages.map((s) => (
-				<button type="button" class="filter-pill" data-filter={s.toLowerCase()} aria-pressed="false">
-					{s}
-				</button>
-			))}
-		</div>
+						<!-- phones and tablets open the note right under the row -->
+						<div class="row-detail">
+							<div class="row-detail-in">
+								<p class="rd-text">{e.log}</p>
+								<ol class="track" aria-label={`Stage: ${stages[e.stage]}`}>
+									{stages.map((s, i) => (
+										<li class={i <= e.stage ? 'is-on' : ''}><i></i><span>{s}</span></li>
+									))}
+								</ol>
+								<a class="spec-cta" href={mail(`About your lab experiment: ${e.name}`)}>
+									Ask us about this one <span aria-hidden="true">&rarr;</span>
+								</a>
+							</div>
+						</div>
+					</li>
+				))}
+			</ol>
+			</div>
 
-		<!-- staggered 4+3 editorial grid on an 8-column track (each card spans
-		     2 of 8, so both rows stay the same width). Every card has a fixed
-		     height and holds two stacked, absolutely-positioned faces
-		     (default / notebook) that cross-fade in place — selecting a card
-		     never changes its box, so the grid geometry never moves. -->
-		<div class="lab-grid reveal" id="labGrid" style="--reveal-order: 4">
-			{experiments.map((e) => (
-				<article
-					class="exp-card"
-					data-stage={stages[e.stage].toLowerCase()}
-					style={`--col-start: ${e.colStart}; --row: ${e.row};`}
-				>
-					<button
-						type="button"
-						class="exp-trigger exp-face exp-face--default"
-						id={`exp-trigger-${e.idx}`}
-						aria-expanded="false"
-						aria-controls={`exp-notebook-${e.idx}`}
-					>
-						<span class="face-top">
-							<span class="exp-name">{e.name}</span>
-							<span class="face-icon" aria-hidden="true">&rarr;</span>
-						</span>
-
-						<span class="exp-tagline">{e.tagline}</span>
-
-						<span class="exp-meter" aria-hidden="true">
-							{stages.map((_, i) => (
-								<span class={`meter-seg${i <= e.stage ? ' is-filled' : ''}${i === e.stage ? ' is-current' : ''}`}></span>
+			<div class="spec" id="labSpec">
+				{rowsData.map((e) => (
+					<article class="spec-item" data-index={e.idx}>
+						<div class="spec-stage">
+							<span class="spec-chip">{stages[e.stage]}</span>
+							<svg class="spec-art" viewBox="0 0 400 240" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={arts[e.idx]} />
+						</div>
+						<p class="spec-kicker">{e.kicker}</p>
+						<h3 class="spec-title">{e.name}</h3>
+						<p class="spec-text">{e.log}</p>
+						<ol class="track" aria-label={`Stage: ${stages[e.stage]}`}>
+							{stages.map((s, i) => (
+								<li class={i <= e.stage ? 'is-on' : ''}><i></i><span>{s}</span></li>
 							))}
-						</span>
-
-						<span class="exp-stage">{stages[e.stage]}</span>
-					</button>
-
-					<div
-						class="exp-face exp-face--notebook"
-						id={`exp-notebook-${e.idx}`}
-						role="region"
-						aria-labelledby={`exp-trigger-${e.idx}`}
-					>
-						<button type="button" class="face-close" data-index={e.idx} aria-label={`Close ${e.name} notebook`}>
-							&times;
-						</button>
-
-						<p class="notebook-kicker">{e.kicker}</p>
-						<h4 class="notebook-title">{e.name}</h4>
-						<p class="notebook-excerpt">{e.log}</p>
-
-						<button
-							type="button"
-							class="notebook-explore"
-							data-kicker={e.kicker}
-							data-name={e.name}
-							data-stage={stages[e.stage]}
-							data-log={e.log}
-						>
-							Explore experiment
-							<span aria-hidden="true">&rarr;</span>
-						</button>
-					</div>
-				</article>
-			))}
+						</ol>
+						<a class="spec-cta" href={mail(`About your lab experiment: ${e.name}`)}>
+							Ask us about this one <span aria-hidden="true">&rarr;</span>
+						</a>
+					</article>
+				))}
+			</div>
 		</div>
 
-		<p class="lab-footer reveal" style="--reveal-order: 5">
-			Open any card to read the notes. Nothing here is finished, and that's the point.
+		<p class="lab-footer reveal" style="--reveal-order: 6">
+			Nothing here is finished, and that&rsquo;s the point.
 		</p>
 	</div>
-
-	<div class="lab-modal" id="labModal" aria-hidden="true">
-		<div class="modal-backdrop" data-close="true"></div>
-		<div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-			<button type="button" class="modal-close" data-close="true" aria-label="Close experiment details">&times;</button>
-			<p class="modal-kicker" id="modalKicker">Lab Notebook</p>
-			<h3 class="modal-title" id="modalTitle">Experiment</h3>
-			<span class="modal-stage" id="modalStage">Thinking</span>
-			<p class="modal-text" id="modalText"></p>
-		</div>
-	</div>
 </section>
+
+<script>
+	import { gsap } from 'gsap';
+
+	const root = document.getElementById('lab');
+	const main = document.getElementById('labMain');
+
+	if (root && main) {
+		const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		const wide = window.matchMedia('(min-width: 901px)');
+		const rows = Array.from(main.querySelectorAll<HTMLButtonElement>('.row'));
+		const items = Array.from(main.querySelectorAll<HTMLElement>('.item'));
+		const specs = Array.from(main.querySelectorAll<HTMLElement>('.spec-item'));
+		const spec = document.getElementById('labSpec')!;
+		const CYCLE = rows.length;
+		const pad = (n: number) => String(n).padStart(2, '0');
+
+		let cur = -1;
+		let interacted = false;
+		let inside = false;
+		let visible = false;
+		let started = false;
+		let tween: gsap.core.Tween | null = null;
+		const hint = document.getElementById('labHint')!;
+		const hintText = document.getElementById('labHintText')!;
+		// nothing plays by itself with reduced motion, so the hint must not say it does
+		if (reduce) {
+			hint.classList.add('is-manual');
+			hintText.textContent = 'Hover or tap any row to preview it.';
+		}
+
+		const drawIn = (el: HTMLElement) => {
+			const strokes = el.querySelectorAll('[data-d]');
+			const segs = el.querySelectorAll<HTMLElement>('.track li.is-on i');
+			gsap.fromTo(strokes, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.9, stagger: 0.06, ease: 'power2.out' });
+			gsap.fromTo(segs, { scaleX: 0 }, { scaleX: 1, duration: 0.5, stagger: 0.08, ease: 'power3.out', transformOrigin: 'left center' });
+		};
+
+		const show = (i: number, animate = true) => {
+			const closing = i < 0;
+			if (i === cur && !closing) {
+				if (!wide.matches) return;
+				return;
+			}
+			const prev = cur;
+			cur = i;
+
+			items.forEach((li, k) => li.classList.toggle('is-active', k === i));
+			rows.forEach((b, k) => (k === i ? b.setAttribute('aria-current', 'true') : b.removeAttribute('aria-current')));
+			arm();
+
+			if (!wide.matches) return; // the mobile accordion is pure CSS off is-active
+
+			specs.forEach((s, k) => {
+				if (k !== i && k !== prev) gsap.set(s, { autoAlpha: 0 });
+			});
+			if (closing) return;
+
+			const next = specs[i];
+			const old = prev >= 0 ? specs[prev] : null;
+			gsap.killTweensOf([next, old]);
+
+			if (!animate || reduce) {
+				if (old) gsap.set(old, { autoAlpha: 0 });
+				gsap.set(next, { autoAlpha: 1, y: 0 });
+				return;
+			}
+			if (old) gsap.to(old, { autoAlpha: 0, y: -10, duration: 0.2, ease: 'power2.in' });
+			gsap.fromTo(next, { autoAlpha: 0, y: 14 }, { autoAlpha: 1, y: 0, duration: 0.45, delay: old ? 0.12 : 0, ease: 'power3.out' });
+			drawIn(next);
+		};
+
+		// ---------- the tour: advances on its own until the visitor takes over ----------
+		// each active row fills a thin bar over 4.2s; when it's full, the next row
+		// takes over. The bar is the visitor's cue that this is playing by itself.
+		const touring = () => wide.matches && !interacted && !reduce && started;
+		const halt = () => {
+			tween?.kill();
+			tween = null;
+		};
+		const sync = () => tween?.paused(!(visible && !inside && !document.hidden));
+		const arm = () => {
+			halt();
+			items.forEach((li) => gsap.set(li.querySelector('.row-timer'), { scaleX: 0 }));
+			if (!touring() || cur < 0 || cur >= CYCLE) return;
+			tween = gsap.fromTo(
+				items[cur].querySelector('.row-timer'),
+				{ scaleX: 0 },
+				{ scaleX: 1, duration: 4.2, ease: 'none', onComplete: () => show((cur + 1) % CYCLE) },
+			);
+			sync();
+		};
+		const start = () => {
+			started = true;
+			arm();
+		};
+		const take = () => {
+			if (interacted) return;
+			interacted = true;
+			spec.setAttribute('aria-live', 'polite');
+			halt();
+			items.forEach((li) => gsap.set(li.querySelector('.row-timer'), { scaleX: 0 }));
+			hint.classList.add('is-manual');
+			hintText.textContent = 'You’re in control. Hover or tap any row.';
+		};
+
+		// ---------- events ----------
+		rows.forEach((row, i) => {
+			row.addEventListener('pointerenter', (e) => {
+				if (e.pointerType !== 'mouse' || !wide.matches) return;
+				take();
+				show(i);
+			});
+			row.addEventListener('focus', () => {
+				if (!wide.matches) return;
+				take();
+				show(i);
+			});
+			// arrow keys walk the list, which also previews each row
+			row.addEventListener('keydown', (e) => {
+				if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+					e.preventDefault();
+					rows[i + (e.key === 'ArrowDown' ? 1 : -1)]?.focus();
+				}
+			});
+			row.addEventListener('click', () => {
+				take();
+				// phones: tapping the open row closes it
+				if (!wide.matches && cur === i) show(-1);
+				else show(i);
+			});
+		});
+
+		main.addEventListener('pointerenter', () => {
+			inside = true;
+			sync();
+		});
+		main.addEventListener('pointerleave', () => {
+			inside = false;
+			sync();
+		});
+		document.addEventListener('visibilitychange', sync);
+
+		wide.addEventListener('change', () => {
+			cur = -2;
+			if (wide.matches) show(0, false);
+			else show(-1);
+		});
+
+		// ---------- reveal, counters, first state ----------
+		const reveal = () => {
+			root.classList.add('is-visible');
+			if (reduce) return;
+			root.querySelectorAll<HTMLElement>('[data-count]').forEach((el) => {
+				const to = Number(el.dataset.count);
+				const o = { v: 0 };
+				el.textContent = '00';
+				gsap.to(o, {
+					v: to,
+					duration: 1.3,
+					delay: 0.35,
+					ease: 'power2.out',
+					onUpdate: () => (el.textContent = pad(Math.round(o.v))),
+					onComplete: () => (el.textContent = pad(to)),
+				});
+			});
+			if (cur >= 0 && wide.matches) drawIn(specs[cur]);
+		};
+
+		if (wide.matches) show(0, false);
+
+		if (reduce || !('IntersectionObserver' in window)) {
+			root.classList.add('is-visible');
+			visible = true;
+		} else {
+			const io = new IntersectionObserver(
+				(entries) => {
+					entries.forEach((entry) => {
+						visible = entry.isIntersecting;
+						sync();
+						if (entry.isIntersecting && !root.classList.contains('is-visible')) {
+							reveal();
+							start();
+						}
+					});
+				},
+				{ threshold: 0.2 },
+			);
+			io.observe(root);
+		}
+	}
+</script>
 
 <style>
 	.lab {
 		--accent-bright: #a78bfa;
-		--card-bg: #0d1018;
+		--mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
 		position: relative;
 		background: var(--bg);
 		color: var(--ink);
 		font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
 		border-top: 1px solid var(--border-soft);
+		overflow: hidden;
 	}
 
 	.lab-inner {
@@ -195,23 +407,21 @@ const experiments = [
 		transform: translateY(0);
 	}
 
+	/* ---------- header: text left, giant counter right ---------- */
 	.lab-head {
-		max-width: 560px;
-		margin: 0 auto clamp(32px, 4vw, 44px);
-		text-align: center;
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		align-items: end;
+		gap: 2rem 4rem;
+		margin-bottom: clamp(2rem, 4vw, 3rem);
 	}
 
 	.lab-eyebrow {
 		display: flex;
 		align-items: center;
-		justify-content: center;
 		gap: 0.5rem;
 		margin-bottom: 1.1rem;
-	}
-
-	.eyebrow-idx,
-	.eyebrow-label {
-		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-family: var(--mono);
 		font-size: 0.75rem;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
@@ -225,465 +435,547 @@ const experiments = [
 
 	.lab-heading {
 		margin: 0 0 0.75rem;
-		font-size: clamp(2rem, 1.6vw + 1.7rem, 2.75rem);
+		font-size: clamp(2.4rem, 3vw + 1.5rem, 4rem);
 		font-weight: 700;
-		letter-spacing: -0.01em;
+		letter-spacing: -0.03em;
+		line-height: 1;
 	}
 
 	.lab-desc {
 		margin: 0;
-		font-size: 1rem;
+		max-width: 34rem;
+		font-size: 1.02rem;
 		line-height: 1.6;
 		color: var(--muted);
 	}
 
-	/* ---------- filters ---------- */
-	.lab-filters {
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: center;
-		gap: 0.6rem;
-		margin-bottom: clamp(1.75rem, 3.5vw, 2.5rem);
-	}
-
-	.filter-pill {
-		padding: 0.5rem 1.05rem;
-		background: none;
-		border: 1px solid var(--border-soft);
-		border-radius: 999px;
-		color: var(--muted);
-		font-size: 0.85rem;
-		font-weight: 500;
-		cursor: pointer;
-		transition: border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease;
-	}
-
-	.filter-pill:hover {
-		color: var(--ink);
-		border-color: rgba(255, 255, 255, 0.22);
-	}
-
-	.filter-pill[aria-pressed='true'] {
-		background: var(--accent);
-		border-color: var(--accent);
-		color: #ffffff;
-	}
-
-	/* ---------- experiment grid ----------
-	   an 8-column track lets each card span 2 columns while the bottom row
-	   sits one column-line short of the top row — that's what centers each
-	   bottom card exactly on the boundary between two top cards, using fr
-	   units throughout so it holds at any desktop width (no pixel offsets).
-	   every card also has a fixed height, so a row's track size is fixed
-	   too — selecting a card can never change it, which is what keeps the
-	   whole grid geometrically stable. */
-	.lab-grid {
-		display: grid;
-		grid-template-columns: repeat(8, 1fr);
-		gap: 1.25rem;
-	}
-
-	.exp-card {
-		position: relative;
-		grid-column: var(--col-start) / span 2;
-		grid-row: var(--row);
-		height: 15.5rem;
-		background: var(--card-bg);
-		border: 1px solid var(--border-soft);
-		border-radius: 16px;
-		overflow: hidden;
-		transition:
-			border-color 0.28s ease-out,
-			background-color 0.28s ease-out,
-			box-shadow 0.28s ease-out;
-	}
-
-	.exp-card:hover {
-		border-color: rgba(255, 255, 255, 0.2);
-	}
-
-	.exp-card.is-hidden {
-		display: none;
-	}
-
-	/* with a stage filter on, the remaining cards would keep their staggered
-	   column slots and leave gaps — let them flow left to right instead */
-	.lab-grid.is-filtered .exp-card {
-		grid-column: auto / span 2;
-		grid-row: auto;
-	}
-
-	/* selected: slightly brighter surface, thin purple border, restrained
-	   glow — never a size change */
-	.exp-card.is-open {
-		border-color: var(--accent);
-		background: rgba(109, 40, 217, 0.09);
-		box-shadow:
-			0 0 0 1px rgba(109, 40, 217, 0.3),
-			0 8px 22px rgba(109, 40, 217, 0.14);
-	}
-
-	/* ---------- two stacked faces, cross-fading in place ----------
-	   both faces are absolutely positioned to fill the fixed-height card,
-	   so swapping which one is visible never touches the card's box model. */
-	.exp-face {
-		position: absolute;
-		inset: 0;
+	.lab-stats {
 		display: flex;
 		flex-direction: column;
-		align-items: flex-start;
-		gap: 0.75rem;
-		padding: 1.5rem;
-		text-align: left;
-		transition:
-			opacity 0.26s ease-out,
-			transform 0.26s ease-out;
+		align-items: flex-end;
+		gap: 0.9rem;
 	}
 
-	.exp-face--default {
-		background: none;
-		border: none;
-		width: 100%;
-		cursor: pointer;
-		font-family: inherit;
-		color: inherit;
-		opacity: 1;
-		transform: translateY(0);
-	}
-
-	.exp-card.is-open .exp-face--default {
-		opacity: 0;
-		transform: translateY(-6px);
-		pointer-events: none;
-	}
-
-	.exp-face--notebook {
-		opacity: 0;
-		transform: translateY(6px);
-		pointer-events: none;
-	}
-
-	.exp-card.is-open .exp-face--notebook {
-		opacity: 1;
-		transform: translateY(0);
-		pointer-events: auto;
-		transition-delay: 60ms;
-	}
-
-	.face-top {
+	.stat-big {
 		display: flex;
-		align-items: flex-start;
-		justify-content: space-between;
-		gap: 0.75rem;
-		width: 100%;
+		align-items: flex-end;
+		gap: 0.9rem;
+		margin: 0;
 	}
 
-	.exp-name {
-		font-size: 1.1rem;
-		font-weight: 700;
-		letter-spacing: -0.005em;
-		color: var(--ink);
+	.stat-num {
+		font-size: clamp(4.5rem, 9vw, 8rem);
+		font-weight: 800;
+		letter-spacing: -0.06em;
+		line-height: 0.8;
+		font-variant-numeric: tabular-nums;
+		background: linear-gradient(180deg, rgba(196, 181, 253, 0.95), rgba(139, 92, 246, 0.28));
+		-webkit-background-clip: text;
+		background-clip: text;
+		color: transparent;
 	}
 
-	.face-icon {
-		flex-shrink: 0;
-		margin-top: 0.1rem;
-		font-size: 0.95rem;
-		color: var(--ink-faint);
-		transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), color 0.25s ease;
-	}
-
-	.exp-face--default:hover .face-icon {
-		color: var(--accent-bright);
-		transform: translateX(3px);
-	}
-
-	.exp-tagline {
-		flex: 1;
-		font-size: 0.88rem;
-		line-height: 1.55;
+	.stat-label {
+		max-width: 6.5rem;
+		padding-bottom: 0.2rem;
+		font-family: var(--mono);
+		font-size: 0.68rem;
+		letter-spacing: 0.08em;
+		line-height: 1.4;
+		text-transform: uppercase;
 		color: var(--muted);
 	}
 
-	/* ---------- 5-segment stage meter ---------- */
-	.exp-meter {
+	.stat-row {
 		display: flex;
-		gap: 4px;
-		width: 100%;
-	}
-
-	.meter-seg {
-		flex: 1;
-		height: 4px;
-		border-radius: 2px;
-		background: var(--border-soft);
-	}
-
-	.meter-seg.is-filled {
-		background: var(--accent);
-	}
-
-	.meter-seg.is-current {
-		animation: meter-pulse 2.6s ease-in-out infinite;
-	}
-
-	@keyframes meter-pulse {
-		0%,
-		100% {
-			opacity: 1;
-		}
-		50% {
-			opacity: 0.55;
-		}
-	}
-
-	.exp-stage {
-		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-		font-size: 0.68rem;
-		letter-spacing: 0.06em;
-		text-transform: uppercase;
-		color: var(--ink-faint);
-	}
-
-	/* ---------- notebook face ---------- */
-	.face-close {
-		position: absolute;
-		top: 0.9rem;
-		right: 0.9rem;
-		width: 22px;
-		height: 22px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
+		flex-wrap: wrap;
+		justify-content: flex-end;
+		gap: 0.4rem 1.2rem;
+		margin: 0;
 		padding: 0;
-		background: none;
-		border: 1px solid var(--border-soft);
-		border-radius: 50%;
-		color: var(--ink-faint);
-		font-size: 0.85rem;
-		line-height: 1;
-		cursor: pointer;
-		transition: color 0.2s ease, border-color 0.2s ease;
-	}
-
-	.face-close:hover {
-		color: var(--ink);
-		border-color: rgba(255, 255, 255, 0.3);
-	}
-
-	.notebook-kicker {
-		margin: 0;
-		padding-right: 1.75rem;
-		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-		font-size: 0.64rem;
-		letter-spacing: 0.06em;
-		text-transform: uppercase;
-		color: var(--accent-bright);
-	}
-
-	.notebook-title {
-		margin: 0;
-		font-size: 1rem;
-		font-weight: 700;
-		color: #ffffff;
-	}
-
-	.notebook-excerpt {
-		flex: 1;
-		margin: 0;
-		font-size: 0.82rem;
-		line-height: 1.5;
-		color: var(--muted);
-		display: -webkit-box;
-		-webkit-line-clamp: 4;
-		-webkit-box-orient: vertical;
-		overflow: hidden;
-	}
-
-	.notebook-explore {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.4rem;
-		padding: 0;
-		background: none;
-		border: none;
-		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-		font-size: 0.68rem;
-		font-weight: 600;
-		letter-spacing: 0.05em;
-		text-transform: uppercase;
-		color: var(--accent-bright);
-		cursor: pointer;
-		transition: color 0.2s ease;
-	}
-
-	.notebook-explore:hover {
-		color: #ffffff;
-	}
-
-	/* ---------- footer ---------- */
-	.lab-footer {
-		margin: clamp(1.5rem, 3vw, 2.25rem) 0 0;
-		text-align: center;
-		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-		font-size: 0.85rem;
-		color: var(--ink-faint);
-	}
-
-	/* ---------- explore-experiment modal ---------- */
-	.lab-modal {
-		position: fixed;
-		inset: 0;
-		z-index: 200;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		padding: 1.5rem;
-		opacity: 0;
-		visibility: hidden;
-		transition: opacity 0.25s ease-out, visibility 0s linear 0.25s;
-	}
-
-	.lab-modal.is-open {
-		opacity: 1;
-		visibility: visible;
-		transition: opacity 0.25s ease-out;
-	}
-
-	.modal-backdrop {
-		position: absolute;
-		inset: 0;
-		background: rgba(6, 6, 9, 0.72);
-		backdrop-filter: blur(6px);
-		-webkit-backdrop-filter: blur(6px);
-	}
-
-	.modal-panel {
-		position: relative;
-		width: 100%;
-		max-width: 520px;
-		max-height: 80vh;
-		overflow-y: auto;
-		background: var(--card-bg);
-		border: 1px solid rgba(109, 40, 217, 0.35);
-		border-radius: 20px;
-		padding: clamp(1.75rem, 4vw, 2.5rem);
-		box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5);
-		transform: translateY(10px) scale(0.98);
-		opacity: 0;
-		transition: transform 0.28s ease-out, opacity 0.28s ease-out;
-	}
-
-	.lab-modal.is-open .modal-panel {
-		transform: translateY(0) scale(1);
-		opacity: 1;
-	}
-
-	.modal-close {
-		position: absolute;
-		top: 1.1rem;
-		right: 1.1rem;
-		width: 30px;
-		height: 30px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		background: none;
-		border: 1px solid var(--border-soft);
-		border-radius: 50%;
-		color: var(--ink-faint);
-		font-size: 1rem;
-		line-height: 1;
-		cursor: pointer;
-		transition: color 0.2s ease, border-color 0.2s ease;
-	}
-
-	.modal-close:hover {
-		color: var(--ink);
-		border-color: rgba(255, 255, 255, 0.3);
-	}
-
-	.modal-kicker {
-		margin: 0 0 0.6rem;
-		padding-right: 2rem;
-		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		list-style: none;
+		font-family: var(--mono);
 		font-size: 0.7rem;
 		letter-spacing: 0.06em;
 		text-transform: uppercase;
-		color: var(--accent-bright);
-	}
-
-	.modal-title {
-		margin: 0 0 0.75rem;
-		font-size: clamp(1.4rem, 1.5vw + 1.1rem, 1.75rem);
-		font-weight: 700;
-		letter-spacing: -0.01em;
-		color: #ffffff;
-	}
-
-	.modal-stage {
-		display: inline-block;
-		margin-bottom: 1.25rem;
-		padding: 0.3rem 0.7rem;
-		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-		font-size: 0.68rem;
-		letter-spacing: 0.05em;
-		text-transform: uppercase;
-		color: var(--ink-faint);
-		border: 1px solid var(--border-soft);
-		border-radius: 999px;
-	}
-
-	.modal-text {
-		margin: 0;
-		font-size: 0.98rem;
-		line-height: 1.7;
 		color: var(--muted);
 	}
 
-	/* ---------- responsive ----------
-	   the staggered composition is a desktop-only flourish — below 980px
-	   there isn't room for it to read as intentional rather than cramped,
-	   so it collapses to a plain 2-column track. With 7 cards and normal
-	   row-by-row auto-placement that yields 2+2+2+1, a balanced fallback
-	   rather than a forced, squeezed staggered layout. */
-	@media (max-width: 1100px) {
-		.lab-grid {
-			grid-template-columns: repeat(2, 1fr);
-		}
+	.stat-row li {
+		display: inline-flex;
+		align-items: baseline;
+		gap: 0.4rem;
+	}
 
-		.exp-card,
-		.lab-grid.is-filtered .exp-card {
-			grid-column: auto;
-			grid-row: auto;
+	.stat-row b {
+		font-weight: 600;
+		color: var(--ink);
+		font-variant-numeric: tabular-nums;
+	}
+
+	/* ---------- list + preview ---------- */
+	.lab-main {
+		display: grid;
+		grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+		gap: clamp(1.5rem, 4vw, 4.5rem);
+		align-items: start;
+	}
+
+	.idx {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		border-bottom: 1px solid var(--border-soft);
+	}
+
+	.item {
+		border-top: 1px solid var(--border-soft);
+	}
+
+	.row {
+		position: relative;
+		display: grid;
+		grid-template-columns: 2.6rem minmax(0, 1fr) auto 1.2rem;
+		grid-template-areas:
+			'n name stage arrow'
+			'n tag  stage arrow';
+		align-items: center;
+		column-gap: 1rem;
+		row-gap: 0.1rem;
+		width: 100%;
+		padding: 1.05rem 0.5rem 1.05rem 0;
+		background: none;
+		border: 0;
+		font: inherit;
+		text-align: left;
+		color: inherit;
+		cursor: pointer;
+		transition: padding 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+	}
+
+	.row::before {
+		content: '';
+		position: absolute;
+		left: 0;
+		top: -1px;
+		bottom: -1px;
+		width: 2px;
+		background: var(--accent-bright);
+		transform: scaleY(0);
+		transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+	}
+
+	.row-n {
+		grid-area: n;
+		font-family: var(--mono);
+		font-size: 0.72rem;
+		letter-spacing: 0.1em;
+		color: var(--muted);
+		transition: color 0.25s ease;
+	}
+
+	.row-name {
+		grid-area: name;
+		font-size: clamp(1.05rem, 0.7vw + 0.9rem, 1.35rem);
+		font-weight: 600;
+		letter-spacing: -0.015em;
+		color: rgba(243, 243, 241, 0.8);
+		transition: color 0.25s ease;
+	}
+
+	.row-tag {
+		grid-area: tag;
+		font-size: 0.84rem;
+		line-height: 1.4;
+		color: var(--muted);
+	}
+
+	.row-stage {
+		grid-area: stage;
+		padding: 0.25rem 0.6rem;
+		border: 1px solid var(--border-soft);
+		border-radius: 999px;
+		font-family: var(--mono);
+		font-size: 0.66rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--muted);
+		transition: border-color 0.25s ease, color 0.25s ease, background-color 0.25s ease;
+	}
+
+	.row-arrow {
+		grid-area: arrow;
+		justify-self: end;
+		width: 0.55rem;
+		height: 0.55rem;
+		border-top: 1.5px solid var(--muted);
+		border-right: 1.5px solid var(--muted);
+		transform: rotate(45deg);
+		transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease;
+	}
+
+	.row:hover .row-name,
+	.item.is-active .row-name {
+		color: var(--ink);
+	}
+
+	.item.is-active .row {
+		padding-left: 1rem;
+	}
+
+	.item.is-active .row::before {
+		transform: scaleY(1);
+	}
+
+	.item.is-active .row-n {
+		color: var(--accent-bright);
+	}
+
+	.item.is-active .row-stage {
+		border-color: rgba(167, 139, 250, 0.55);
+		background: rgba(139, 92, 246, 0.12);
+		color: var(--ink);
+	}
+
+	.item.is-active .row-arrow {
+		border-color: var(--accent-bright);
+		transform: rotate(45deg) translate(2px, -2px);
+	}
+
+	.row:focus-visible {
+		outline: 2px solid var(--accent-bright);
+		outline-offset: -2px;
+	}
+
+	/* ---------- the preview panel (wide screens) ---------- */
+	.spec {
+		position: sticky;
+		top: 96px;
+		display: grid;
+		min-height: 26rem;
+		padding: clamp(1.25rem, 2.2vw, 2rem);
+		background:
+			radial-gradient(120% 90% at 0% 0%, rgba(139, 92, 246, 0.15), transparent 60%),
+			rgba(16, 19, 25, 0.92);
+		border: 1px solid rgba(255, 255, 255, 0.09);
+		border-radius: 20px;
+	}
+
+	.spec-item {
+		grid-area: 1 / 1;
+		display: flex;
+		flex-direction: column;
+		visibility: hidden;
+		opacity: 0;
+	}
+
+	.spec-item:first-child {
+		visibility: visible;
+		opacity: 1;
+	}
+
+	/* the drawing sits on a faint dotted grid, like a bench mat */
+	.spec-stage {
+		position: relative;
+		display: grid;
+		place-items: center;
+		aspect-ratio: 2 / 1;
+		margin: 0 0 1.4rem;
+		background-image: radial-gradient(rgba(255, 255, 255, 0.09) 1px, transparent 1px);
+		background-size: 18px 18px;
+		border: 1px solid rgba(255, 255, 255, 0.07);
+		border-radius: 14px;
+	}
+
+	.spec-art {
+		width: 82%;
+		height: auto;
+		color: var(--accent-bright);
+		filter: drop-shadow(0 0 14px rgba(139, 92, 246, 0.35));
+	}
+
+	.spec-chip {
+		position: absolute;
+		top: 0.7rem;
+		right: 0.7rem;
+		padding: 0.25rem 0.6rem;
+		background: rgba(10, 10, 13, 0.7);
+		border: 1px solid rgba(167, 139, 250, 0.45);
+		border-radius: 999px;
+		font-family: var(--mono);
+		font-size: 0.64rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--ink);
+	}
+
+	/* ---------- the hint line above the list ---------- */
+	.idx-hint {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		margin: 0 0 0.9rem;
+		font-family: var(--mono);
+		font-size: 0.7rem;
+		letter-spacing: 0.06em;
+		color: var(--muted);
+	}
+
+	.hint-dot {
+		flex: none;
+		width: 7px;
+		height: 7px;
+		border-radius: 50%;
+		background: var(--accent-bright);
+		box-shadow: 0 0 10px rgba(167, 139, 250, 0.8);
+		animation: lab-pulse 1.8s ease-in-out infinite;
+	}
+
+	.idx-hint.is-manual .hint-dot {
+		animation: none;
+		background: transparent;
+		border: 1.5px solid var(--accent-bright);
+		box-shadow: none;
+	}
+
+	@keyframes lab-pulse {
+		50% {
+			opacity: 0.35;
 		}
 	}
 
-	@media (max-width: 640px) {
-		.lab-grid {
+	/* a thin bar that fills while a row is up next; only shown during the tour */
+	.row-timer {
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: -1px;
+		height: 2px;
+		background: var(--accent-bright);
+		transform: scaleX(0);
+		transform-origin: left center;
+		opacity: 0;
+	}
+
+	.item.is-active .row-timer {
+		opacity: 0.85;
+	}
+
+	.spec :global([data-d]) {
+		stroke-dasharray: 1;
+	}
+
+	.spec-kicker {
+		margin: 0 0 0.5rem;
+		font-family: var(--mono);
+		font-size: 0.7rem;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--accent-bright);
+	}
+
+	.spec-title {
+		margin: 0 0 0.75rem;
+		font-size: clamp(1.4rem, 1.2vw + 1rem, 1.9rem);
+		font-weight: 700;
+		letter-spacing: -0.02em;
+		line-height: 1.12;
+	}
+
+	.spec-text {
+		margin: 0 0 1.4rem;
+		max-width: 46ch;
+		font-size: 0.98rem;
+		line-height: 1.65;
+		color: rgba(243, 243, 241, 0.78);
+	}
+
+	/* five-step stage track */
+	.track {
+		display: grid;
+		grid-template-columns: repeat(5, minmax(0, 1fr));
+		gap: 6px;
+		margin: auto 0 1.2rem;
+		padding: 0;
+		list-style: none;
+	}
+
+	.track li {
+		display: flex;
+		flex-direction: column;
+		gap: 0.45rem;
+	}
+
+	.track i {
+		display: block;
+		height: 3px;
+		border-radius: 2px;
+		background: rgba(255, 255, 255, 0.12);
+	}
+
+	.track li.is-on i {
+		background: var(--accent-bright);
+	}
+
+	.track span {
+		font-family: var(--mono);
+		font-size: 0.6rem;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: rgba(139, 146, 157, 0.7);
+	}
+
+	.track li.is-on span {
+		color: var(--muted);
+	}
+
+	.spec-cta {
+		display: inline-flex;
+		align-items: center;
+		align-self: flex-start;
+		gap: 0.5rem;
+		padding: 0.65rem 1.15rem;
+		border: 1px solid rgba(167, 139, 250, 0.5);
+		border-radius: 999px;
+		font-size: 0.86rem;
+		font-weight: 600;
+		color: var(--ink);
+		text-decoration: none;
+		transition: background-color 0.2s ease, border-color 0.2s ease;
+	}
+
+	.spec-cta:hover,
+	.spec-cta:focus-visible {
+		background: rgba(139, 92, 246, 0.2);
+		border-color: var(--accent-bright);
+	}
+
+	.spec-cta:focus-visible {
+		outline: 2px solid var(--accent-bright);
+		outline-offset: 3px;
+	}
+
+	.lab-footer {
+		margin: clamp(1.5rem, 3vw, 2.25rem) 0 0;
+		font-size: 0.9rem;
+		color: var(--muted);
+	}
+
+	/* the row's own note is only for small screens */
+	.row-detail {
+		display: none;
+	}
+
+	/* ---------- tablet and phone: an accordion ---------- */
+	@media (max-width: 900px) {
+		.lab-head {
 			grid-template-columns: 1fr;
 		}
 
-		.exp-card {
-			height: 14.5rem;
+		.lab-stats {
+			align-items: flex-start;
+		}
+
+		.stat-row {
+			justify-content: flex-start;
+		}
+
+		.lab-main {
+			grid-template-columns: 1fr;
+		}
+
+		.spec,
+		.idx-hint {
+			display: none;
+		}
+
+		.row {
+			grid-template-columns: 2.2rem minmax(0, 1fr) 1.2rem;
+			grid-template-areas:
+				'n name arrow'
+				'n tag  arrow'
+				'n stage arrow';
+			row-gap: 0.35rem;
+		}
+
+		.row-stage {
+			justify-self: start;
+			margin-top: 0.2rem;
+		}
+
+		.item.is-active .row {
+			padding-left: 0.9rem;
+		}
+
+		.item.is-active .row-arrow {
+			transform: rotate(135deg);
+		}
+
+		.row-detail {
+			display: grid;
+			grid-template-rows: 0fr;
+			transition: grid-template-rows 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+		}
+
+		.item.is-active .row-detail {
+			grid-template-rows: 1fr;
+		}
+
+		.row-detail-in {
+			min-height: 0;
+			overflow: hidden;
+			padding-left: 3.2rem;
+		}
+
+		.item.is-active .row-detail-in {
+			padding-bottom: 1.3rem;
+		}
+
+		.rd-text {
+			margin: 0 0 1rem;
+			font-size: 0.95rem;
+			line-height: 1.6;
+			color: rgba(243, 243, 241, 0.78);
+		}
+
+		.row-detail .track {
+			margin: 0 0 1rem;
+		}
+	}
+
+	@media (max-width: 520px) {
+		.stat-big {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 0.6rem;
+		}
+
+		.stat-label {
+			max-width: none;
+		}
+
+		.row-detail-in {
+			padding-left: 0;
+		}
+
+		/* five labels share a phone-width row, so they have to be small */
+		.track span {
+			font-size: 0.5rem;
+			letter-spacing: 0;
 		}
 	}
 
 	@media (prefers-reduced-motion: reduce) {
 		.reveal,
-		.filter-pill,
-		.exp-card,
-		.exp-face,
-		.face-icon,
-		.face-close,
-		.notebook-explore,
-		.lab-modal,
-		.modal-panel,
-		.modal-close {
+		.row,
+		.row::before,
+		.row-arrow,
+		.row-detail,
+		.spec-cta {
 			transition: none;
 		}
 
-		.meter-seg.is-current {
+		.hint-dot {
 			animation: none;
 		}
 	}
@@ -696,132 +988,19 @@ const experiments = [
 			transform: none !important;
 		}
 
-		.lab-filters {
+		/* without JS every note is shown under its row */
+		.lab .spec,
+		.lab .idx-hint {
 			display: none !important;
 		}
 
-		.lab-modal {
-			display: none !important;
+		.lab .row-detail {
+			display: grid !important;
+			grid-template-rows: 1fr !important;
+		}
+
+		.lab .row-detail-in {
+			padding: 0 0 1.2rem 3.2rem !important;
 		}
 	</style>
 </noscript>
-
-<script>
-	const section = document.getElementById('lab');
-	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-	if (reduceMotion || !('IntersectionObserver' in window)) {
-		section?.classList.add('is-visible');
-	} else {
-		const revealObserver = new IntersectionObserver(
-			(entries) => {
-				entries.forEach((entry) => {
-					if (entry.isIntersecting) {
-						section?.classList.add('is-visible');
-						revealObserver.disconnect();
-					}
-				});
-			},
-			{ threshold: 0.1 },
-		);
-		if (section) revealObserver.observe(section);
-	}
-
-	const filterPills = Array.from(document.querySelectorAll('.filter-pill')) as HTMLButtonElement[];
-	const cards = Array.from(document.querySelectorAll('.exp-card')) as HTMLElement[];
-	const triggers = Array.from(document.querySelectorAll('.exp-trigger')) as HTMLButtonElement[];
-	const closeButtons = Array.from(document.querySelectorAll('.face-close')) as HTMLButtonElement[];
-	const exploreButtons = Array.from(document.querySelectorAll('.notebook-explore')) as HTMLButtonElement[];
-
-	let openIndex: number | null = null;
-
-	const applyOpenState = () => {
-		cards.forEach((card, i) => {
-			const isOpen = i === openIndex;
-			card.classList.toggle('is-open', isOpen);
-			triggers[i]?.setAttribute('aria-expanded', String(isOpen));
-		});
-	};
-
-	const setOpen = (index: number | null) => {
-		openIndex = index;
-		applyOpenState();
-	};
-
-	triggers.forEach((trigger, i) => {
-		trigger.addEventListener('click', () => {
-			setOpen(openIndex === i ? null : i);
-		});
-	});
-
-	closeButtons.forEach((btn, i) => {
-		btn.addEventListener('click', (event) => {
-			event.stopPropagation();
-			if (openIndex === i) setOpen(null);
-		});
-	});
-
-	applyOpenState();
-
-	filterPills.forEach((pill) => {
-		pill.addEventListener('click', () => {
-			const filter = pill.dataset.filter ?? 'all';
-
-			filterPills.forEach((p) => p.setAttribute('aria-pressed', String(p === pill)));
-			document.getElementById('labGrid')?.classList.toggle('is-filtered', filter !== 'all');
-
-			cards.forEach((card) => {
-				const matches = filter === 'all' || card.dataset.stage === filter;
-				card.classList.toggle('is-hidden', !matches);
-			});
-
-			// if filtering hides the open card, just close it rather than
-			// guessing which other card should take its place
-			if (openIndex !== null && cards[openIndex]?.classList.contains('is-hidden')) {
-				setOpen(null);
-			}
-		});
-	});
-
-	// ---------- explore-experiment modal ----------
-	const modal = document.getElementById('labModal');
-	const modalKicker = document.getElementById('modalKicker');
-	const modalTitle = document.getElementById('modalTitle');
-	const modalStage = document.getElementById('modalStage');
-	const modalText = document.getElementById('modalText');
-	let lastFocused: HTMLElement | null = null;
-
-	const openModal = (trigger: HTMLButtonElement) => {
-		lastFocused = trigger;
-		if (modalKicker) modalKicker.textContent = trigger.dataset.kicker ?? '';
-		if (modalTitle) modalTitle.textContent = trigger.dataset.name ?? '';
-		if (modalStage) modalStage.textContent = trigger.dataset.stage ?? '';
-		if (modalText) modalText.textContent = trigger.dataset.log ?? '';
-		modal?.classList.add('is-open');
-		modal?.setAttribute('aria-hidden', 'false');
-		document.body.style.overflow = 'hidden';
-		(modal?.querySelector('.modal-close') as HTMLElement | null)?.focus();
-	};
-
-	const closeModal = () => {
-		modal?.classList.remove('is-open');
-		modal?.setAttribute('aria-hidden', 'true');
-		document.body.style.overflow = '';
-		lastFocused?.focus();
-	};
-
-	exploreButtons.forEach((btn) => {
-		btn.addEventListener('click', (event) => {
-			event.stopPropagation();
-			openModal(btn);
-		});
-	});
-
-	modal?.querySelectorAll('[data-close]').forEach((el) => {
-		el.addEventListener('click', closeModal);
-	});
-
-	document.addEventListener('keydown', (event) => {
-		if (event.key === 'Escape' && modal?.classList.contains('is-open')) closeModal();
-	});
-</script>
