@@ -1,395 +1,1102 @@
 ---
+// each step: the big word, one sentence, and a small line icon (24 grid)
 const steps = [
-	{ label: 'Why?', desc: 'Before anything else, we ask why this needs to exist at all.' },
-	{ label: 'Problem', desc: "We sit with the real problem, not the version that's easy to solve." },
-	{ label: 'Think', desc: 'No tools yet. Just people, a whiteboard, and hard questions.' },
-	{ label: 'Experiment', desc: 'Small, fast, disposable attempts — most of which will fail on purpose.' },
-	{ label: 'Build', desc: 'What survives the experiments gets built for real.' },
-	{ label: 'Connect', desc: 'Wired into the systems and people that already exist — not replacing them.' },
-	{ label: 'Scale', desc: 'Once it works for one team, we make it work for everyone.' },
+	{
+		label: 'Why?',
+		desc: 'Before anything else, we ask why this needs to exist at all.',
+		icon: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1 1-1.1 1.8M12 17h.01"/>',
+	},
+	{
+		label: 'Problem',
+		desc: "We sit with the real problem, not the version that's easy to solve.",
+		icon: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
+	},
+	{
+		label: 'Think',
+		desc: 'No tools yet. Just people, a whiteboard, and hard questions.',
+		icon: '<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3Z"/>',
+	},
+	{
+		label: 'Experiment',
+		desc: 'Small, fast, disposable attempts — most of which will fail on purpose.',
+		icon: '<path d="M9 3h6M10 3v6L4.5 19a1.5 1.5 0 0 0 1.3 2.2h12.4A1.5 1.5 0 0 0 19.5 19L14 9V3"/><path d="M7.5 15h9"/>',
+	},
+	{
+		label: 'Build',
+		desc: 'What survives the experiments gets built for real.',
+		icon: '<path d="M12 3 3.5 7.5v9L12 21l8.5-4.5v-9L12 3Z"/><path d="M12 12 3.5 7.5M12 12l8.5-4.5M12 12v9"/>',
+	},
+	{
+		label: 'Connect',
+		desc: 'Wired into the systems and people that already exist — not replacing them.',
+		icon: '<circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.2 10.8l7.6-3.6M8.2 13.2l7.6 3.6"/>',
+	},
+	{
+		label: 'Scale',
+		desc: 'Once it works for one team, we make it work for everyone.',
+		icon: '<path d="M4 20 20 4M20 4h-7M20 4v7"/>',
+	},
 ];
 ---
 
-<section class="method" id="method">
-	<div class="method-scroll">
-		<div class="method-sticky">
+<section class="method" id="method" aria-labelledby="method-title">
+	<div class="method-bg" aria-hidden="true">
+		<span class="bg-well bg-well--a"></span>
+		<span class="bg-well bg-well--b"></span>
+		<span class="bg-well bg-well--c"></span>
+	</div>
+
+	<div class="method-inner">
+		<div class="method-head">
 			<div class="method-eyebrow reveal" style="--reveal-order: 0">
 				<span class="eyebrow-idx">05</span>
-				<span class="eyebrow-line" aria-hidden="true"></span>
+				<span class="eyebrow-dot" aria-hidden="true">&bull;</span>
 				<span class="eyebrow-label">The Neulancers Method</span>
 			</div>
 
-			<h2 class="method-heading reveal" style="--reveal-order: 1">We don&rsquo;t start with technology.</h2>
-
-			<nav class="method-nav reveal" aria-label="Method steps" style="--reveal-order: 2">
-				<div class="nav-track" aria-hidden="true">
-					<div class="nav-track-fill" id="navTrackFill"></div>
-				</div>
-				<ol class="nav-list" id="navList">
-					{steps.map((step, i) => (
-						<li class="nav-step-item">
-							<a class="nav-item" href={`#method-step-${i}`} data-index={i} aria-current={i === 0 ? 'true' : 'false'}>
-								<span class="nav-node" aria-hidden="true">
-									<span class="nav-node-glow"></span>
-									<span class="nav-node-ring"></span>
-									<span class="nav-node-num">{`0${i + 1}`}</span>
-								</span>
-								<span class="nav-label">{step.label}</span>
-							</a>
-						</li>
-					))}
-				</ol>
-			</nav>
+			<h2 class="method-heading reveal" id="method-title" style="--reveal-order: 1">We don&rsquo;t start with technology.</h2>
+			<p class="method-sub reveal" style="--reveal-order: 2">Seven steps, in this order. Follow the line<span class="sub-hint">, and hover any step to read it again</span>.</p>
+			<ol class="method-legend reveal" style="--reveal-order: 3" aria-label="Jump to a step">
+				{steps.map((step, i) => (
+					<li data-index={i}><button type="button" class="legend-btn"><span>{`0${i + 1}`}</span>{step.label}</button></li>
+				))}
+			</ol>
 		</div>
 
-		<div class="method-steps" id="methodSteps">
-			{steps.map((step, i) => (
-				<div class="step-block" id={`method-step-${i}`} data-index={i}>
-					<span class="step-block-idx">{`0${i + 1}`}</span>
-					<h3 class="step-block-label">{step.label}</h3>
-					<p class="step-block-desc">{step.desc}</p>
-				</div>
-			))}
+		<div class="mp" id="methodPath">
+			<svg class="mp-svg" aria-hidden="true" fill="none">
+				<defs>
+					<linearGradient id="mpGrad" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="1">
+						<stop offset="0" stop-color="#c4b5fd"></stop>
+						<stop offset="1" stop-color="#7c3aed"></stop>
+					</linearGradient>
+				</defs>
+				<path class="mp-track"></path>
+				<path class="mp-prog"></path>
+				<g class="mp-cap mp-cap--start"><circle class="cap-shadow" r="16"></circle><circle class="cap-dot" r="8"></circle></g>
+				<g class="mp-cap mp-cap--end"><circle class="cap-shadow" r="16"></circle><circle class="cap-dot" r="8"></circle></g>
+				<circle class="mp-pen" r="7"></circle>
+			</svg>
 
+			<ol class="mp-stops">
+				{steps.map((step, i) => (
+					<li class="stop" data-index={i}>
+						<span class="stop-dot" aria-hidden="true"></span>
+						<div class="stop-body">
+							<p class="stop-n">{`0${i + 1}`}</p>
+							<div class="stop-row" tabindex="0">
+								<h3 class="stop-word">{step.label}</h3>
+								<span class="stop-tile" aria-hidden="true">
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" set:html={step.icon}></svg>
+								</span>
+							</div>
+							<div class="stop-desc">
+								<p class="card-kicker"><span>{`Step 0${i + 1}`}</span><i aria-hidden="true"></i><span>{step.label.replace('?', '')}</span></p>
+								<p class="card-text">{step.desc}</p>
+								<ol class="card-dots" aria-hidden="true">
+									{steps.map((_, k) => (
+										<li class:list={[k < i && 'is-past', k === i && 'is-now']}></li>
+									))}
+								</ol>
+							</div>
+						</div>
+					</li>
+				))}
+			</ol>
+		</div>
+
+		<div class="method-end reveal" style="--reveal-order: 0">
 			<p class="method-footer">Technology is usually the last part of the conversation.</p>
+			<a href="#contact" class="method-cta">
+				<span>Bring us a problem</span>
+				<span class="cta-arrow" aria-hidden="true">&rarr;</span>
+			</a>
 		</div>
 	</div>
 </section>
 
+<script>
+	import { gsap } from 'gsap';
+	import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+	gsap.registerPlugin(ScrollTrigger);
+
+	const section = document.getElementById('method');
+	const wrap = document.getElementById('methodPath');
+
+	if (section && wrap) {
+		const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		const svg = wrap.querySelector<SVGSVGElement>('.mp-svg')!;
+		const track = wrap.querySelector<SVGPathElement>('.mp-track')!;
+		const prog = wrap.querySelector<SVGPathElement>('.mp-prog')!;
+		const pen = wrap.querySelector<SVGCircleElement>('.mp-pen')!;
+		const stops = Array.from(wrap.querySelectorAll<HTMLElement>('.stop'));
+		const legend = Array.from(section.querySelectorAll<HTMLElement>('.method-legend li'));
+		const N = stops.length;
+
+		// ---------- entrance for the heading block ----------
+		const revealEls = Array.from(section.querySelectorAll<HTMLElement>('.reveal'));
+		if (reduceMotion || !('IntersectionObserver' in window)) {
+			revealEls.forEach((el) => el.classList.add('is-visible'));
+		} else {
+			const io = new IntersectionObserver(
+				(entries) =>
+					entries.forEach((entry) => {
+						if (entry.isIntersecting) {
+							entry.target.classList.add('is-visible');
+							io.unobserve(entry.target);
+						}
+					}),
+				{ threshold: 0.15 },
+			);
+			revealEls.forEach((el) => io.observe(el));
+		}
+
+		// legend buttons jump to their step
+		let stopY: number[] = [];
+		section.querySelectorAll<HTMLButtonElement>('.legend-btn').forEach((btn, i) =>
+			btn.addEventListener('click', () => {
+				const y = wrap.getBoundingClientRect().top + window.scrollY + (stopY[i] ?? 0) - window.innerHeight * 0.4;
+				window.scrollTo({ top: y, behavior: reduceMotion ? 'auto' : 'smooth' });
+			}),
+		);
+
+		// the glow behind the line drifts a little against the scroll
+		if (!reduceMotion) {
+			gsap.to(section.querySelectorAll('.bg-well'), {
+				yPercent: (i: number) => (i % 2 ? -10 : 10),
+				ease: 'none',
+				scrollTrigger: { trigger: section, start: 'top bottom', end: 'bottom top', scrub: true },
+			});
+		}
+
+		// a smooth curve through the points. Each segment's handles are one third
+		// of that segment's own length, pointing along the local direction, so
+		// uneven point spacing (a long line next to a tight loop) can't make the
+		// curve overshoot into little hooks.
+		type P = { x: number; y: number };
+		const curve = (p: P[]) => {
+			const dir = (a: P, b: P) => {
+				const l = Math.hypot(b.x - a.x, b.y - a.y) || 1;
+				return { x: (b.x - a.x) / l, y: (b.y - a.y) / l };
+			};
+			let d = `M${p[0].x.toFixed(1)} ${p[0].y.toFixed(1)}`;
+			for (let k = 0; k < p.length - 1; k++) {
+				const p1 = p[k];
+				const p2 = p[k + 1];
+				const t1 = dir(p[k - 1] ?? p1, p2);
+				const t2 = dir(p1, p[k + 2] ?? p2);
+				const h = Math.hypot(p2.x - p1.x, p2.y - p1.y) / 3;
+				d += ` C${(p1.x + t1.x * h).toFixed(1)} ${(p1.y + t1.y * h).toFixed(1)} ${(p2.x - t2.x * h).toFixed(1)} ${(p2.y - t2.y * h).toFixed(1)} ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+			}
+			return d;
+		};
+
+		// a loop-the-loop in the line between two stops: the line runs straight,
+		// curls once round a circle (drifting forward a little so it crosses
+		// itself) and carries on, all sitting on the line between the two stops
+		const loop = (a: P, b: P, flip: number, at: number): P[] => {
+			const dx = b.x - a.x;
+			const dy = b.y - a.y;
+			const L = Math.hypot(dx, dy);
+			const u = { x: dx / L, y: dy / L };
+			const n = { x: -u.y * flip, y: u.x * flip };
+			const R = Math.min(L * 0.17, 56);
+			const D = R * 2.5;
+			const base = { x: a.x + u.x * L * at, y: a.y + u.y * L * at };
+			const out: P[] = [];
+			const steps = 40;
+			for (let k = 0; k <= steps; k++) {
+				const th = (k / steps) * Math.PI * 2;
+				const xl = R * Math.sin(th) + (D * th) / (Math.PI * 2);
+				const yl = R * (1 - Math.cos(th));
+				out.push({ x: base.x + u.x * xl + n.x * yl, y: base.y + u.y * xl + n.y * yl });
+			}
+			return out;
+		};
+		// loops: right after step 1, and into step 6
+		const loopAfter = new Set([0, 4]);
+
+		let ctx: gsap.Context | null = null;
+		let width = 0;
+
+		const build = () => {
+			ctx?.revert();
+			wrap.classList.add('is-ready');
+
+			const W = wrap.clientWidth;
+			width = W;
+			const mobile = W < 700;
+			wrap.classList.toggle('is-mobile', mobile);
+
+			// the whole line is about three screens tall, so the last step arrives
+			// after roughly three scrolls
+			const vh = window.innerHeight;
+			// three screens tall: steps 1-2 on the first screen, 3-4 on the second
+			// and 5-7 on the third, as in the sketch
+			const H = Math.max(mobile ? 1900 : 1600, Math.min(2 * vh, 2400));
+			wrap.style.height = `${H}px`;
+			svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+			svg.setAttribute('width', String(W));
+			svg.setAttribute('height', String(H));
+			svg.querySelector('#mpGrad')?.setAttribute('y2', String(H));
+
+			const right = W * (mobile ? 0.76 : 0.8);
+			const left = W * (mobile ? 0.24 : 0.2);
+			const plan: Array<[number, number]> = [
+				[right, 0.07],
+				[left, 0.205],
+				[right, 0.345],
+				[left, 0.49],
+				[right, 0.64],
+				[W * 0.34, 0.79],
+				[W * (mobile ? 0.14 : 0.1), 0.92],
+			];
+			const stopPts: P[] = plan.map(([x, fy]) => ({ x, y: H * fy }));
+			// the line comes in from the right edge of the screen and leaves by the
+			// left edge (the svg overflows the page padding on purpose)
+			const box = wrap.getBoundingClientRect();
+			const rightGap = Math.max(0, window.innerWidth - box.right);
+			const leftGap = Math.max(0, box.left);
+			// every stop is passed on a diagonal aimed at its neighbours, with a
+			// control point just before and after it, so the line sweeps in long
+			// S-curves instead of running down vertical walls
+			const near = (p: P, q: P, k: number): P => ({ x: p.x + (q.x - p.x) * k, y: p.y + (q.y - p.y) * k });
+			const startPt = { x: W + rightGap - 34, y: H * 0.02 };
+			const endPt = { x: -leftGap + 34, y: H * 0.955 };
+			const pts: P[] = [startPt];
+			stopPts.forEach((p, i) => {
+				const pre = i > 0 ? near(p, stopPts[i - 1], 0.3) : null;
+				const post = i < N - 1 ? near(p, stopPts[i + 1], 0.3) : null;
+				if (pre) pts.push(pre);
+				pts.push(p);
+				if (post) {
+					pts.push(post);
+					const nextPre = near(stopPts[i + 1], p, 0.3);
+					if (loopAfter.has(i)) {
+						pts.push(...loop(post, nextPre, i % 2 === 0 ? 1 : -1, 0.5));
+					} else {
+						// a soft bow so the stretch between stops is a curve, not a ruler line
+						const dx = nextPre.x - post.x;
+						const dy = nextPre.y - post.y;
+						const bow = (i % 2 === 0 ? -1 : 1) * 0.16;
+						pts.push({ x: post.x + dx / 2 - dy * bow, y: post.y + dy / 2 + dx * bow });
+					}
+				}
+			});
+			pts.push(endPt);
+
+			const d = curve(pts);
+			[track, prog].forEach((path) => {
+				path.setAttribute('d', d);
+				path.setAttribute('pathLength', '1');
+			});
+
+			const placeCap = (sel: string, pt: P) => {
+				svg.querySelectorAll<SVGCircleElement>(`${sel} circle`).forEach((c, k) => {
+					c.setAttribute('cx', (pt.x + 0).toFixed(1));
+					c.setAttribute('cy', (pt.y + 0).toFixed(1));
+				});
+			};
+			placeCap('.mp-cap--start', startPt);
+			placeCap('.mp-cap--end', endPt);
+
+			stopY = stopPts.map((p) => p.y);
+			stops.forEach((el, i) => {
+				el.style.left = `${stopPts[i].x}px`;
+				el.style.top = `${stopPts[i].y}px`;
+				el.dataset.side = stopPts[i].x > W * 0.5 ? 'node-right' : 'node-left';
+			});
+
+			// where along the line each stop sits (0..1), found by sampling
+			const len = track.getTotalLength();
+			const samples = 1400;
+			const frac = stops.map((_, i) => {
+				const target = stopPts[i];
+				let best = 0;
+				let bestDist = Infinity;
+				for (let s = 0; s <= samples; s++) {
+					const pt = track.getPointAtLength((s / samples) * len);
+					const dist = (pt.x - target.x) ** 2 + (pt.y - target.y) ** 2;
+					if (dist < bestDist) {
+						bestDist = dist;
+						best = s / samples;
+					}
+				}
+				return best;
+			});
+
+			const movePen = (p: number) => {
+				const pt = prog.getPointAtLength(p * len);
+				pen.setAttribute('cx', pt.x.toFixed(1));
+				pen.setAttribute('cy', pt.y.toFixed(1));
+			};
+
+			// finished state: used when motion is off
+			prog.style.strokeDasharray = '1';
+			prog.style.strokeDashoffset = '0';
+			movePen(1);
+			legend.forEach((li) => li.classList.add('is-done'));
+			stops.forEach((el) => el.classList.add('is-reached'));
+
+			if (reduceMotion) {
+				// no scroll story to follow, so every explanation stays open
+				stops.forEach((el) => el.classList.add('is-current'));
+				return;
+			}
+
+			ctx = gsap.context(() => {
+				const parts = (el: HTMLElement) => ({
+					dot: el.querySelector('.stop-dot')!,
+					n: el.querySelector('.stop-n')!,
+					icon: el.querySelector('.stop-tile')!,
+					word: el.querySelector('.stop-word')!,
+					desc: el.querySelector('.stop-desc')!,
+				});
+
+				gsap.set(prog, { strokeDashoffset: 1 });
+				gsap.set(pen, { opacity: 0 });
+				legend.forEach((li) => li.classList.remove('is-done'));
+				stops.forEach((el) => el.classList.remove('is-reached', 'is-current'));
+
+				// the legend lights up as the line passes each step; the newest
+				// step reached is "current" and keeps its explanation open
+				let tlRef: gsap.core.Timeline | null = null;
+				const paint = () => {
+					if (!tlRef) return;
+					const p = tlRef.progress();
+					let cur = -1;
+					stops.forEach((el, i) => {
+						const reached = p >= frac[i] - 0.01;
+						el.classList.toggle('is-reached', reached);
+						legend[i].classList.toggle('is-done', reached);
+						if (reached) cur = i;
+					});
+					stops.forEach((el, i) => el.classList.toggle('is-current', i === cur));
+					legend.forEach((li, i) => {
+						li.classList.toggle('is-current', i === cur);
+						const btn = li.querySelector('.legend-btn');
+						if (i === cur) btn?.setAttribute('aria-current', 'step');
+						else btn?.removeAttribute('aria-current');
+					});
+				};
+
+				// paint runs off the timeline itself, not the scroll events: the line
+				// trails the scroll by the scrub delay, so after a fast scroll or a
+				// legend jump the state has to keep following the animation
+				const tl = gsap.timeline({
+					defaults: { ease: 'none' },
+					onUpdate: paint,
+					scrollTrigger: {
+						trigger: wrap,
+						start: 'top 92%',
+						end: 'bottom 88%',
+						scrub: 1.2,
+						invalidateOnRefresh: true,
+					},
+				});
+				tlRef = tl;
+
+				// the line draws itself, and a dot rides its tip
+				tl.to(prog, { strokeDashoffset: 0, duration: 1 }, 0);
+				const head = { p: 0 };
+				tl.to(head, { p: 1, duration: 1, onUpdate: () => movePen(head.p) }, 0);
+				tl.fromTo(pen, { opacity: 0 }, { opacity: 1, duration: 0.02 }, 0);
+				tl.to(pen, { opacity: 0, duration: 0.03 }, 0.97);
+
+				// each stop opens as the line reaches it
+				stops.forEach((el, i) => {
+					const o = parts(el);
+					const at = Math.max(0, frac[i] - 0.035);
+					gsap.set([o.dot, o.n, o.icon, o.word], { opacity: 0 });
+					tl.fromTo(o.dot, { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.04, ease: 'back.out(3)' }, at);
+					tl.fromTo(o.n, { opacity: 0, x: -8 }, { opacity: 1, x: 0, duration: 0.04, ease: 'power2.out' }, at + 0.005);
+					tl.fromTo(o.icon, { scale: 0, rotation: -30, opacity: 0 }, { scale: 1, rotation: -4, opacity: 1, duration: 0.06, ease: 'back.out(2.5)' }, at + 0.01);
+					tl.fromTo(o.word, { y: 18, opacity: 0 }, { y: 0, opacity: 1, duration: 0.07, ease: 'power2.out' }, at + 0.01);
+				});
+			}, wrap);
+		};
+
+		build();
+
+		// rebuild when the available width changes (not on every height change,
+		// which would fire constantly with mobile address bars)
+		let timer: ReturnType<typeof setTimeout>;
+		window.addEventListener('resize', () => {
+			clearTimeout(timer);
+			timer = setTimeout(() => {
+				if (Math.abs(wrap.clientWidth - width) > 1) {
+					build();
+					ScrollTrigger.refresh();
+				}
+			}, 200);
+		});
+	}
+</script>
+
 <style>
 	.method {
+		--accent-bright: #a78bfa;
+		--mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
 		position: relative;
 		background: var(--bg);
 		color: var(--ink);
 		font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
 		border-top: 1px solid var(--border-soft);
+		overflow: hidden;
 	}
 
-	.method-scroll {
-		display: grid;
-		grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.3fr);
-		gap: clamp(2rem, 6vw, 5rem);
+	/* ---------- atmosphere: the hero's soft wells and faint rings ---------- */
+	.method-bg {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+	}
+
+	.bg-well {
+		position: absolute;
+		width: min(120vw, 1300px);
+		aspect-ratio: 1.6;
+		translate: -50% -50%;
+		background: radial-gradient(ellipse at center, rgba(109, 40, 217, 0.2), rgba(109, 40, 217, 0.05) 38%, transparent 66%);
+	}
+
+	.bg-well::after {
+		content: '';
+		position: absolute;
+		inset: -12%;
+		border-radius: 50%;
+		background: repeating-radial-gradient(ellipse at center, transparent 0 78px, rgba(255, 255, 255, 0.03) 78px 79px);
+		-webkit-mask-image: radial-gradient(ellipse at center, #000 10%, transparent 62%);
+		mask-image: radial-gradient(ellipse at center, #000 10%, transparent 62%);
+	}
+
+	.bg-well--a {
+		left: 78%;
+		top: 22%;
+	}
+
+	.bg-well--b {
+		left: 22%;
+		top: 52%;
+	}
+
+	.bg-well--c {
+		left: 70%;
+		top: 82%;
+	}
+
+	.method-inner {
+		position: relative;
+		z-index: 1;
 		max-width: 1320px;
 		margin: 0 auto;
-		padding: clamp(72px, 10vw, 128px) clamp(20px, 4vw, 32px);
+		padding: clamp(72px, 9vw, 112px) clamp(20px, 4vw, 32px) clamp(72px, 9vw, 112px);
 	}
 
-	/* ---------- scroll-in reveal (sticky column only) ---------- */
+	/* ---------- entrance ---------- */
 	.reveal {
 		opacity: 0;
 		transform: translateY(18px);
 		transition:
 			opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
 			transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-		transition-delay: calc(var(--reveal-order, 0) * 90ms);
+		transition-delay: calc(var(--reveal-order, 0) * 80ms);
 	}
 
-	.method.is-visible .reveal {
+	.reveal.is-visible {
 		opacity: 1;
-		transform: translateY(0);
+		transform: none;
 	}
 
-	/* ---------- sticky left column ---------- */
-	.method-sticky {
-		position: sticky;
-		top: clamp(96px, 14vh, 140px);
-		align-self: start;
+	.method-head {
+		margin-bottom: clamp(1.5rem, 4vw, 3rem);
 	}
 
 	.method-eyebrow {
-		display: flex;
+		display: inline-flex;
 		align-items: center;
-		gap: 0.75rem;
-		margin-bottom: 1.5rem;
-	}
-
-	.eyebrow-idx {
-		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-		font-size: 0.75rem;
-		color: var(--ink-faint);
-	}
-
-	.eyebrow-line {
-		width: 32px;
-		height: 1px;
-		background: var(--border-soft);
-	}
-
-	.eyebrow-label {
-		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-		font-size: 0.75rem;
-		letter-spacing: 0.08em;
+		gap: 0.6rem;
+		margin-bottom: 0.9rem;
+		font-family: var(--mono);
+		font-size: 0.72rem;
+		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		color: var(--muted);
 	}
 
+	.eyebrow-dot {
+		color: var(--accent-bright);
+	}
+
 	.method-heading {
-		margin: 0 0 2.5rem;
-		font-size: clamp(1.7rem, 1.3vw + 1.5rem, 2.3rem);
+		margin: 0 0 0.7rem;
+		max-width: 18ch;
+		font-size: clamp(2rem, 2.6vw + 1.1rem, 3.4rem);
 		font-weight: 700;
-		letter-spacing: -0.01em;
-		max-width: 16ch;
+		letter-spacing: -0.03em;
+		line-height: 1.05;
+		text-wrap: balance;
 	}
 
-	/* ---------- nav rail: tracks scroll position ---------- */
-	.method-nav {
-		position: relative;
-		--node-size: 2.5rem;
+	.method-sub {
+		margin: 0 0 1.4rem;
+		font-size: 1rem;
+		color: rgba(243, 243, 241, 0.7);
 	}
 
-	.nav-track {
-		position: absolute;
-		top: calc(var(--node-size) / 2);
-		bottom: calc(var(--node-size) / 2);
-		left: calc(var(--node-size) / 2);
-		width: 1.5px;
-		background: rgba(255, 255, 255, 0.08);
-	}
-
-	.nav-track-fill {
-		width: 100%;
-		height: 0%;
-		background: linear-gradient(to bottom, var(--accent), #a78bfa);
-		box-shadow: 0 0 10px 1px rgba(139, 92, 246, 0.5);
-		transition: height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-	}
-
-	.nav-list {
-		list-style: none;
+	/* the seven steps as a quiet legend; each lights up as the line reaches it */
+	.method-legend {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem 1.4rem;
 		margin: 0;
 		padding: 0;
-		display: flex;
-		flex-direction: column;
-		gap: 1.65rem;
+		list-style: none;
 	}
 
-	.nav-step-item {
-		position: relative;
+	.method-legend li {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-family: var(--mono);
+		font-size: 0.72rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: rgba(243, 243, 241, 0.5);
+		transition: color 0.4s ease;
 	}
 
-	/* CSS-only chevron marker in the gap between two nodes, echoing the
-	   downward arrows in the reference's connecting line */
-	.nav-step-item:not(:last-child)::after {
+	.legend-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.2rem 0;
+		background: none;
+		border: 0;
+		font: inherit;
+		letter-spacing: inherit;
+		text-transform: inherit;
+		color: inherit;
+		cursor: pointer;
+	}
+
+	.legend-btn:hover {
+		color: var(--ink);
+	}
+
+	.legend-btn:focus-visible {
+		outline: 2px solid var(--accent-bright);
+		outline-offset: 3px;
+		border-radius: 4px;
+	}
+
+	.sub-hint {
+		display: none;
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.sub-hint {
+			display: inline;
+		}
+	}
+
+	.method-legend li {
+		gap: 0;
+	}
+
+	.method-legend li::before {
+		margin-right: 0.5rem;
 		content: '';
-		position: absolute;
-		left: calc(var(--node-size) / 2);
-		bottom: calc(-0.825rem - 1px);
 		width: 6px;
 		height: 6px;
-		border-right: 1.4px solid rgba(167, 139, 250, 0.55);
-		border-bottom: 1.4px solid rgba(167, 139, 250, 0.55);
-		transform: translate(-50%, 0) rotate(45deg);
-		z-index: 2;
-		pointer-events: none;
+		border-radius: 50%;
+		background: rgba(255, 255, 255, 0.22);
+		transition: background-color 0.4s ease, box-shadow 0.4s ease;
 	}
 
-	.nav-item {
-		position: relative;
-		z-index: 1;
-		display: flex;
-		align-items: center;
-		gap: 0.9rem;
-		text-decoration: none;
+	.method-legend li span {
 		color: inherit;
+		opacity: 0.7;
 	}
 
-	.nav-node {
+	.method-legend li.is-done {
+		color: var(--ink);
+	}
+
+	.method-legend li.is-done::before {
+		background: var(--accent-bright);
+		box-shadow: 0 0 10px rgba(167, 139, 250, 0.7);
+	}
+
+	/* the step you are on: brighter, with a ring round its dot */
+	.method-legend li.is-current {
+		color: var(--ink);
+	}
+
+	.method-legend li.is-current span {
+		opacity: 1;
+	}
+
+	.method-legend li.is-current::before {
+		background: var(--accent-bright);
+		box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.28), 0 0 12px rgba(167, 139, 250, 0.8);
+	}
+
+	/* ---------- the path ----------
+	   Without JavaScript this is a plain numbered list. With it, the stops are
+	   placed along a line that is drawn into the svg. */
+	.mp {
 		position: relative;
-		flex-shrink: 0;
-		width: var(--node-size);
-		height: var(--node-size);
+	}
+
+	.mp-svg {
+		display: none;
+	}
+
+	.mp-stops {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.stop {
+		padding: 1.25rem 0;
+		border-top: 1px solid var(--border-soft);
+	}
+
+	.stop-dot {
+		display: none;
+	}
+
+	.stop-n {
+		display: inline-block;
+		margin: 0 0 0.35rem;
+		padding: 0.15rem 0.55rem;
+		background: var(--bg);
+		border-radius: 999px;
+		font-family: var(--mono);
+		font-size: 0.74rem;
+		letter-spacing: 0.1em;
+		color: var(--accent-bright);
+	}
+
+	.stop-row {
 		display: flex;
 		align-items: center;
-		justify-content: center;
-		border-radius: 50%;
-		background: radial-gradient(circle at 50% 38%, rgba(109, 40, 217, 0.16), rgba(10, 10, 13, 0.9) 72%);
-		border: 1.5px solid var(--border-soft);
-		transition:
-			border-color 0.3s ease,
-			background 0.3s ease,
-			box-shadow 0.3s ease,
-			transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+		gap: clamp(0.6rem, 1.2vw, 1rem);
 	}
 
-	.nav-node-glow {
-		position: absolute;
-		inset: -8px;
-		border-radius: 50%;
-		background: radial-gradient(circle, rgba(109, 40, 217, 0.5), transparent 70%);
-		filter: blur(9px);
-		opacity: 0;
-		pointer-events: none;
-		transition: opacity 0.4s ease;
+	/* glass icon tile, like the hero's chips */
+	.stop-tile {
+		display: grid;
+		place-items: center;
+		flex: none;
+		width: clamp(38px, 3.4vw, 52px);
+		height: clamp(38px, 3.4vw, 52px);
+		color: var(--accent-bright);
+		background: linear-gradient(145deg, rgba(167, 139, 250, 0.22), rgba(109, 40, 217, 0.08));
+		border: 1px solid rgba(167, 139, 250, 0.35);
+		border-radius: 28%;
+		transform: rotate(-5deg);
+		box-shadow: 0 8px 24px rgba(109, 40, 217, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+		-webkit-backdrop-filter: blur(10px);
+		backdrop-filter: blur(10px);
 	}
 
-	.nav-node-ring {
-		position: absolute;
-		inset: -4px;
-		border-radius: 50%;
-		border: 1px solid rgba(139, 92, 246, 0.4);
-		opacity: 0;
-		pointer-events: none;
-		transition: opacity 0.4s ease;
+	.stop-tile svg {
+		width: 54%;
+		height: 54%;
 	}
 
-	.nav-node-num {
-		position: relative;
-		z-index: 1;
-		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-		font-size: 0.72rem;
+	/* the word is an outline until the line reaches it, then fills in */
+	.stop-word {
+		margin: 0;
+		font-size: clamp(1.9rem, 3.8vw, 3.6rem);
 		font-weight: 700;
-		color: var(--ink-faint);
-		transition: color 0.3s ease;
+		letter-spacing: -0.035em;
+		line-height: 1;
+		text-transform: uppercase;
 	}
 
-	.nav-label {
-		font-size: 0.95rem;
-		font-weight: 600;
-		color: var(--muted);
-		transition: color 0.25s ease;
+	.stop-desc {
+		display: inline-block;
+		margin: 0.7rem 0 0;
+		max-width: 32ch;
+		text-align: left;
 	}
 
-	.nav-item:hover .nav-label {
-		color: var(--ink);
+	.card-kicker {
+		display: flex;
+		align-items: center;
+		gap: 0.55rem;
+		margin: 0 0 0.45rem;
+		font-family: var(--mono);
+		font-size: 0.66rem;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: var(--accent-bright);
 	}
 
-	.nav-item[aria-current='true'] .nav-node {
-		border-color: var(--accent);
-		background: radial-gradient(circle at 50% 35%, rgba(139, 92, 246, 0.55), rgba(76, 29, 149, 0.4) 72%);
-		box-shadow:
-			0 0 0 1px rgba(109, 40, 217, 0.5),
-			0 8px 22px rgba(109, 40, 217, 0.4);
-		transform: scale(1.08);
+	.card-kicker i {
+		flex: 1;
+		min-width: 16px;
+		height: 1px;
+		background: linear-gradient(90deg, rgba(167, 139, 250, 0.55), transparent);
 	}
 
-	.nav-item[aria-current='true'] .nav-node-num {
-		color: #ffffff;
+	.card-kicker span:last-child {
+		color: rgba(243, 243, 241, 0.55);
 	}
 
-	.nav-item[aria-current='true'] .nav-node-glow {
-		opacity: 1;
-		animation: navNodePulse 2.6s ease-in-out infinite;
+	.card-text {
+		margin: 0 0 0.7rem;
+		font-size: 0.9rem;
+		line-height: 1.5;
+		color: rgba(243, 243, 241, 0.92);
 	}
 
-	.nav-item[aria-current='true'] .nav-node-ring {
-		opacity: 1;
+	.card-dots {
+		display: flex;
+		gap: 5px;
+		margin: 0;
+		padding: 0;
+		list-style: none;
 	}
 
-	.nav-item[aria-current='true'] .nav-label {
-		color: var(--ink);
+	.card-dots li {
+		width: 14px;
+		height: 3px;
+		border-radius: 2px;
+		background: rgba(255, 255, 255, 0.14);
 	}
 
-	@keyframes navNodePulse {
-		0%,
-		100% {
-			opacity: 0.55;
-			transform: scale(0.92);
+	.card-dots li.is-past {
+		background: rgba(167, 139, 250, 0.45);
+	}
+
+	.card-dots li.is-now {
+		width: 26px;
+		background: var(--accent-bright);
+		box-shadow: 0 0 8px rgba(167, 139, 250, 0.7);
+	}
+
+	/* ----- with JS: a zig-zag line with the stops hung on it ----- */
+	.mp.is-ready .mp-svg {
+		display: block;
+		position: absolute;
+		inset: 0;
+		overflow: visible;
+		pointer-events: none;
+	}
+
+	.mp-track,
+	.mp-prog {
+		stroke-width: 4;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+
+	.mp-track {
+		stroke: rgba(167, 139, 250, 0.1);
+	}
+
+	.mp-prog {
+		stroke: url(#mpGrad);
+		filter: drop-shadow(0 0 5px rgba(139, 92, 246, 0.35));
+	}
+
+	.mp.is-mobile .mp-track,
+	.mp.is-mobile .mp-prog {
+		stroke-width: 3;
+	}
+
+	/* round heads at both ends of the line, with a dark offset shadow */
+	.cap-shadow {
+		fill: rgba(139, 92, 246, 0.16);
+	}
+
+	.cap-dot {
+		fill: var(--accent-bright);
+		stroke: var(--bg);
+		stroke-width: 3;
+		filter: drop-shadow(0 0 6px rgba(139, 92, 246, 0.6));
+	}
+
+	.mp.is-mobile .cap-shadow {
+		r: 13px;
+	}
+
+	.mp.is-mobile .cap-dot {
+		r: 6.5px;
+	}
+
+	.mp-pen {
+		r: 6px;
+		fill: #ffffff;
+		filter: drop-shadow(0 0 8px rgba(167, 139, 250, 0.9));
+	}
+
+	.mp.is-ready .mp-stops {
+		position: absolute;
+		inset: 0;
+	}
+
+	.mp.is-ready .stop {
+		position: absolute;
+		width: 0;
+		height: 0;
+		padding: 0;
+		border: 0;
+	}
+
+	.mp.is-ready .stop-dot {
+		display: block;
+		position: absolute;
+		left: -7px;
+		top: -7px;
+		width: 14px;
+		height: 14px;
+		background: var(--bg);
+		border: 2px solid var(--accent-bright);
+		border-radius: 50%;
+		box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.14);
+	}
+
+	.mp.is-ready .stop-body {
+		position: absolute;
+		top: 0;
+		width: max-content;
+		max-width: min(760px, 62vw);
+		transform: translateY(-50%);
+	}
+
+	/* the node is on the right, so its text goes to the left, and the other way round */
+	.mp.is-ready .stop[data-side='node-right'] .stop-body {
+		right: 30px;
+		text-align: right;
+	}
+
+	.mp.is-ready .stop[data-side='node-right'] .stop-row {
+		justify-content: flex-end;
+	}
+
+	.mp.is-ready .stop[data-side='node-left'] .stop-body {
+		left: 30px;
+		text-align: left;
+	}
+
+	.mp.is-ready .stop[data-side='node-left'] .stop-row {
+		flex-direction: row-reverse;
+		justify-content: flex-end;
+	}
+
+	/* the description is a glass chip, so the line passing behind it blurs out */
+	.mp.is-ready .stop-desc {
+		position: relative;
+		padding: 0.85rem 1.05rem 0.9rem;
+		border: 1px solid transparent;
+		border-radius: 18px;
+		/* gradient edge: bright violet at the top corner fading to a hairline */
+		background:
+			linear-gradient(160deg, #14121d, #0b0b10) padding-box,
+			linear-gradient(150deg, rgba(167, 139, 250, 0.7), rgba(255, 255, 255, 0.1) 45%, rgba(109, 40, 217, 0.4)) border-box;
+		box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5), 0 0 28px rgba(109, 40, 217, 0.22);
+		transform: rotate(-1.5deg);
+	}
+
+	/* a small notch pointing back up toward the step */
+	.mp.is-ready .stop-desc::before {
+		content: '';
+		position: absolute;
+		top: -7px;
+		width: 12px;
+		height: 12px;
+		background: #14121d;
+		border-top: 1px solid rgba(167, 139, 250, 0.6);
+		border-left: 1px solid rgba(167, 139, 250, 0.6);
+		transform: rotate(45deg);
+	}
+
+	.mp.is-ready .stop[data-side='node-right'] .stop-desc::before {
+		right: 28px;
+	}
+
+	.mp.is-ready .stop[data-side='node-left'] .stop-desc::before {
+		left: 28px;
+	}
+
+	/* on devices with a mouse the card stays tucked away until its step is
+	   hovered or focused; touch screens keep it showing */
+	@media (hover: hover) and (pointer: fine) {
+		.mp.is-ready .stop-desc {
+			opacity: 0;
+			pointer-events: none;
+			transform: rotate(-1.5deg) translateY(-10px) scale(0.92);
+			transform-origin: top center;
+			transition: opacity 0.25s ease, transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
 		}
-		50% {
+
+		.mp.is-ready .stop.is-reached:hover .stop-desc,
+		.mp.is-ready .stop.is-reached:focus-within .stop-desc,
+		.mp.is-ready .stop.is-current .stop-desc {
 			opacity: 1;
-			transform: scale(1.1);
+			transform: rotate(-1.5deg);
+		}
+
+		.mp.is-ready .stop.is-reached .stop-row {
+			cursor: pointer;
+			outline: none;
+		}
+
+		.mp.is-ready .stop.is-reached .stop-tile {
+			position: relative;
+			transition: box-shadow 0.3s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+		}
+
+		.mp.is-ready .stop.is-reached .stop-tile::after {
+			content: '+';
+			position: absolute;
+			top: -7px;
+			right: -7px;
+			display: grid;
+			place-items: center;
+			width: 18px;
+			height: 18px;
+			border-radius: 50%;
+			background: var(--accent-bright);
+			color: #0a0a0d;
+			font-family: var(--mono);
+			font-size: 0.8rem;
+			font-weight: 700;
+			line-height: 1;
+			transition: transform 0.3s ease, opacity 0.3s ease;
+		}
+
+		.mp.is-ready .stop.is-reached:hover .stop-tile::after,
+		.mp.is-ready .stop.is-reached:focus-within .stop-tile::after {
+			transform: rotate(45deg) scale(0.85);
+			opacity: 0.7;
+		}
+
+		.mp.is-ready .stop.is-reached:hover .stop-tile,
+		.mp.is-ready .stop.is-reached:focus-within .stop-tile {
+			transform: rotate(0deg) scale(1.08);
+			box-shadow: 0 10px 28px rgba(109, 40, 217, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+		}
+
+		.mp.is-ready .stop-row:focus-visible .stop-word {
+			text-decoration: underline;
+			text-decoration-color: var(--accent-bright);
+			text-underline-offset: 6px;
 		}
 	}
 
-	/* ---------- right column: full-height step reading blocks ---------- */
-	.step-block {
+	/* phones: the text sits above its node, leaning toward the middle */
+	.mp.is-mobile .stop-body {
+		top: auto;
+		bottom: 26px;
+		transform: none;
+		max-width: min(250px, 66vw);
+	}
+
+	.mp.is-mobile .stop[data-side='node-right'] .stop-body {
+		right: -14px;
+	}
+
+	.mp.is-mobile .stop[data-side='node-left'] .stop-body {
+		left: -14px;
+	}
+
+	.mp.is-mobile .stop-word {
+		font-size: 1.9rem;
+	}
+
+	.mp.is-mobile .stop-tile {
+		width: 38px;
+		height: 38px;
+	}
+
+	/* the step legend wraps onto three lines on a phone and crowds the line */
+	@media (max-width: 700px) {
+		.method-legend {
+			display: none;
+		}
+	}
+
+	.mp.is-mobile .card-text {
+		font-size: 0.82rem;
+	}
+
+	.mp.is-mobile .stop-desc {
+		padding: 0.7rem 0.9rem;
+	}
+
+	.mp.is-mobile .stop-desc::before {
+		display: none;
+	}
+
+	/* ---------- the close: where the line ends ---------- */
+	.method-end {
 		display: flex;
 		flex-direction: column;
-		align-items: flex-start;
-		justify-content: center;
-		min-height: 22vh;
-		padding: 1.25rem 0;
-		border-bottom: 1px solid var(--border-soft);
-	}
-
-	.step-block:first-child {
-		padding-top: 0;
-	}
-
-	.step-block-idx {
-		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-		font-size: 0.8rem;
-		color: var(--ink-faint);
-		margin-bottom: 0.75rem;
-	}
-
-	.step-block-label {
-		margin: 0 0 1rem;
-		font-size: clamp(2rem, 2.4vw + 1.3rem, 3.2rem);
-		font-weight: 700;
-		letter-spacing: -0.015em;
-		color: var(--ink);
-	}
-
-	.step-block-desc {
-		margin: 0;
-		max-width: 42ch;
-		font-size: clamp(1rem, 0.5vw + 0.9rem, 1.2rem);
-		line-height: 1.6;
-		color: var(--muted);
+		align-items: center;
+		gap: 1.5rem;
+		margin-top: clamp(1.5rem, 4vw, 3rem);
+		text-align: center;
 	}
 
 	.method-footer {
-		margin: 2.5rem 0 0;
-		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-		font-size: 0.85rem;
-		color: var(--ink-faint);
+		margin: 0;
+		max-width: 22ch;
+		font-size: clamp(1.7rem, 2.4vw + 0.9rem, 3rem);
+		font-weight: 700;
+		letter-spacing: -0.03em;
+		line-height: 1.1;
+		text-wrap: balance;
 	}
 
-	/* ---------- responsive: sticky two-column doesn't work on narrow
-	   screens — stack normally instead ---------- */
-	@media (max-width: 860px) {
-		.method-scroll {
-			display: block;
-		}
+	.method-cta {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.55em;
+		padding: 0.85rem 1.6rem;
+		background: var(--accent);
+		color: #ffffff;
+		border-radius: 999px;
+		text-decoration: none;
+		font-size: 0.95rem;
+		font-weight: 600;
+		box-shadow: 0 12px 30px rgba(109, 40, 217, 0.35);
+		transition: background-color 0.15s ease, transform 0.2s ease;
+	}
 
-		.method-sticky {
-			position: static;
-			margin-bottom: clamp(2.5rem, 8vw, 3.5rem);
-		}
+	.method-cta:hover,
+	.method-cta:focus-visible {
+		background: #5b21b6;
+	}
 
-		.method-heading {
-			max-width: none;
-		}
+	.method-cta:focus-visible {
+		outline: 2px solid var(--accent-bright);
+		outline-offset: 3px;
+	}
 
-		/* the step list below already repeats every label, so the rail
-		   would just show the same seven items twice on a narrow screen */
-		.method-nav {
-			display: none;
-		}
+	.cta-arrow {
+		transition: transform 0.2s ease;
+	}
 
-		.method-heading {
-			margin-bottom: 0;
-		}
-
-		.nav-track {
-			display: none;
-		}
-
-		.nav-step-item:not(:last-child)::after {
-			display: none;
-		}
-
-		.step-block {
-			min-height: 0;
-			padding: 1.25rem 0;
-		}
+	.method-cta:hover .cta-arrow {
+		transform: translateX(3px);
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.nav-node,
-		.nav-node-num,
-		.nav-node-glow,
-		.nav-node-ring,
-		.nav-label,
-		.nav-track-fill,
-		.reveal {
+		.reveal,
+		.method-legend li,
+		.method-legend li::before,
+		.method-cta,
+		.cta-arrow {
 			transition: none;
-		}
-
-		.nav-item[aria-current='true'] .nav-node-glow {
-			animation: none;
-			opacity: 0.8;
 		}
 	}
 </style>
@@ -400,81 +1107,5 @@ const steps = [
 			opacity: 1 !important;
 			transform: none !important;
 		}
-
-		.method-sticky {
-			position: static !important;
-		}
 	</style>
 </noscript>
-
-<script>
-	const section = document.getElementById('method');
-	const navItems = Array.from(document.querySelectorAll('.nav-item')) as HTMLAnchorElement[];
-	const trackFill = document.getElementById('navTrackFill');
-	const stepBlocks = Array.from(document.querySelectorAll('.step-block')) as HTMLElement[];
-	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-	// section entrance (eyebrow / heading / nav) fades in once, same as
-	// the other sections
-	if (section) {
-		if (reduceMotion || !('IntersectionObserver' in window)) {
-			section.classList.add('is-visible');
-		} else {
-			const entranceObserver = new IntersectionObserver(
-				(entries) => {
-					entries.forEach((entry) => {
-						if (entry.isIntersecting) {
-							section.classList.add('is-visible');
-							entranceObserver.disconnect();
-						}
-					});
-				},
-				{ threshold: 0.15 },
-			);
-			entranceObserver.observe(section);
-		}
-	}
-
-	// active-step tracking: whichever step-block occupies the vertical
-	// center of the viewport is "current" — highlights the matching nav
-	// item and fills the rail up to it.
-	if (navItems.length && stepBlocks.length && 'IntersectionObserver' in window) {
-		const setActive = (index: number) => {
-			navItems.forEach((item, i) => {
-				item.setAttribute('aria-current', String(i === index));
-			});
-			if (trackFill) {
-				trackFill.style.height = `${(index / (navItems.length - 1)) * 100}%`;
-			}
-		};
-
-		const activeObserver = new IntersectionObserver(
-			(entries) => {
-				entries.forEach((entry) => {
-					if (entry.isIntersecting) {
-						const index = Number((entry.target as HTMLElement).dataset.index ?? 0);
-						setActive(index);
-					}
-				});
-			},
-			{ rootMargin: '-45% 0px -45% 0px', threshold: 0 },
-		);
-
-		stepBlocks.forEach((block) => activeObserver.observe(block));
-	}
-
-	// clicking a nav item still works as a plain anchor link without this,
-	// but smooth-scroll it when motion is allowed
-	if (!reduceMotion) {
-		navItems.forEach((item) => {
-			item.addEventListener('click', (event) => {
-				const targetId = item.getAttribute('href')?.slice(1);
-				const target = targetId ? document.getElementById(targetId) : null;
-				if (target) {
-					event.preventDefault();
-					target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-				}
-			});
-		});
-	}
-</script>
