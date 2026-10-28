@@ -134,6 +134,18 @@ const steps = [
 		const legend = Array.from(section.querySelectorAll<HTMLElement>('.method-legend li'));
 		const N = stops.length;
 
+		// each big word is split into letters so it can rise in one by one; the
+		// heading keeps its full text for screen readers
+		stops.forEach((el) => {
+			const word = el.querySelector<HTMLElement>('.stop-word');
+			if (!word || word.querySelector('.ch')) return;
+			const text = word.textContent ?? '';
+			word.setAttribute('aria-label', text);
+			word.innerHTML = Array.from(text)
+				.map((c) => `<span class="ch" aria-hidden="true">${c}</span>`)
+				.join('');
+		});
+
 		// ---------- entrance for the heading block ----------
 		const revealEls = Array.from(section.querySelectorAll<HTMLElement>('.reveal'));
 		if (reduceMotion || !('IntersectionObserver' in window)) {
@@ -154,9 +166,15 @@ const steps = [
 
 		// legend buttons jump to their step
 		let stopY: number[] = [];
+		// where to scroll so the line has just reached a step (set once the line is
+		// built; the line is drawn by path length, so a step's height on the page
+		// is not a reliable guide)
+		let scrollFor: ((i: number) => number) | null = null;
 		section.querySelectorAll<HTMLButtonElement>('.legend-btn').forEach((btn, i) =>
 			btn.addEventListener('click', () => {
-				const y = wrap.getBoundingClientRect().top + window.scrollY + (stopY[i] ?? 0) - window.innerHeight * 0.4;
+				const y = scrollFor
+					? scrollFor(i)
+					: wrap.getBoundingClientRect().top + window.scrollY + (stopY[i] ?? 0) - window.innerHeight * 0.4;
 				window.scrollTo({ top: y, behavior: reduceMotion ? 'auto' : 'smooth' });
 			}),
 		);
@@ -214,14 +232,212 @@ const steps = [
 			}
 			return out;
 		};
-		// loops: right after step 1, and into step 6
-		const loopAfter = new Set([0, 4]);
+		const NS = 'http://www.w3.org/2000/svg';
 
+		// ---------- path styles: one for wider screens, one for phones ----------
+		type Cfg = {
+			plan: (W: number, mobile: boolean) => Array<[number, number]>;
+			start: (W: number, H: number, lg: number, rg: number) => P;
+			end: (W: number, H: number, lg: number, rg: number) => P;
+			loops: Set<number>;
+			free: boolean;
+			k: number;
+			amp: number;
+			bow: number;
+			wobble: number;
+			doodles: Set<number>;
+			seed: number;
+		};
+		const edgeStart = (W: number, H: number, lg: number, rg: number): P => ({ x: W + rg - 34, y: H * 0.02 });
+		const edgeEnd = (W: number, H: number, lg: number, rg: number): P => ({ x: -lg + 34, y: H * 0.955 });
+		const VARIANTS: Record<string, Cfg> = {
+			// phones: alternating sides, one loop
+			classic: {
+				plan: (W, m) => {
+					const r = W * (m ? 0.76 : 0.84);
+					const l = W * (m ? 0.24 : 0.16);
+					return [[r, 0.07], [l, 0.205], [r, 0.345], [l, 0.49], [r, 0.64], [W * 0.34, 0.79], [W * (m ? 0.14 : 0.1), 0.92]];
+				},
+				start: edgeStart,
+				end: edgeEnd,
+				loops: new Set([0]),
+				free: false,
+				k: 0.3,
+				amp: 0,
+				bow: 0.16,
+				wobble: 0,
+				doodles: new Set(),
+				seed: 1,
+			},
+			// phones: a straight line down the left with every step hung on it
+			timeline: {
+				plan: (W) => Array.from({ length: 7 }, (_, i): [number, number] => [W * 0.1, 0.05 + i * 0.135]),
+				start: (W) => ({ x: W * 0.1, y: 0 }),
+				end: (W, H) => ({ x: W * 0.1, y: H }),
+				loops: new Set(),
+				free: false,
+				k: 0.3,
+				amp: 0,
+				bow: 0,
+				wobble: 0,
+				doodles: new Set(),
+				seed: 1,
+			},
+			// wider screens: one flowing line at irregular spots, a few drawings
+			mix: {
+				plan: (W) => [[W * 0.84, 0.06], [W * 0.3, 0.19], [W * 0.7, 0.35], [W * 0.16, 0.5], [W * 0.78, 0.66], [W * 0.38, 0.8], [W * 0.12, 0.93]],
+				start: edgeStart,
+				end: edgeEnd,
+				loops: new Set([0]),
+				free: true,
+				k: 0.16,
+				amp: 0.3,
+				bow: 0.16,
+				wobble: 0,
+				doodles: new Set([2, 3, 6]),
+				seed: 7,
+			},
+		};
+		const variant = 'mix';
+
+		// small seeded random numbers, so a rebuild draws the same line
+		const mulberry = (a: number) => () => {
+			a |= 0;
+			a = (a + 0x6d2b79f5) | 0;
+			let t = Math.imul(a ^ (a >>> 15), 1 | a);
+			t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+			return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+		};
+
+		// a hand-drawn look: resample the line and nudge each sample sideways
+		const wobbleLine = (d: string, amount: number, rnd: () => number) => {
+			track.setAttribute('d', d);
+			const L = track.getTotalLength();
+			const n = Math.max(8, Math.round(L / 16));
+			const out: P[] = [];
+			let drift = 0;
+			for (let k = 0; k <= n; k++) {
+				const a = track.getPointAtLength((k / n) * L);
+				const b = track.getPointAtLength(Math.min(L, (k / n) * L + 2));
+				const l = Math.hypot(b.x - a.x, b.y - a.y) || 1;
+				drift = drift * 0.6 + (rnd() - 0.5) * amount * 1.6;
+				out.push({ x: a.x + (-(b.y - a.y) / l) * drift, y: a.y + ((b.x - a.x) / l) * drift });
+			}
+			return curve(out);
+		};
+
+		// little drawings that appear beside a step once the line reaches it
+		const spiral = () => {
+			let d = '';
+			for (let k = 0; k <= 70; k++) {
+				const t = (k / 70) * Math.PI * 5.5;
+				const r = 2 + t * 2.4;
+				d += `${k ? 'L' : 'M'}${(r * Math.cos(t)).toFixed(1)} ${(r * Math.sin(t)).toFixed(1)} `;
+			}
+			return d;
+		};
+		const DOODLES: string[] = [
+			'M0 14 C16 -12 42 -12 56 10 M46 3 L56 10 L48 19', // an arrow curling toward the answer
+			'M0 0 q7 -9 14 0 t14 0 t14 0 t14 0 t14 0', // a quick underline squiggle
+			spiral(), // thinking in circles
+			'M0 0 H18 M18 0 C32 0 36 -16 52 -16 M18 0 C32 0 36 16 52 16 M18 0 H56 M52 -20 l8 8 m0 -8 l-8 8 M52 12 l8 8 m0 -8 l-8 8', // a fork: two attempts fail, one goes on
+			'M0 6 L12 20 L40 -14', // a tick
+			'M0 0 L32 -16 M0 0 L32 16 M32 -16 L32 16 M-5 0 a5 5 0 1 0 10 0 a5 5 0 1 0 -10 0 M27 -16 a5 5 0 1 0 10 0 a5 5 0 1 0 -10 0 M27 16 a5 5 0 1 0 10 0 a5 5 0 1 0 -10 0', // connected dots
+			'M0 -20 L5 -5 L20 0 L5 5 L0 20 L-5 5 L-20 0 L-5 -5 Z', // a spark
+		];
+		type Spot = { dir: number; dx: number; dy: number };
+		const drawDoodles = (cfg: Cfg, pts: P[], spots: Spot[]) => {
+			svg.querySelector('.mp-doodles')?.remove();
+			if (!cfg.doodles.size) return;
+			const g = document.createElementNS(NS, 'g');
+			g.setAttribute('class', 'mp-doodles');
+			pts.forEach((p, i) => {
+				if (!cfg.doodles.has(i)) return;
+				const sp = spots[i] ?? { dir: 1, dx: 88, dy: -46 };
+				const dir = sp.dir;
+				const wrapG = document.createElementNS(NS, 'g');
+				wrapG.setAttribute('transform', `translate(${(p.x + dir * sp.dx).toFixed(1)} ${(p.y + sp.dy).toFixed(1)}) scale(${dir} 1)`);
+				const path = document.createElementNS(NS, 'path');
+				path.setAttribute('d', DOODLES[i]);
+				path.setAttribute('pathLength', '1');
+				path.setAttribute('class', 'mp-doodle');
+				path.dataset.stop = String(i);
+				path.setAttribute('fill', 'none');
+				path.setAttribute('stroke', '#c4b5fd');
+				path.setAttribute('stroke-width', '2.2');
+				path.setAttribute('stroke-linecap', 'round');
+				path.setAttribute('stroke-linejoin', 'round');
+				path.style.strokeDasharray = '1';
+				path.style.strokeDashoffset = '1';
+				path.style.transition = 'stroke-dashoffset 0.9s cubic-bezier(0.16, 1, 0.3, 1)';
+				path.style.filter = 'drop-shadow(0 0 6px rgba(139,92,246,0.6))';
+				wrapG.appendChild(path);
+				g.appendChild(wrapG);
+			});
+			svg.appendChild(g);
+		};
+		const setDoodles = (reached: (i: number) => boolean) =>
+			svg.querySelectorAll<SVGPathElement>('.mp-doodle').forEach((el) => {
+				el.style.strokeDashoffset = reached(Number(el.dataset.stop)) ? '0' : '1';
+			});
+
+		// a slim bar that stays on screen once the step list has scrolled away:
+		// where you are, and a dot per step to jump to
+		let setSticky: (cur: number) => void = () => {};
+		if (!reduceMotion) {
+			const names = stops.map((el, i) => el.querySelector('.stop-word')?.getAttribute('aria-label') ?? `Step ${i + 1}`);
+			const bar = document.createElement('div');
+			bar.className = 'method-sticky';
+			bar.setAttribute('role', 'navigation');
+			bar.setAttribute('aria-label', 'Method steps');
+			bar.innerHTML = `<span class="ms-count">01 / 0${N}</span><span class="ms-name">${names[0]}</span><span class="ms-dots">${stops
+				.map((_, i) => `<button type="button" class="ms-dot" aria-label="Go to step ${i + 1}: ${names[i]}"></button>`)
+				.join('')}</span>`;
+			document.body.appendChild(bar);
+			const count = bar.querySelector<HTMLElement>('.ms-count')!;
+			const nameEl = bar.querySelector<HTMLElement>('.ms-name')!;
+			const dots = Array.from(bar.querySelectorAll<HTMLButtonElement>('.ms-dot'));
+			dots.forEach((d, i) => d.addEventListener('click', () => legend[i].querySelector('button')?.click()));
+			setSticky = (cur) => {
+				const c = Math.max(0, cur);
+				count.textContent = `0${c + 1} / 0${N}`;
+				nameEl.textContent = names[c];
+				dots.forEach((d, i) => {
+					d.classList.toggle('is-on', i <= c);
+					d.classList.toggle('is-cur', i === c);
+					if (i === c) d.setAttribute('aria-current', 'step');
+					else d.removeAttribute('aria-current');
+				});
+			};
+			setSticky(0);
+			const legendEl = section.querySelector<HTMLElement>('.method-legend');
+			let queued = false;
+			const place = () => {
+				queued = false;
+				const sr = section.getBoundingClientRect();
+				const legendGone = !legendEl || legendEl.getBoundingClientRect().bottom < 76 || getComputedStyle(legendEl).display === 'none';
+				const headGone = section.querySelector('.method-head')!.getBoundingClientRect().bottom < 76;
+				bar.classList.toggle('is-on', (legendGone && headGone) && sr.bottom > 240 && sr.top < window.innerHeight);
+			};
+			const queue = () => {
+				if (!queued) {
+					queued = true;
+					requestAnimationFrame(place);
+				}
+			};
+			window.addEventListener('scroll', queue, { passive: true });
+			window.addEventListener('resize', queue);
+			place();
+		}
+
+		let stopTick: (() => void) | null = null;
 		let ctx: gsap.Context | null = null;
 		let width = 0;
 
 		const build = () => {
 			ctx?.revert();
+			stopTick?.();
+			stopTick = null;
 			wrap.classList.add('is-ready');
 
 			const W = wrap.clientWidth;
@@ -234,59 +450,75 @@ const steps = [
 			const vh = window.innerHeight;
 			// three screens tall: steps 1-2 on the first screen, 3-4 on the second
 			// and 5-7 on the third, as in the sketch
-			const H = Math.max(mobile ? 1900 : 1600, Math.min(2 * vh, 2400));
+			// about a screen and a quarter on desktop: the stops are close enough
+			// that three or four are visible together. The explanation opens beside
+			// each word, so the tighter spacing doesn't make it collide with the next.
+			const H = Math.max(mobile ? 1500 : 1100, Math.min(1.25 * vh, 1500));
 			wrap.style.height = `${H}px`;
 			svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
 			svg.setAttribute('width', String(W));
 			svg.setAttribute('height', String(H));
 			svg.querySelector('#mpGrad')?.setAttribute('y2', String(H));
 
-			const right = W * (mobile ? 0.76 : 0.8);
-			const left = W * (mobile ? 0.24 : 0.2);
-			const plan: Array<[number, number]> = [
-				[right, 0.07],
-				[left, 0.205],
-				[right, 0.345],
-				[left, 0.49],
-				[right, 0.64],
-				[W * 0.34, 0.79],
-				[W * (mobile ? 0.14 : 0.1), 0.92],
-			];
-			const stopPts: P[] = plan.map(([x, fy]) => ({ x, y: H * fy }));
-			// the line comes in from the right edge of the screen and leaves by the
-			// left edge (the svg overflows the page padding on purpose)
 			const box = wrap.getBoundingClientRect();
 			const rightGap = Math.max(0, window.innerWidth - box.right);
 			const leftGap = Math.max(0, box.left);
+			// phones always use the plain path; the styles are for wider screens
+			const cfg = mobile ? VARIANTS.timeline : VARIANTS[variant];
+			const stopPts: P[] = cfg.plan(W, mobile).map(([x, fy]) => ({ x, y: H * fy }));
+			const startPt = cfg.start(W, H, leftGap, rightGap);
+			const endPt = cfg.end(W, H, leftGap, rightGap);
+			const rnd = mulberry(cfg.seed);
+			const minX = -leftGap + 24;
+			const maxX = W + rightGap - 24;
 			// every stop is passed on a diagonal aimed at its neighbours, with a
-			// control point just before and after it, so the line sweeps in long
-			// S-curves instead of running down vertical walls
+			// control point just before and after it
 			const near = (p: P, q: P, k: number): P => ({ x: p.x + (q.x - p.x) * k, y: p.y + (q.y - p.y) * k });
-			const startPt = { x: W + rightGap - 34, y: H * 0.02 };
-			const endPt = { x: -leftGap + 34, y: H * 0.955 };
 			const pts: P[] = [startPt];
+			// the line's first and last stretches get a bend too, so it doesn't
+			// arrive or leave in a ruler-straight run
+			const bendBetween = (a: P, b: P): P => {
+				const dx = b.x - a.x;
+				const dy = b.y - a.y;
+				const L = Math.hypot(dx, dy) || 1;
+				const o = (rnd() - 0.5) * 2 * cfg.amp * L * 0.7;
+				return { x: Math.min(maxX, Math.max(minX, a.x + dx * 0.5 + (-dy / L) * o)), y: a.y + dy * 0.5 + (dx / L) * o };
+			};
+			if (cfg.free) pts.push(bendBetween(startPt, stopPts[0]));
 			stopPts.forEach((p, i) => {
-				const pre = i > 0 ? near(p, stopPts[i - 1], 0.3) : null;
-				const post = i < N - 1 ? near(p, stopPts[i + 1], 0.3) : null;
+				const pre = i > 0 ? near(p, stopPts[i - 1], cfg.k) : null;
+				const post = i < N - 1 ? near(p, stopPts[i + 1], cfg.k) : null;
 				if (pre) pts.push(pre);
 				pts.push(p);
 				if (post) {
 					pts.push(post);
-					const nextPre = near(stopPts[i + 1], p, 0.3);
-					if (loopAfter.has(i)) {
+					const nextPre = near(stopPts[i + 1], p, cfg.k);
+					const dx = nextPre.x - post.x;
+					const dy = nextPre.y - post.y;
+					if (cfg.loops.has(i)) {
 						pts.push(...loop(post, nextPre, i % 2 === 0 ? 1 : -1, 0.5));
+					} else if (cfg.free) {
+						// two bends of random size and direction, so no two stretches look alike
+						const L = Math.hypot(dx, dy) || 1;
+						const nx = -dy / L;
+						const ny = dx / L;
+						const a1 = (rnd() - 0.5) * 2 * cfg.amp * L;
+						const a2 = (rnd() - 0.5) * 2 * cfg.amp * L;
+						const clampX = (x: number) => Math.min(maxX, Math.max(minX, x));
+						pts.push({ x: clampX(post.x + dx * 0.33 + nx * a1), y: post.y + dy * 0.33 + ny * a1 });
+						pts.push({ x: clampX(post.x + dx * 0.67 + nx * a2), y: post.y + dy * 0.67 + ny * a2 });
 					} else {
 						// a soft bow so the stretch between stops is a curve, not a ruler line
-						const dx = nextPre.x - post.x;
-						const dy = nextPre.y - post.y;
-						const bow = (i % 2 === 0 ? -1 : 1) * 0.16;
+						const bow = (i % 2 === 0 ? -1 : 1) * cfg.bow;
 						pts.push({ x: post.x + dx / 2 - dy * bow, y: post.y + dy / 2 + dx * bow });
 					}
 				}
 			});
+			if (cfg.free) pts.push(bendBetween(stopPts[N - 1], endPt));
 			pts.push(endPt);
 
-			const d = curve(pts);
+			let d = curve(pts);
+			if (cfg.wobble) d = wobbleLine(d, cfg.wobble, rnd);
 			[track, prog].forEach((path) => {
 				path.setAttribute('d', d);
 				path.setAttribute('pathLength', '1');
@@ -310,6 +542,10 @@ const steps = [
 
 			// where along the line each stop sits (0..1), found by sampling
 			const len = track.getTotalLength();
+			// the part of the line that is still ahead is dotted; the bright line
+			// drawn over it is the part already travelled. (pathLength is 1, so
+			// dash sizes are fractions of the whole line.)
+			track.style.strokeDasharray = `${0.5 / len} ${12 / len}`;
 			const samples = 1400;
 			const frac = stops.map((_, i) => {
 				const target = stopPts[i];
@@ -326,6 +562,92 @@ const steps = [
 				return best;
 			});
 
+			// For each step, choose the side (and, if needed, a small lift) where its
+			// word does not sit on the line. The line is sampled every 6px and each
+			// option's word box is tested against it.
+			const dirs: number[] = stopPts.map((p) => (p.x > W * 0.5 ? 1 : -1));
+			stops.forEach((el) => el.style.setProperty('--wy', '0px'));
+			if (!mobile) {
+				const dense: P[] = [];
+				for (let at = 0; at <= len; at += 6) {
+					const q = track.getPointAtLength(at);
+					dense.push({ x: q.x, y: q.y });
+				}
+				type Box = { x0: number; x1: number; y0: number; y1: number };
+				const hits = (r: Box) => {
+					const m = 8;
+					let n = 0;
+					for (const q of dense) if (q.x > r.x0 - m && q.x < r.x1 + m && q.y > r.y0 - m && q.y < r.y1 + m) n++;
+					return n;
+				};
+				stops.forEach((el, i) => {
+					const p = stopPts[i];
+					const word = el.querySelector<HTMLElement>('.stop-word')!;
+					const tile = el.querySelector<HTMLElement>('.stop-tile')!.offsetWidth || 44;
+					const gap = parseFloat(getComputedStyle(el.querySelector('.stop-row')!).columnGap) || 14;
+					const w = word.offsetWidth;
+					const h = word.offsetHeight;
+					const prefer: 'left' | 'right' = p.x > W * 0.5 ? 'left' : 'right';
+					const other: 'left' | 'right' = prefer === 'left' ? 'right' : 'left';
+					const box = (side: 'left' | 'right', dy: number): Box =>
+						side === 'right'
+							? { x0: p.x + tile / 2 + gap, x1: p.x + tile / 2 + gap + w, y0: p.y - h / 2 + dy, y1: p.y + h / 2 + dy }
+							: { x0: p.x - tile / 2 - gap - w, x1: p.x - tile / 2 - gap, y0: p.y - h / 2 + dy, y1: p.y + h / 2 + dy };
+					const lift = h / 2 + 10;
+					const tries: Array<['left' | 'right', number]> = [[prefer, 0], [other, 0], [prefer, -lift], [prefer, lift], [other, -lift], [other, lift]];
+					let best = tries[0];
+					let bestHits = Infinity;
+					for (const t of tries) {
+						const n = hits(box(t[0], t[1]));
+						if (n < bestHits) {
+							best = t;
+							bestHits = n;
+							if (n === 0) break;
+						}
+					}
+					// the word sits to the right of the node ("node-left") or to the left of it
+					el.dataset.side = best[0] === 'right' ? 'node-left' : 'node-right';
+					el.style.setProperty('--wy', `${best[1].toFixed(1)}px`);
+					dirs[i] = best[0] === 'right' ? -1 : 1;
+				});
+			}
+			// each drawing takes the first spot beside its node that the line misses,
+			// preferring the side away from the word
+			const spots: Spot[] = [];
+			if (!mobile) {
+				const dense2: P[] = [];
+				for (let at = 0; at <= len; at += 6) {
+					const q = track.getPointAtLength(at);
+					dense2.push({ x: q.x, y: q.y });
+				}
+				stopPts.forEach((p, i) => {
+					if (!cfg.doodles.has(i)) return;
+					const tries: Spot[] = [
+						{ dir: dirs[i], dx: 88, dy: -46 },
+						{ dir: -dirs[i], dx: 88, dy: -46 },
+						{ dir: dirs[i], dx: 88, dy: 50 },
+						{ dir: -dirs[i], dx: 88, dy: 50 },
+						{ dir: dirs[i], dx: 150, dy: -46 },
+						{ dir: -dirs[i], dx: 150, dy: -46 },
+					];
+					let best = tries[0];
+					let bestHits = Infinity;
+					for (const t of tries) {
+						const cx = p.x + t.dir * (t.dx + 30);
+						const cy = p.y + t.dy;
+						let n = 0;
+						for (const q of dense2) if (Math.abs(q.x - cx) < 52 && Math.abs(q.y - cy) < 52) n++;
+						if (n < bestHits) {
+							best = t;
+							bestHits = n;
+							if (n === 0) break;
+						}
+					}
+					spots[i] = best;
+				});
+			}
+			drawDoodles(cfg, stopPts, spots);
+
 			const movePen = (p: number) => {
 				const pt = prog.getPointAtLength(p * len);
 				pen.setAttribute('cx', pt.x.toFixed(1));
@@ -338,6 +660,7 @@ const steps = [
 			movePen(1);
 			legend.forEach((li) => li.classList.add('is-done'));
 			stops.forEach((el) => el.classList.add('is-reached'));
+			setDoodles(() => true);
 
 			if (reduceMotion) {
 				// no scroll story to follow, so every explanation stays open
@@ -373,6 +696,8 @@ const steps = [
 						if (reached) cur = i;
 					});
 					stops.forEach((el, i) => el.classList.toggle('is-current', i === cur));
+					setDoodles((i) => stops[i].classList.contains('is-reached'));
+					setSticky(cur);
 					legend.forEach((li, i) => {
 						li.classList.toggle('is-current', i === cur);
 						const btn = li.querySelector('.legend-btn');
@@ -381,21 +706,38 @@ const steps = [
 					});
 				};
 
-				// paint runs off the timeline itself, not the scroll events: the line
-				// trails the scroll by the scrub delay, so after a fast scroll or a
-				// legend jump the state has to keep following the animation
-				const tl = gsap.timeline({
-					defaults: { ease: 'none' },
-					onUpdate: paint,
-					scrollTrigger: {
-						trigger: wrap,
-						start: 'top 92%',
-						end: 'bottom 88%',
-						scrub: 1.2,
-						invalidateOnRefresh: true,
-					},
-				});
+				// The timeline is driven by hand: scroll sets where it should be, and a
+				// short ease carries it there. Arriving at the section also draws the line
+				// as far as the first step on its own, so the path is never an empty void.
+				const tl = gsap.timeline({ defaults: { ease: 'none' }, paused: true, onUpdate: paint });
 				tlRef = tl;
+				let target = 0;
+				let shown = 0;
+				const floor = { v: 0 };
+				const drive = ScrollTrigger.create({
+					trigger: wrap,
+					start: 'top 92%',
+					end: 'bottom 88%',
+					invalidateOnRefresh: true,
+					onUpdate: (self) => (target = self.progress),
+					onRefresh: (self) => (target = self.progress),
+				});
+				scrollFor = (i) => drive.start + Math.min(1, frac[i] + 0.012) * (drive.end - drive.start);
+				const tick = () => {
+					const goal = Math.max(target, floor.v);
+					const k = 1 - Math.pow(0.9, Math.min(gsap.ticker.deltaRatio(), 4));
+					shown += (goal - shown) * k;
+					if (Math.abs(goal - shown) < 0.0002) shown = goal;
+					tl.progress(shown);
+				};
+				gsap.ticker.add(tick);
+				stopTick = () => gsap.ticker.remove(tick);
+				ScrollTrigger.create({
+					trigger: section,
+					start: 'top 90%',
+					once: true,
+					onEnter: () => gsap.to(floor, { v: Math.min(frac[0] + 0.04, 0.16), duration: 1.6, delay: 0.3, ease: 'power2.out' }),
+				});
 
 				// the line draws itself, and a dot rides its tip
 				tl.to(prog, { strokeDashoffset: 0, duration: 1 }, 0);
@@ -412,7 +754,13 @@ const steps = [
 					tl.fromTo(o.dot, { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.04, ease: 'back.out(3)' }, at);
 					tl.fromTo(o.n, { opacity: 0, x: -8 }, { opacity: 1, x: 0, duration: 0.04, ease: 'power2.out' }, at + 0.005);
 					tl.fromTo(o.icon, { scale: 0, rotation: -30, opacity: 0 }, { scale: 1, rotation: -4, opacity: 1, duration: 0.06, ease: 'back.out(2.5)' }, at + 0.01);
-					tl.fromTo(o.word, { y: 18, opacity: 0 }, { y: 0, opacity: 1, duration: 0.07, ease: 'power2.out' }, at + 0.01);
+					tl.fromTo(o.word, { opacity: 0 }, { opacity: 1, duration: 0.01 }, at + 0.01);
+					tl.fromTo(
+						o.word.querySelectorAll('.ch'),
+						{ y: 34, opacity: 0, rotate: 7 },
+						{ y: 0, opacity: 1, rotate: 0, duration: 0.05, stagger: 0.006, ease: 'back.out(1.6)' },
+						at + 0.01,
+					);
 				});
 			}, wrap);
 		};
@@ -673,13 +1021,19 @@ const steps = [
 	.stop-n {
 		display: inline-block;
 		margin: 0 0 0.35rem;
-		padding: 0.15rem 0.55rem;
-		background: var(--bg);
+		padding: 0.15rem 0.6rem;
+		background: rgba(139, 92, 246, 0.12);
+		border: 1px solid rgba(167, 139, 250, 0.4);
 		border-radius: 999px;
 		font-family: var(--mono);
 		font-size: 0.74rem;
 		letter-spacing: 0.1em;
 		color: var(--accent-bright);
+	}
+
+	/* letters are animated one at a time, so they must be able to move */
+	.stop-word .ch {
+		display: inline-block;
 	}
 
 	.stop-row {
@@ -693,8 +1047,8 @@ const steps = [
 		display: grid;
 		place-items: center;
 		flex: none;
-		width: clamp(38px, 3.4vw, 52px);
-		height: clamp(38px, 3.4vw, 52px);
+		width: clamp(36px, 2.8vw, 46px);
+		height: clamp(36px, 2.8vw, 46px);
 		color: var(--accent-bright);
 		background: linear-gradient(145deg, rgba(167, 139, 250, 0.22), rgba(109, 40, 217, 0.08));
 		border: 1px solid rgba(167, 139, 250, 0.35);
@@ -713,7 +1067,7 @@ const steps = [
 	/* the word is an outline until the line reaches it, then fills in */
 	.stop-word {
 		margin: 0;
-		font-size: clamp(1.9rem, 3.8vw, 3.6rem);
+		font-size: clamp(1.5rem, 2.5vw, 2.4rem);
 		font-weight: 700;
 		letter-spacing: -0.035em;
 		line-height: 1;
@@ -799,7 +1153,8 @@ const steps = [
 	}
 
 	.mp-track {
-		stroke: rgba(167, 139, 250, 0.1);
+		stroke: rgba(167, 139, 250, 0.42);
+		stroke-width: 3;
 	}
 
 	.mp-prog {
@@ -862,6 +1217,85 @@ const steps = [
 		border: 2px solid var(--accent-bright);
 		border-radius: 50%;
 		box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.14);
+	}
+
+	/* ---- desktop: the icon tile is the node itself, with the line running
+	   through it, so each stop reads as one object ---- */
+	.mp.is-ready:not(.is-mobile) {
+		--tile: clamp(36px, 2.8vw, 46px);
+	}
+
+	.mp.is-ready:not(.is-mobile) .stop-dot {
+		display: none;
+	}
+
+	/* the line can pass behind a word, so the word gets a soft dark halo */
+	.mp.is-ready:not(.is-mobile) .stop-word {
+		translate: 0 var(--wy, 0px);
+		text-shadow: 0 0 16px var(--bg), 0 0 6px var(--bg), 0 0 2px var(--bg);
+	}
+
+	.mp.is-ready:not(.is-mobile) .stop-tile {
+		/* opaque, so the line stops at the tile instead of showing through it */
+		background:
+			linear-gradient(145deg, rgba(167, 139, 250, 0.22), rgba(109, 40, 217, 0.08)),
+			#0d0b14;
+	}
+
+	.mp.is-ready:not(.is-mobile) .stop[data-side='node-right'] .stop-body {
+		right: calc(var(--tile) / -2);
+	}
+
+	.mp.is-ready:not(.is-mobile) .stop[data-side='node-left'] .stop-body {
+		left: calc(var(--tile) / -2);
+	}
+
+	/* the explanation opens beside the word, on the side away from the node,
+	   so it never lands on the next step */
+	.mp.is-ready:not(.is-mobile) .stop-desc {
+		position: absolute;
+		top: 50%;
+		translate: 0 -50%;
+		width: max-content;
+		max-width: 30ch;
+		margin: 0;
+	}
+
+	.mp.is-ready:not(.is-mobile) .stop[data-side='node-right'] .stop-desc {
+		right: calc(100% + 1.4rem);
+	}
+
+	.mp.is-ready:not(.is-mobile) .stop[data-side='node-left'] .stop-desc {
+		left: calc(100% + 1.4rem);
+	}
+
+	.mp.is-ready:not(.is-mobile) .stop-desc::before {
+		display: none;
+	}
+
+	/* steps already passed settle back; the current one lights up. Hovering
+	   or focusing a passed step brings it forward again. */
+	.mp.is-ready:not(.is-mobile) .stop.is-reached:not(.is-current) .stop-row {
+		opacity: 0.6;
+		transition: opacity 0.4s ease;
+	}
+
+	.mp.is-ready:not(.is-mobile) .stop.is-reached:not(.is-current):hover .stop-row,
+	.mp.is-ready:not(.is-mobile) .stop.is-reached:not(.is-current):focus-within .stop-row {
+		opacity: 1;
+	}
+
+	/* the word of the step you're on glows softly in the line's violet */
+	.mp.is-ready:not(.is-mobile) .stop.is-current .stop-word {
+		color: #ffffff;
+		text-shadow: 0 0 30px rgba(167, 139, 250, 0.55), 0 0 10px rgba(139, 92, 246, 0.35), 0 0 4px var(--bg);
+	}
+
+	.mp.is-ready:not(.is-mobile) .stop.is-current .stop-tile {
+		box-shadow:
+			0 0 0 5px rgba(139, 92, 246, 0.22),
+			0 10px 30px rgba(109, 40, 217, 0.55),
+			inset 0 1px 0 rgba(255, 255, 255, 0.18);
 	}
 
 	.mp.is-ready .stop-body {
@@ -993,29 +1427,59 @@ const steps = [
 		}
 	}
 
-	/* phones: the text sits above its node, leaning toward the middle */
+	/* phones: a straight timeline down the left. Each tile sits on the line, its
+	   word beside it, and the sentence underneath */
 	.mp.is-mobile .stop-body {
-		top: auto;
-		bottom: 26px;
-		transform: none;
-		max-width: min(250px, 66vw);
+		top: 0;
+		bottom: auto;
+		left: -19px;
+		right: auto;
+		transform: translateY(-19px);
+		width: max-content;
+		max-width: min(300px, calc(100vw - 84px));
 	}
 
-	.mp.is-mobile .stop[data-side='node-right'] .stop-body {
-		right: -14px;
+	.mp.is-mobile .stop[data-side] .stop-body {
+		left: -19px;
+		right: auto;
+		text-align: left;
 	}
 
-	.mp.is-mobile .stop[data-side='node-left'] .stop-body {
-		left: -14px;
+	.mp.is-mobile .stop-n,
+	.mp.is-mobile .stop-dot {
+		display: none;
+	}
+
+	/* the "+" hints at hover, which a phone doesn't have */
+	.mp.is-ready.is-mobile .stop.is-reached .stop-tile::after {
+		display: none;
 	}
 
 	.mp.is-mobile .stop-word {
-		font-size: 1.9rem;
+		font-size: 1.5rem;
+		white-space: nowrap;
 	}
 
 	.mp.is-mobile .stop-tile {
 		width: 38px;
 		height: 38px;
+		/* opaque, so the line stops at the tile */
+		background:
+			linear-gradient(145deg, rgba(167, 139, 250, 0.22), rgba(109, 40, 217, 0.08)),
+			#0d0b14;
+	}
+
+	/* the sentence is always there once its step is reached (no hover on a phone) */
+	.mp.is-ready.is-mobile .stop-desc {
+		opacity: 0;
+		pointer-events: auto;
+		transform: none;
+		margin: 0.55rem 0 0 calc(38px + 0.7rem);
+		transition: opacity 0.4s ease;
+	}
+
+	.mp.is-ready.is-mobile .stop.is-reached .stop-desc {
+		opacity: 1;
 	}
 
 	/* the step legend wraps onto three lines on a phone and crowds the line */
@@ -1035,6 +1499,91 @@ const steps = [
 
 	.mp.is-mobile .stop-desc::before {
 		display: none;
+	}
+
+	/* ---------- the slim step bar that follows you through the section ---------- */
+	:global(.method-sticky) {
+		position: fixed;
+		top: 78px;
+		left: 50%;
+		z-index: 90;
+		display: flex;
+		align-items: center;
+		gap: 0.9rem;
+		padding: 0.5rem 1rem;
+		background: rgba(13, 16, 24, 0.88);
+		border: 1px solid rgba(167, 139, 250, 0.35);
+		border-radius: 999px;
+		box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+		backdrop-filter: blur(10px);
+		-webkit-backdrop-filter: blur(10px);
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.72rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		white-space: nowrap;
+		color: #f3f3f1;
+		opacity: 0;
+		pointer-events: none;
+		transform: translate(-50%, -12px);
+		transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+	}
+
+	:global(.method-sticky.is-on) {
+		opacity: 1;
+		pointer-events: auto;
+		transform: translate(-50%, 0);
+	}
+
+	:global(.method-sticky .ms-count) {
+		color: #c4b5fd;
+	}
+
+	:global(.method-sticky .ms-name) {
+		min-width: 5.5rem;
+	}
+
+	:global(.method-sticky .ms-dots) {
+		display: flex;
+		gap: 7px;
+	}
+
+	:global(.method-sticky .ms-dot) {
+		position: relative;
+		width: 9px;
+		height: 9px;
+		padding: 0;
+		background: none;
+		border: 1.5px solid rgba(167, 139, 250, 0.6);
+		border-radius: 50%;
+		cursor: pointer;
+		transition: background-color 0.25s ease, box-shadow 0.25s ease;
+	}
+
+	/* a larger invisible target than the dot itself */
+	:global(.method-sticky .ms-dot)::after {
+		content: '';
+		position: absolute;
+		inset: -9px -5px;
+	}
+
+	:global(.method-sticky .ms-dot.is-on) {
+		background: #a78bfa;
+	}
+
+	:global(.method-sticky .ms-dot.is-cur) {
+		box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.3);
+	}
+
+	:global(.method-sticky .ms-dot:focus-visible) {
+		outline: 2px solid #a78bfa;
+		outline-offset: 4px;
+	}
+
+	@media (max-width: 520px) {
+		:global(.method-sticky .ms-name) {
+			display: none;
+		}
 	}
 
 	/* ---------- the close: where the line ends ---------- */
