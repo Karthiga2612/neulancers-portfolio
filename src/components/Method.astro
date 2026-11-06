@@ -1,5 +1,10 @@
 ---
-// each step: the big word, one sentence, and a small line icon (24 grid)
+// The seven steps. Layout and the trail follow Animorio's "Stars along the
+// trail" (free to use on your own site: https://animorio.com/en/license/);
+// GSAP keeps its own licence.
+//
+// Each step has a large step number with a small line drawing beside it that
+// draws itself as the step arrives. The number of the step you are on lights up.
 const steps = [
 	{
 		label: 'Why?',
@@ -37,6 +42,7 @@ const steps = [
 		icon: '<path d="M4 20 20 4M20 4h-7M20 4v7"/>',
 	},
 ];
+const total = String(steps.length).padStart(2, '0');
 ---
 
 <section class="method" id="method" aria-labelledby="method-title">
@@ -55,7 +61,7 @@ const steps = [
 			</div>
 
 			<h2 class="method-heading reveal" id="method-title" style="--reveal-order: 1">We don&rsquo;t start with technology.</h2>
-			<p class="method-sub reveal" style="--reveal-order: 2">Seven steps, in this order. Follow the line<span class="sub-hint">, and hover any step to read it again</span>.</p>
+			<p class="method-sub reveal" style="--reveal-order: 2">Seven steps, in this order. Follow the trail.</p>
 			<ol class="method-legend reveal" style="--reveal-order: 3" aria-label="Jump to a step">
 				{steps.map((step, i) => (
 					<li data-index={i}><button type="button" class="legend-btn"><span>{`0${i + 1}`}</span>{step.label}</button></li>
@@ -63,43 +69,29 @@ const steps = [
 			</ol>
 		</div>
 
-		<div class="mp" id="methodPath">
-			<svg class="mp-svg" aria-hidden="true" fill="none">
+		<div class="mt" id="methodPath" data-trail-wrap>
+			<svg class="trail-svg" data-trail-svg aria-hidden="true" focusable="false">
 				<defs>
-					<linearGradient id="mpGrad" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="1">
-						<stop offset="0" stop-color="#c4b5fd"></stop>
-						<stop offset="1" stop-color="#7c3aed"></stop>
-					</linearGradient>
+					<symbol id="mtStar" viewBox="-10 -10 20 20"><path d="M0 -10C1.2 -2.5 2.5 -1.2 10 0C2.5 1.2 1.2 2.5 0 10C-1.2 2.5 -2.5 1.2 -10 0C-2.5 -1.2 -1.2 -2.5 0 -10Z"/></symbol>
+					<symbol id="mtFlower" viewBox="-10 -10 20 20"><circle cx="0.00" cy="-4.90" r="4.3"/><circle cx="4.66" cy="-1.51" r="4.3"/><circle cx="2.88" cy="3.96" r="4.3"/><circle cx="-2.88" cy="3.96" r="4.3"/><circle cx="-4.66" cy="-1.51" r="4.3"/><circle r="3.4"/></symbol>
+					<symbol id="mtRing" viewBox="-10 -10 20 20"><path d="M0 -9A9 9 0 1 1 0 9A9 9 0 1 1 0 -9ZM0 -4.5A4.5 4.5 0 1 0 0 4.5A4.5 4.5 0 1 0 0 -4.5Z" fill-rule="evenodd"/></symbol>
+					<symbol id="mtKite" viewBox="-10 -10 20 20"><path d="M0 -10L7 -1.5L0 10L-7 -1.5Z"/></symbol>
+					<symbol id="mtDrop" viewBox="-10 -10 20 20"><path d="M0 -10C4 -4 7.5 -0.5 7.5 3A7.5 7.5 0 0 1 -7.5 3C-7.5 -0.5 -4 -4 0 -10Z"/></symbol>
 				</defs>
-				<path class="mp-track"></path>
-				<path class="mp-prog"></path>
-				<g class="mp-cap mp-cap--start"><circle class="cap-shadow" r="16"></circle><circle class="cap-dot" r="8"></circle></g>
-				<g class="mp-cap mp-cap--end"><circle class="cap-shadow" r="16"></circle><circle class="cap-dot" r="8"></circle></g>
-				<circle class="mp-pen" r="7"></circle>
+				<path class="trail-line" data-trail-line d="M0 0"/>
+				<g class="trail-shapes" data-trail-shapes></g>
 			</svg>
 
-			<ol class="mp-stops">
+			<ol class="steps">
 				{steps.map((step, i) => (
-					<li class="stop" data-index={i}>
-						<span class="stop-dot" aria-hidden="true"></span>
-						<div class="stop-body">
-							<p class="stop-n">{`0${i + 1}`}</p>
-							<div class="stop-row" tabindex="0">
-								<h3 class="stop-word">{step.label}</h3>
-								<span class="stop-tile" aria-hidden="true">
-									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" set:html={step.icon}></svg>
-								</span>
-							</div>
-							<div class="stop-desc">
-								<p class="card-kicker"><span>{`Step 0${i + 1}`}</span><i aria-hidden="true"></i><span>{step.label.replace('?', '')}</span></p>
-								<p class="card-text">{step.desc}</p>
-								<ol class="card-dots" aria-hidden="true">
-									{steps.map((_, k) => (
-										<li class:list={[k < i && 'is-past', k === i && 'is-now']}></li>
-									))}
-								</ol>
-							</div>
+					<li class={`step ${i % 2 === 0 ? 'step--left' : 'step--right'}`} data-step data-side={i % 2 === 0 ? 'left' : 'right'}>
+						<div class="vis" aria-hidden="true">
+							<span class="vis-num">{`0${i + 1}`}</span>
+							<svg class="vis-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" set:html={step.icon}></svg>
 						</div>
+						<h3 class="step__title">{step.label}</h3>
+						<p class="step__meta">{`Step 0${i + 1} of ${total}`}</p>
+						<p class="step__text">{step.desc}</p>
 					</li>
 				))}
 			</ol>
@@ -118,37 +110,43 @@ const steps = [
 <script>
 	import { gsap } from 'gsap';
 	import { ScrollTrigger } from 'gsap/ScrollTrigger';
+	import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
 
-	gsap.registerPlugin(ScrollTrigger);
+	/* Stars along the trail, after Animorio (free on your own sites:
+	   https://animorio.com/en/license/; GSAP keeps its own licence).
+	   An invisible trail winds between the steps. The scroll moves one number
+	   from 0 to 1; every shape asks MotionPathPlugin where on the trail that
+	   number, less its place in the train, falls, so the shapes start bunched up
+	   and end strung out along the whole way. */
+
+	/* ---- values to change ---- */
+	const COUNT = 24; // how many shapes travel along the trail
+	const SIZE = [26, 20]; // their size in pixels, on a computer and on a phone
+	// where the trip starts and ends: a point of the section meets a point of the
+	// screen. It starts as soon as the first step is coming into view (the demo
+	// waited until a fifth of the way down, which for seven steps is around step 4)
+	const TRAIL = ['top 80%', 'bottom 55%'];
+	const SPIN = 540; // how many degrees each shape turns on its way down
+	const SWING = 0.26; // how far from the middle the trail swings, as a share of the width
+
+	gsap.registerPlugin(ScrollTrigger, MotionPathPlugin);
 
 	const section = document.getElementById('method');
-	const wrap = document.getElementById('methodPath');
+	const wrap = document.querySelector<HTMLElement>('[data-trail-wrap]');
+	const svg = document.querySelector<SVGSVGElement>('[data-trail-svg]');
+	const line = document.querySelector<SVGPathElement>('[data-trail-line]');
+	const group = document.querySelector<SVGGElement>('[data-trail-shapes]');
 
-	if (section && wrap) {
-		const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-		const svg = wrap.querySelector<SVGSVGElement>('.mp-svg')!;
-		const track = wrap.querySelector<SVGPathElement>('.mp-track')!;
-		const prog = wrap.querySelector<SVGPathElement>('.mp-prog')!;
-		const pen = wrap.querySelector<SVGCircleElement>('.mp-pen')!;
-		const stops = Array.from(wrap.querySelectorAll<HTMLElement>('.stop'));
+	if (section && wrap && svg && line && group) {
+		const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		const steps = Array.from(wrap.querySelectorAll<HTMLElement>('[data-step]'));
 		const legend = Array.from(section.querySelectorAll<HTMLElement>('.method-legend li'));
-		const N = stops.length;
-
-		// each big word is split into letters so it can rise in one by one; the
-		// heading keeps its full text for screen readers
-		stops.forEach((el) => {
-			const word = el.querySelector<HTMLElement>('.stop-word');
-			if (!word || word.querySelector('.ch')) return;
-			const text = word.textContent ?? '';
-			word.setAttribute('aria-label', text);
-			word.innerHTML = Array.from(text)
-				.map((c) => `<span class="ch" aria-hidden="true">${c}</span>`)
-				.join('');
-		});
+		const NS = 'http://www.w3.org/2000/svg';
+		const SHAPES = ['mtStar', 'mtFlower', 'mtRing', 'mtKite', 'mtDrop'];
 
 		// ---------- entrance for the heading block ----------
 		const revealEls = Array.from(section.querySelectorAll<HTMLElement>('.reveal'));
-		if (reduceMotion || !('IntersectionObserver' in window)) {
+		if (REDUCED || !('IntersectionObserver' in window)) {
 			revealEls.forEach((el) => el.classList.add('is-visible'));
 		} else {
 			const io = new IntersectionObserver(
@@ -164,621 +162,153 @@ const steps = [
 			revealEls.forEach((el) => io.observe(el));
 		}
 
+		// ---------- the shapes ----------
+		const shapes: SVGUseElement[] = [];
+		for (let i = 0; i < COUNT; i += 1) {
+			const u = document.createElementNS(NS, 'use');
+			u.setAttribute('href', `#${SHAPES[i % SHAPES.length]}`);
+			group.appendChild(u);
+			shapes.push(u);
+		}
+
+		// ---------- the trail ----------
+		// a point at the top in the middle, one beside every step on the other
+		// side from its words, one at the bottom in the middle; then a smooth
+		// curve through them (each piece leans towards the points before and after it)
+		let raw: unknown = null;
+		let size = SIZE[0];
+		const trail = () => {
+			const box = wrap.getBoundingClientRect();
+			const w = box.width;
+			const h = box.height;
+			const phone = window.innerWidth <= 720;
+			size = phone ? SIZE[1] : SIZE[0];
+			svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+			const pts: Array<[number, number]> = [[w / 2, 0]];
+			steps.forEach((p, i) => {
+				const r = p.getBoundingClientRect();
+				const left = p.dataset.side === 'left';
+				const swing = phone ? (i % 2 ? -1 : 1) * SWING * 1.4 : (left ? 1 : -1) * SWING;
+				pts.push([w * (0.5 + swing), r.top - box.top + r.height / 2]);
+			});
+			pts.push([w / 2, h]);
+			let d = `M${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
+			for (let i = 0; i < pts.length - 1; i += 1) {
+				const a = pts[Math.max(0, i - 1)];
+				const b = pts[i];
+				const c = pts[i + 1];
+				const e = pts[Math.min(pts.length - 1, i + 2)];
+				const c1 = [b[0] + (c[0] - a[0]) / 6, b[1] + (c[1] - a[1]) / 6];
+				const c2 = [c[0] - (e[0] - b[0]) / 6, c[1] - (e[1] - b[1]) / 6];
+				d += `C${c1[0].toFixed(1)} ${c1[1].toFixed(1)} ${c2[0].toFixed(1)} ${c2[1].toFixed(1)} ${c[0].toFixed(1)} ${c[1].toFixed(1)}`;
+			}
+			line.setAttribute('d', d);
+			raw = MotionPathPlugin.getRawPath(line);
+			MotionPathPlugin.cacheRawPathMeasurements(raw as never);
+		};
+
+		const journey = { progress: 0 };
+		const place = () => {
+			if (!raw) return;
+			const gap = 1 / COUNT;
+			shapes.forEach((u, i) => {
+				const p = Math.max(0, Math.min(0.999, journey.progress - i * gap));
+				// a shape that has not had its turn yet stays hidden instead of
+				// waiting in a pile at the entrance, so the train comes in one by one
+				u.style.opacity = journey.progress - i * gap > 0 ? '1' : '0';
+				const at = MotionPathPlugin.getPositionOnPath(raw as never, p) as { x: number; y: number };
+				u.setAttribute('width', String(size));
+				u.setAttribute('height', String(size));
+				u.setAttribute('x', (-size / 2).toFixed(1));
+				u.setAttribute('y', (-size / 2).toFixed(1));
+				u.setAttribute('transform', `translate(${at.x.toFixed(1)} ${at.y.toFixed(1)}) rotate(${(p * SPIN).toFixed(1)})`);
+			});
+		};
+
+		// ---------- the current step ----------
+		// the last step whose top has risen above 62% of the screen, worked out
+		// from positions so it is right even after a jump
+		let shownStep = -2;
+		const setCurrent = (cur: number) => {
+			if (cur === shownStep) return;
+			shownStep = cur;
+			legend.forEach((li, i) => {
+				li.classList.toggle('is-done', i <= cur);
+				li.classList.toggle('is-current', i === cur);
+				const btn = li.querySelector('.legend-btn');
+				if (i === cur) btn?.setAttribute('aria-current', 'step');
+				else btn?.removeAttribute('aria-current');
+			});
+			steps.forEach((s, i) => {
+				s.classList.toggle('is-current', i === cur);
+				s.classList.toggle('is-past', i < cur);
+			});
+		};
+		const findCurrent = () => {
+			let cur = -1;
+			steps.forEach((s, i) => {
+				if (s.getBoundingClientRect().top < window.innerHeight * 0.62) cur = i;
+			});
+			setCurrent(cur);
+		};
+
 		// legend buttons jump to their step
-		let stopY: number[] = [];
-		// where to scroll so the line has just reached a step (set once the line is
-		// built; the line is drawn by path length, so a step's height on the page
-		// is not a reliable guide)
-		let scrollFor: ((i: number) => number) | null = null;
-		section.querySelectorAll<HTMLButtonElement>('.legend-btn').forEach((btn, i) =>
-			btn.addEventListener('click', () => {
-				const y = scrollFor
-					? scrollFor(i)
-					: wrap.getBoundingClientRect().top + window.scrollY + (stopY[i] ?? 0) - window.innerHeight * 0.4;
-				window.scrollTo({ top: y, behavior: reduceMotion ? 'auto' : 'smooth' });
+		legend.forEach((li, i) =>
+			li.querySelector('button')?.addEventListener('click', () => {
+				const r = steps[i].getBoundingClientRect();
+				window.scrollTo({ top: window.scrollY + r.top - window.innerHeight * 0.35, behavior: REDUCED ? 'auto' : 'smooth' });
 			}),
 		);
 
-		// the glow behind the line drifts a little against the scroll
-		if (!reduceMotion) {
-			gsap.to(section.querySelectorAll('.bg-well'), {
-				yPercent: (i: number) => (i % 2 ? -10 : 10),
-				ease: 'none',
-				scrollTrigger: { trigger: section, start: 'top bottom', end: 'bottom top', scrub: true },
+		// ---------- the drawings draw themselves as their step arrives ----------
+		steps.forEach((s) => {
+			const kids = Array.from(s.querySelectorAll<SVGElement>('.vis-icon > *'));
+			kids.forEach((k) => {
+				k.setAttribute('pathLength', '1');
+				k.style.strokeDasharray = '1';
+				k.style.strokeDashoffset = REDUCED ? '0' : '1';
 			});
-		}
-
-		// a smooth curve through the points. Each segment's handles are one third
-		// of that segment's own length, pointing along the local direction, so
-		// uneven point spacing (a long line next to a tight loop) can't make the
-		// curve overshoot into little hooks.
-		type P = { x: number; y: number };
-		const curve = (p: P[]) => {
-			const dir = (a: P, b: P) => {
-				const l = Math.hypot(b.x - a.x, b.y - a.y) || 1;
-				return { x: (b.x - a.x) / l, y: (b.y - a.y) / l };
-			};
-			let d = `M${p[0].x.toFixed(1)} ${p[0].y.toFixed(1)}`;
-			for (let k = 0; k < p.length - 1; k++) {
-				const p1 = p[k];
-				const p2 = p[k + 1];
-				const t1 = dir(p[k - 1] ?? p1, p2);
-				const t2 = dir(p1, p[k + 2] ?? p2);
-				const h = Math.hypot(p2.x - p1.x, p2.y - p1.y) / 3;
-				d += ` C${(p1.x + t1.x * h).toFixed(1)} ${(p1.y + t1.y * h).toFixed(1)} ${(p2.x - t2.x * h).toFixed(1)} ${(p2.y - t2.y * h).toFixed(1)} ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
-			}
-			return d;
-		};
-
-		// a loop-the-loop in the line between two stops: the line runs straight,
-		// curls once round a circle (drifting forward a little so it crosses
-		// itself) and carries on, all sitting on the line between the two stops
-		const loop = (a: P, b: P, flip: number, at: number): P[] => {
-			const dx = b.x - a.x;
-			const dy = b.y - a.y;
-			const L = Math.hypot(dx, dy);
-			const u = { x: dx / L, y: dy / L };
-			const n = { x: -u.y * flip, y: u.x * flip };
-			const R = Math.min(L * 0.17, 56);
-			const D = R * 2.5;
-			const base = { x: a.x + u.x * L * at, y: a.y + u.y * L * at };
-			const out: P[] = [];
-			const steps = 40;
-			for (let k = 0; k <= steps; k++) {
-				const th = (k / steps) * Math.PI * 2;
-				const xl = R * Math.sin(th) + (D * th) / (Math.PI * 2);
-				const yl = R * (1 - Math.cos(th));
-				out.push({ x: base.x + u.x * xl + n.x * yl, y: base.y + u.y * xl + n.y * yl });
-			}
-			return out;
-		};
-		const NS = 'http://www.w3.org/2000/svg';
-
-		// ---------- path styles: one for wider screens, one for phones ----------
-		type Cfg = {
-			plan: (W: number, mobile: boolean) => Array<[number, number]>;
-			start: (W: number, H: number, lg: number, rg: number) => P;
-			end: (W: number, H: number, lg: number, rg: number) => P;
-			loops: Set<number>;
-			free: boolean;
-			k: number;
-			amp: number;
-			bow: number;
-			wobble: number;
-			doodles: Set<number>;
-			seed: number;
-		};
-		const edgeStart = (W: number, H: number, lg: number, rg: number): P => ({ x: W + rg - 34, y: H * 0.02 });
-		const edgeEnd = (W: number, H: number, lg: number, rg: number): P => ({ x: -lg + 34, y: H * 0.955 });
-		const VARIANTS: Record<string, Cfg> = {
-			// phones: alternating sides, one loop
-			classic: {
-				plan: (W, m) => {
-					const r = W * (m ? 0.76 : 0.84);
-					const l = W * (m ? 0.24 : 0.16);
-					return [[r, 0.07], [l, 0.205], [r, 0.345], [l, 0.49], [r, 0.64], [W * 0.34, 0.79], [W * (m ? 0.14 : 0.1), 0.92]];
-				},
-				start: edgeStart,
-				end: edgeEnd,
-				loops: new Set([0]),
-				free: false,
-				k: 0.3,
-				amp: 0,
-				bow: 0.16,
-				wobble: 0,
-				doodles: new Set(),
-				seed: 1,
-			},
-			// phones: a straight line down the left with every step hung on it
-			timeline: {
-				plan: (W) => Array.from({ length: 7 }, (_, i): [number, number] => [W * 0.1, 0.05 + i * 0.135]),
-				start: (W) => ({ x: W * 0.1, y: 0 }),
-				end: (W, H) => ({ x: W * 0.1, y: H }),
-				loops: new Set(),
-				free: false,
-				k: 0.3,
-				amp: 0,
-				bow: 0,
-				wobble: 0,
-				doodles: new Set(),
-				seed: 1,
-			},
-			// wider screens: one flowing line at irregular spots, a few drawings
-			mix: {
-				plan: (W) => [[W * 0.84, 0.06], [W * 0.3, 0.19], [W * 0.7, 0.35], [W * 0.16, 0.5], [W * 0.78, 0.66], [W * 0.38, 0.8], [W * 0.12, 0.93]],
-				start: edgeStart,
-				end: edgeEnd,
-				loops: new Set([0]),
-				free: true,
-				k: 0.16,
-				amp: 0.3,
-				bow: 0.16,
-				wobble: 0,
-				doodles: new Set([2, 3, 6]),
-				seed: 7,
-			},
-		};
-		const variant = 'mix';
-
-		// small seeded random numbers, so a rebuild draws the same line
-		const mulberry = (a: number) => () => {
-			a |= 0;
-			a = (a + 0x6d2b79f5) | 0;
-			let t = Math.imul(a ^ (a >>> 15), 1 | a);
-			t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-			return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-		};
-
-		// a hand-drawn look: resample the line and nudge each sample sideways
-		const wobbleLine = (d: string, amount: number, rnd: () => number) => {
-			track.setAttribute('d', d);
-			const L = track.getTotalLength();
-			const n = Math.max(8, Math.round(L / 16));
-			const out: P[] = [];
-			let drift = 0;
-			for (let k = 0; k <= n; k++) {
-				const a = track.getPointAtLength((k / n) * L);
-				const b = track.getPointAtLength(Math.min(L, (k / n) * L + 2));
-				const l = Math.hypot(b.x - a.x, b.y - a.y) || 1;
-				drift = drift * 0.6 + (rnd() - 0.5) * amount * 1.6;
-				out.push({ x: a.x + (-(b.y - a.y) / l) * drift, y: a.y + ((b.x - a.x) / l) * drift });
-			}
-			return curve(out);
-		};
-
-		// little drawings that appear beside a step once the line reaches it
-		const spiral = () => {
-			let d = '';
-			for (let k = 0; k <= 70; k++) {
-				const t = (k / 70) * Math.PI * 5.5;
-				const r = 2 + t * 2.4;
-				d += `${k ? 'L' : 'M'}${(r * Math.cos(t)).toFixed(1)} ${(r * Math.sin(t)).toFixed(1)} `;
-			}
-			return d;
-		};
-		const DOODLES: string[] = [
-			'M0 14 C16 -12 42 -12 56 10 M46 3 L56 10 L48 19', // an arrow curling toward the answer
-			'M0 0 q7 -9 14 0 t14 0 t14 0 t14 0 t14 0', // a quick underline squiggle
-			spiral(), // thinking in circles
-			'M0 0 H18 M18 0 C32 0 36 -16 52 -16 M18 0 C32 0 36 16 52 16 M18 0 H56 M52 -20 l8 8 m0 -8 l-8 8 M52 12 l8 8 m0 -8 l-8 8', // a fork: two attempts fail, one goes on
-			'M0 6 L12 20 L40 -14', // a tick
-			'M0 0 L32 -16 M0 0 L32 16 M32 -16 L32 16 M-5 0 a5 5 0 1 0 10 0 a5 5 0 1 0 -10 0 M27 -16 a5 5 0 1 0 10 0 a5 5 0 1 0 -10 0 M27 16 a5 5 0 1 0 10 0 a5 5 0 1 0 -10 0', // connected dots
-			'M0 -20 L5 -5 L20 0 L5 5 L0 20 L-5 5 L-20 0 L-5 -5 Z', // a spark
-		];
-		type Spot = { dir: number; dx: number; dy: number };
-		const drawDoodles = (cfg: Cfg, pts: P[], spots: Spot[]) => {
-			svg.querySelector('.mp-doodles')?.remove();
-			if (!cfg.doodles.size) return;
-			const g = document.createElementNS(NS, 'g');
-			g.setAttribute('class', 'mp-doodles');
-			pts.forEach((p, i) => {
-				if (!cfg.doodles.has(i)) return;
-				const sp = spots[i] ?? { dir: 1, dx: 88, dy: -46 };
-				const dir = sp.dir;
-				const wrapG = document.createElementNS(NS, 'g');
-				wrapG.setAttribute('transform', `translate(${(p.x + dir * sp.dx).toFixed(1)} ${(p.y + sp.dy).toFixed(1)}) scale(${dir} 1)`);
-				const path = document.createElementNS(NS, 'path');
-				path.setAttribute('d', DOODLES[i]);
-				path.setAttribute('pathLength', '1');
-				path.setAttribute('class', 'mp-doodle');
-				path.dataset.stop = String(i);
-				path.setAttribute('fill', 'none');
-				path.setAttribute('stroke', '#c4b5fd');
-				path.setAttribute('stroke-width', '2.2');
-				path.setAttribute('stroke-linecap', 'round');
-				path.setAttribute('stroke-linejoin', 'round');
-				path.style.strokeDasharray = '1';
-				path.style.strokeDashoffset = '1';
-				path.style.transition = 'stroke-dashoffset 0.9s cubic-bezier(0.16, 1, 0.3, 1)';
-				path.style.filter = 'drop-shadow(0 0 6px rgba(139,92,246,0.6))';
-				wrapG.appendChild(path);
-				g.appendChild(wrapG);
-			});
-			svg.appendChild(g);
-		};
-		const setDoodles = (reached: (i: number) => boolean) =>
-			svg.querySelectorAll<SVGPathElement>('.mp-doodle').forEach((el) => {
-				el.style.strokeDashoffset = reached(Number(el.dataset.stop)) ? '0' : '1';
-			});
-
-		// a slim bar that stays on screen once the step list has scrolled away:
-		// where you are, and a dot per step to jump to
-		let setSticky: (cur: number) => void = () => {};
-		if (!reduceMotion) {
-			const names = stops.map((el, i) => el.querySelector('.stop-word')?.getAttribute('aria-label') ?? `Step ${i + 1}`);
-			const bar = document.createElement('div');
-			bar.className = 'method-sticky';
-			bar.setAttribute('role', 'navigation');
-			bar.setAttribute('aria-label', 'Method steps');
-			bar.innerHTML = `<span class="ms-count">01 / 0${N}</span><span class="ms-name">${names[0]}</span><span class="ms-dots">${stops
-				.map((_, i) => `<button type="button" class="ms-dot" aria-label="Go to step ${i + 1}: ${names[i]}"></button>`)
-				.join('')}</span>`;
-			document.body.appendChild(bar);
-			const count = bar.querySelector<HTMLElement>('.ms-count')!;
-			const nameEl = bar.querySelector<HTMLElement>('.ms-name')!;
-			const dots = Array.from(bar.querySelectorAll<HTMLButtonElement>('.ms-dot'));
-			dots.forEach((d, i) => d.addEventListener('click', () => legend[i].querySelector('button')?.click()));
-			setSticky = (cur) => {
-				const c = Math.max(0, cur);
-				count.textContent = `0${c + 1} / 0${N}`;
-				nameEl.textContent = names[c];
-				dots.forEach((d, i) => {
-					d.classList.toggle('is-on', i <= c);
-					d.classList.toggle('is-cur', i === c);
-					if (i === c) d.setAttribute('aria-current', 'step');
-					else d.removeAttribute('aria-current');
-				});
-			};
-			setSticky(0);
-			const legendEl = section.querySelector<HTMLElement>('.method-legend');
-			let queued = false;
-			const place = () => {
-				queued = false;
-				const sr = section.getBoundingClientRect();
-				const legendGone = !legendEl || legendEl.getBoundingClientRect().bottom < 76 || getComputedStyle(legendEl).display === 'none';
-				const headGone = section.querySelector('.method-head')!.getBoundingClientRect().bottom < 76;
-				bar.classList.toggle('is-on', (legendGone && headGone) && sr.bottom > 240 && sr.top < window.innerHeight);
-			};
-			const queue = () => {
-				if (!queued) {
-					queued = true;
-					requestAnimationFrame(place);
-				}
-			};
-			window.addEventListener('scroll', queue, { passive: true });
-			window.addEventListener('resize', queue);
-			place();
-		}
-
-		let stopTick: (() => void) | null = null;
-		let ctx: gsap.Context | null = null;
-		let width = 0;
-
-		const build = () => {
-			ctx?.revert();
-			stopTick?.();
-			stopTick = null;
-			wrap.classList.add('is-ready');
-
-			const W = wrap.clientWidth;
-			width = W;
-			const mobile = W < 700;
-			wrap.classList.toggle('is-mobile', mobile);
-
-			// the whole line is about three screens tall, so the last step arrives
-			// after roughly three scrolls
-			const vh = window.innerHeight;
-			// three screens tall: steps 1-2 on the first screen, 3-4 on the second
-			// and 5-7 on the third, as in the sketch
-			// about a screen and a quarter on desktop: the stops are close enough
-			// that three or four are visible together. The explanation opens beside
-			// each word, so the tighter spacing doesn't make it collide with the next.
-			const H = Math.max(mobile ? 1500 : 1100, Math.min(1.25 * vh, 1500));
-			wrap.style.height = `${H}px`;
-			svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-			svg.setAttribute('width', String(W));
-			svg.setAttribute('height', String(H));
-			svg.querySelector('#mpGrad')?.setAttribute('y2', String(H));
-
-			const box = wrap.getBoundingClientRect();
-			const rightGap = Math.max(0, window.innerWidth - box.right);
-			const leftGap = Math.max(0, box.left);
-			// phones always use the plain path; the styles are for wider screens
-			const cfg = mobile ? VARIANTS.timeline : VARIANTS[variant];
-			const stopPts: P[] = cfg.plan(W, mobile).map(([x, fy]) => ({ x, y: H * fy }));
-			const startPt = cfg.start(W, H, leftGap, rightGap);
-			const endPt = cfg.end(W, H, leftGap, rightGap);
-			const rnd = mulberry(cfg.seed);
-			const minX = -leftGap + 24;
-			const maxX = W + rightGap - 24;
-			// every stop is passed on a diagonal aimed at its neighbours, with a
-			// control point just before and after it
-			const near = (p: P, q: P, k: number): P => ({ x: p.x + (q.x - p.x) * k, y: p.y + (q.y - p.y) * k });
-			const pts: P[] = [startPt];
-			// the line's first and last stretches get a bend too, so it doesn't
-			// arrive or leave in a ruler-straight run
-			const bendBetween = (a: P, b: P): P => {
-				const dx = b.x - a.x;
-				const dy = b.y - a.y;
-				const L = Math.hypot(dx, dy) || 1;
-				const o = (rnd() - 0.5) * 2 * cfg.amp * L * 0.7;
-				return { x: Math.min(maxX, Math.max(minX, a.x + dx * 0.5 + (-dy / L) * o)), y: a.y + dy * 0.5 + (dx / L) * o };
-			};
-			if (cfg.free) pts.push(bendBetween(startPt, stopPts[0]));
-			stopPts.forEach((p, i) => {
-				const pre = i > 0 ? near(p, stopPts[i - 1], cfg.k) : null;
-				const post = i < N - 1 ? near(p, stopPts[i + 1], cfg.k) : null;
-				if (pre) pts.push(pre);
-				pts.push(p);
-				if (post) {
-					pts.push(post);
-					const nextPre = near(stopPts[i + 1], p, cfg.k);
-					const dx = nextPre.x - post.x;
-					const dy = nextPre.y - post.y;
-					if (cfg.loops.has(i)) {
-						pts.push(...loop(post, nextPre, i % 2 === 0 ? 1 : -1, 0.5));
-					} else if (cfg.free) {
-						// two bends of random size and direction, so no two stretches look alike
-						const L = Math.hypot(dx, dy) || 1;
-						const nx = -dy / L;
-						const ny = dx / L;
-						const a1 = (rnd() - 0.5) * 2 * cfg.amp * L;
-						const a2 = (rnd() - 0.5) * 2 * cfg.amp * L;
-						const clampX = (x: number) => Math.min(maxX, Math.max(minX, x));
-						pts.push({ x: clampX(post.x + dx * 0.33 + nx * a1), y: post.y + dy * 0.33 + ny * a1 });
-						pts.push({ x: clampX(post.x + dx * 0.67 + nx * a2), y: post.y + dy * 0.67 + ny * a2 });
-					} else {
-						// a soft bow so the stretch between stops is a curve, not a ruler line
-						const bow = (i % 2 === 0 ? -1 : 1) * cfg.bow;
-						pts.push({ x: post.x + dx / 2 - dy * bow, y: post.y + dy / 2 + dx * bow });
-					}
-				}
-			});
-			if (cfg.free) pts.push(bendBetween(stopPts[N - 1], endPt));
-			pts.push(endPt);
-
-			let d = curve(pts);
-			if (cfg.wobble) d = wobbleLine(d, cfg.wobble, rnd);
-			[track, prog].forEach((path) => {
-				path.setAttribute('d', d);
-				path.setAttribute('pathLength', '1');
-			});
-
-			const placeCap = (sel: string, pt: P) => {
-				svg.querySelectorAll<SVGCircleElement>(`${sel} circle`).forEach((c, k) => {
-					c.setAttribute('cx', (pt.x + 0).toFixed(1));
-					c.setAttribute('cy', (pt.y + 0).toFixed(1));
-				});
-			};
-			placeCap('.mp-cap--start', startPt);
-			placeCap('.mp-cap--end', endPt);
-
-			stopY = stopPts.map((p) => p.y);
-			stops.forEach((el, i) => {
-				el.style.left = `${stopPts[i].x}px`;
-				el.style.top = `${stopPts[i].y}px`;
-				el.dataset.side = stopPts[i].x > W * 0.5 ? 'node-right' : 'node-left';
-			});
-
-			// where along the line each stop sits (0..1), found by sampling
-			const len = track.getTotalLength();
-			// the part of the line that is still ahead is dotted; the bright line
-			// drawn over it is the part already travelled. (pathLength is 1, so
-			// dash sizes are fractions of the whole line.)
-			track.style.strokeDasharray = `${0.5 / len} ${12 / len}`;
-			const samples = 1400;
-			const frac = stops.map((_, i) => {
-				const target = stopPts[i];
-				let best = 0;
-				let bestDist = Infinity;
-				for (let s = 0; s <= samples; s++) {
-					const pt = track.getPointAtLength((s / samples) * len);
-					const dist = (pt.x - target.x) ** 2 + (pt.y - target.y) ** 2;
-					if (dist < bestDist) {
-						bestDist = dist;
-						best = s / samples;
-					}
-				}
-				return best;
-			});
-
-			// For each step, choose the side (and, if needed, a small lift) where its
-			// word does not sit on the line. The line is sampled every 6px and each
-			// option's word box is tested against it.
-			const dirs: number[] = stopPts.map((p) => (p.x > W * 0.5 ? 1 : -1));
-			stops.forEach((el) => el.style.setProperty('--wy', '0px'));
-			if (!mobile) {
-				const dense: P[] = [];
-				for (let at = 0; at <= len; at += 6) {
-					const q = track.getPointAtLength(at);
-					dense.push({ x: q.x, y: q.y });
-				}
-				type Box = { x0: number; x1: number; y0: number; y1: number };
-				const hits = (r: Box) => {
-					const m = 8;
-					let n = 0;
-					for (const q of dense) if (q.x > r.x0 - m && q.x < r.x1 + m && q.y > r.y0 - m && q.y < r.y1 + m) n++;
-					return n;
-				};
-				stops.forEach((el, i) => {
-					const p = stopPts[i];
-					const word = el.querySelector<HTMLElement>('.stop-word')!;
-					const tile = el.querySelector<HTMLElement>('.stop-tile')!.offsetWidth || 44;
-					const gap = parseFloat(getComputedStyle(el.querySelector('.stop-row')!).columnGap) || 14;
-					const w = word.offsetWidth;
-					const h = word.offsetHeight;
-					const prefer: 'left' | 'right' = p.x > W * 0.5 ? 'left' : 'right';
-					const other: 'left' | 'right' = prefer === 'left' ? 'right' : 'left';
-					const box = (side: 'left' | 'right', dy: number): Box =>
-						side === 'right'
-							? { x0: p.x + tile / 2 + gap, x1: p.x + tile / 2 + gap + w, y0: p.y - h / 2 + dy, y1: p.y + h / 2 + dy }
-							: { x0: p.x - tile / 2 - gap - w, x1: p.x - tile / 2 - gap, y0: p.y - h / 2 + dy, y1: p.y + h / 2 + dy };
-					const lift = h / 2 + 10;
-					const tries: Array<['left' | 'right', number]> = [[prefer, 0], [other, 0], [prefer, -lift], [prefer, lift], [other, -lift], [other, lift]];
-					let best = tries[0];
-					let bestHits = Infinity;
-					for (const t of tries) {
-						const n = hits(box(t[0], t[1]));
-						if (n < bestHits) {
-							best = t;
-							bestHits = n;
-							if (n === 0) break;
-						}
-					}
-					// the word sits to the right of the node ("node-left") or to the left of it
-					el.dataset.side = best[0] === 'right' ? 'node-left' : 'node-right';
-					el.style.setProperty('--wy', `${best[1].toFixed(1)}px`);
-					dirs[i] = best[0] === 'right' ? -1 : 1;
+			if (!REDUCED) {
+				ScrollTrigger.create({
+					trigger: s,
+					start: 'top 82%',
+					once: true,
+					onEnter: () => gsap.to(kids, { strokeDashoffset: 0, duration: 1, ease: 'power2.out', stagger: 0.14 }),
 				});
 			}
-			// each drawing takes the first spot beside its node that the line misses,
-			// preferring the side away from the word
-			const spots: Spot[] = [];
-			if (!mobile) {
-				const dense2: P[] = [];
-				for (let at = 0; at <= len; at += 6) {
-					const q = track.getPointAtLength(at);
-					dense2.push({ x: q.x, y: q.y });
-				}
-				stopPts.forEach((p, i) => {
-					if (!cfg.doodles.has(i)) return;
-					const tries: Spot[] = [
-						{ dir: dirs[i], dx: 88, dy: -46 },
-						{ dir: -dirs[i], dx: 88, dy: -46 },
-						{ dir: dirs[i], dx: 88, dy: 50 },
-						{ dir: -dirs[i], dx: 88, dy: 50 },
-						{ dir: dirs[i], dx: 150, dy: -46 },
-						{ dir: -dirs[i], dx: 150, dy: -46 },
-					];
-					let best = tries[0];
-					let bestHits = Infinity;
-					for (const t of tries) {
-						const cx = p.x + t.dir * (t.dx + 30);
-						const cy = p.y + t.dy;
-						let n = 0;
-						for (const q of dense2) if (Math.abs(q.x - cx) < 52 && Math.abs(q.y - cy) < 52) n++;
-						if (n < bestHits) {
-							best = t;
-							bestHits = n;
-							if (n === 0) break;
-						}
-					}
-					spots[i] = best;
-				});
-			}
-			drawDoodles(cfg, stopPts, spots);
+		});
 
-			const movePen = (p: number) => {
-				const pt = prog.getPointAtLength(p * len);
-				pen.setAttribute('cx', pt.x.toFixed(1));
-				pen.setAttribute('cy', pt.y.toFixed(1));
-			};
-
-			// finished state: used when motion is off
-			prog.style.strokeDasharray = '1';
-			prog.style.strokeDashoffset = '0';
-			movePen(1);
-			legend.forEach((li) => li.classList.add('is-done'));
-			stops.forEach((el) => el.classList.add('is-reached'));
-			setDoodles(() => true);
-
-			if (reduceMotion) {
-				// no scroll story to follow, so every explanation stays open
-				stops.forEach((el) => el.classList.add('is-current'));
+		// ---------- start ----------
+		const start = () => {
+			trail();
+			if (REDUCED) {
+				// nothing travels: the shapes are already strung out along the whole trail
+				journey.progress = 1;
+				place();
+				findCurrent();
+				gsap.from(group, { opacity: 0, duration: 0.6, ease: 'power1.out' });
 				return;
 			}
-
-			ctx = gsap.context(() => {
-				const parts = (el: HTMLElement) => ({
-					dot: el.querySelector('.stop-dot')!,
-					n: el.querySelector('.stop-n')!,
-					icon: el.querySelector('.stop-tile')!,
-					word: el.querySelector('.stop-word')!,
-					desc: el.querySelector('.stop-desc')!,
-				});
-
-				gsap.set(prog, { strokeDashoffset: 1 });
-				gsap.set(pen, { opacity: 0 });
-				legend.forEach((li) => li.classList.remove('is-done'));
-				stops.forEach((el) => el.classList.remove('is-reached', 'is-current'));
-
-				// the legend lights up as the line passes each step; the newest
-				// step reached is "current" and keeps its explanation open
-				let tlRef: gsap.core.Timeline | null = null;
-				const paint = () => {
-					if (!tlRef) return;
-					const p = tlRef.progress();
-					let cur = -1;
-					stops.forEach((el, i) => {
-						const reached = p >= frac[i] - 0.01;
-						el.classList.toggle('is-reached', reached);
-						legend[i].classList.toggle('is-done', reached);
-						if (reached) cur = i;
-					});
-					stops.forEach((el, i) => el.classList.toggle('is-current', i === cur));
-					setDoodles((i) => stops[i].classList.contains('is-reached'));
-					setSticky(cur);
-					legend.forEach((li, i) => {
-						li.classList.toggle('is-current', i === cur);
-						const btn = li.querySelector('.legend-btn');
-						if (i === cur) btn?.setAttribute('aria-current', 'step');
-						else btn?.removeAttribute('aria-current');
-					});
-				};
-
-				// The timeline is driven by hand: scroll sets where it should be, and a
-				// short ease carries it there. Arriving at the section also draws the line
-				// as far as the first step on its own, so the path is never an empty void.
-				const tl = gsap.timeline({ defaults: { ease: 'none' }, paused: true, onUpdate: paint });
-				tlRef = tl;
-				let target = 0;
-				let shown = 0;
-				const floor = { v: 0 };
-				const drive = ScrollTrigger.create({
-					trigger: wrap,
-					start: 'top 92%',
-					end: 'bottom 88%',
-					invalidateOnRefresh: true,
-					onUpdate: (self) => (target = self.progress),
-					onRefresh: (self) => (target = self.progress),
-				});
-				scrollFor = (i) => drive.start + Math.min(1, frac[i] + 0.012) * (drive.end - drive.start);
-				const tick = () => {
-					const goal = Math.max(target, floor.v);
-					const k = 1 - Math.pow(0.9, Math.min(gsap.ticker.deltaRatio(), 4));
-					shown += (goal - shown) * k;
-					if (Math.abs(goal - shown) < 0.0002) shown = goal;
-					tl.progress(shown);
-				};
-				gsap.ticker.add(tick);
-				stopTick = () => gsap.ticker.remove(tick);
-				ScrollTrigger.create({
-					trigger: section,
-					start: 'top 90%',
-					once: true,
-					onEnter: () => gsap.to(floor, { v: Math.min(frac[0] + 0.04, 0.16), duration: 1.6, delay: 0.3, ease: 'power2.out' }),
-				});
-
-				// the line draws itself, and a dot rides its tip
-				tl.to(prog, { strokeDashoffset: 0, duration: 1 }, 0);
-				const head = { p: 0 };
-				tl.to(head, { p: 1, duration: 1, onUpdate: () => movePen(head.p) }, 0);
-				tl.fromTo(pen, { opacity: 0 }, { opacity: 1, duration: 0.02 }, 0);
-				tl.to(pen, { opacity: 0, duration: 0.03 }, 0.97);
-
-				// each stop opens as the line reaches it
-				stops.forEach((el, i) => {
-					const o = parts(el);
-					const at = Math.max(0, frac[i] - 0.035);
-					gsap.set([o.dot, o.n, o.icon, o.word], { opacity: 0 });
-					tl.fromTo(o.dot, { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.04, ease: 'back.out(3)' }, at);
-					tl.fromTo(o.n, { opacity: 0, x: -8 }, { opacity: 1, x: 0, duration: 0.04, ease: 'power2.out' }, at + 0.005);
-					tl.fromTo(o.icon, { scale: 0, rotation: -30, opacity: 0 }, { scale: 1, rotation: -4, opacity: 1, duration: 0.06, ease: 'back.out(2.5)' }, at + 0.01);
-					tl.fromTo(o.word, { opacity: 0 }, { opacity: 1, duration: 0.01 }, at + 0.01);
-					tl.fromTo(
-						o.word.querySelectorAll('.ch'),
-						{ y: 34, opacity: 0, rotate: 7 },
-						{ y: 0, opacity: 1, rotate: 0, duration: 0.05, stagger: 0.006, ease: 'back.out(1.6)' },
-						at + 0.01,
-					);
-				});
-			}, wrap);
+			place();
+			gsap.to(journey, {
+				progress: 1,
+				ease: 'none',
+				onUpdate: place,
+				scrollTrigger: { trigger: wrap, start: TRAIL[0], end: TRAIL[1], scrub: true, invalidateOnRefresh: true },
+			});
+			ScrollTrigger.create({
+				trigger: wrap,
+				start: 'top bottom',
+				end: 'bottom top',
+				onUpdate: findCurrent,
+				onRefresh: findCurrent,
+			});
+			ScrollTrigger.addEventListener('refreshInit', trail);
+			findCurrent();
 		};
 
-		build();
-
-		// rebuild when the available width changes (not on every height change,
-		// which would fire constantly with mobile address bars)
-		let timer: ReturnType<typeof setTimeout>;
-		window.addEventListener('resize', () => {
-			clearTimeout(timer);
-			timer = setTimeout(() => {
-				if (Math.abs(wrap.clientWidth - width) > 1) {
-					build();
-					ScrollTrigger.refresh();
-				}
-			}, 200);
-		});
+		if (document.fonts && document.fonts.ready) document.fonts.ready.then(start, start);
+		else start();
 	}
 </script>
 
@@ -940,16 +470,6 @@ const steps = [
 		border-radius: 4px;
 	}
 
-	.sub-hint {
-		display: none;
-	}
-
-	@media (hover: hover) and (pointer: fine) {
-		.sub-hint {
-			display: inline;
-		}
-	}
-
 	.method-legend li {
 		gap: 0;
 	}
@@ -992,596 +512,182 @@ const steps = [
 		box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.28), 0 0 12px rgba(167, 139, 250, 0.8);
 	}
 
-	/* ---------- the path ----------
-	   Without JavaScript this is a plain numbered list. With it, the stops are
-	   placed along a line that is drawn into the svg. */
-	.mp {
+	/* ---------- the trail ----------
+	   The steps sit in two columns, one on the left and the next on the right.
+	   Behind them an svg as big as the whole list holds an invisible trail, drawn
+	   by the script between the steps, and the little shapes that travel along it. */
+	.method {
+		/* the shapes on the trail, in turn, lifted for a dark page */
+		--shape-1: #ff6b81;
+		--shape-2: #ffc247;
+		--shape-3: #3fd0be;
+		--shape-4: #a78bfa;
+		--shape-5: #f3f3f1;
+		--accent-soft: #8f7df0;
+	}
+
+	.mt {
 		position: relative;
+		padding: clamp(0.5rem, 2vh, 1.5rem) 0 10vh;
 	}
 
-	.mp-svg {
-		display: none;
-	}
-
-	.mp-stops {
-		margin: 0;
-		padding: 0;
-		list-style: none;
-	}
-
-	.stop {
-		padding: 1.25rem 0;
-		border-top: 1px solid var(--border-soft);
-	}
-
-	.stop-dot {
-		display: none;
-	}
-
-	.stop-n {
-		display: inline-block;
-		margin: 0 0 0.35rem;
-		padding: 0.15rem 0.6rem;
-		background: rgba(139, 92, 246, 0.12);
-		border: 1px solid rgba(167, 139, 250, 0.4);
-		border-radius: 999px;
-		font-family: var(--mono);
-		font-size: 0.74rem;
-		letter-spacing: 0.1em;
-		color: var(--accent-bright);
-	}
-
-	/* letters are animated one at a time, so they must be able to move */
-	.stop-word .ch {
-		display: inline-block;
-	}
-
-	.stop-row {
-		display: flex;
-		align-items: center;
-		gap: clamp(0.6rem, 1.2vw, 1rem);
-	}
-
-	/* glass icon tile, like the hero's chips */
-	.stop-tile {
-		display: grid;
-		place-items: center;
-		flex: none;
-		width: clamp(36px, 2.8vw, 46px);
-		height: clamp(36px, 2.8vw, 46px);
-		color: var(--accent-bright);
-		background: linear-gradient(145deg, rgba(167, 139, 250, 0.22), rgba(109, 40, 217, 0.08));
-		border: 1px solid rgba(167, 139, 250, 0.35);
-		border-radius: 28%;
-		transform: rotate(-5deg);
-		box-shadow: 0 8px 24px rgba(109, 40, 217, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.12);
-		-webkit-backdrop-filter: blur(10px);
-		backdrop-filter: blur(10px);
-	}
-
-	.stop-tile svg {
-		width: 54%;
-		height: 54%;
-	}
-
-	/* the word is an outline until the line reaches it, then fills in */
-	.stop-word {
-		margin: 0;
-		font-size: clamp(1.5rem, 2.5vw, 2.4rem);
-		font-weight: 700;
-		letter-spacing: -0.035em;
-		line-height: 1;
-		text-transform: uppercase;
-	}
-
-	.stop-desc {
-		display: inline-block;
-		margin: 0.7rem 0 0;
-		max-width: 32ch;
-		text-align: left;
-	}
-
-	.card-kicker {
-		display: flex;
-		align-items: center;
-		gap: 0.55rem;
-		margin: 0 0 0.45rem;
-		font-family: var(--mono);
-		font-size: 0.66rem;
-		letter-spacing: 0.12em;
-		text-transform: uppercase;
-		color: var(--accent-bright);
-	}
-
-	.card-kicker i {
-		flex: 1;
-		min-width: 16px;
-		height: 1px;
-		background: linear-gradient(90deg, rgba(167, 139, 250, 0.55), transparent);
-	}
-
-	.card-kicker span:last-child {
-		color: rgba(243, 243, 241, 0.55);
-	}
-
-	.card-text {
-		margin: 0 0 0.7rem;
-		font-size: 0.9rem;
-		line-height: 1.5;
-		color: rgba(243, 243, 241, 0.92);
-	}
-
-	.card-dots {
-		display: flex;
-		gap: 5px;
-		margin: 0;
-		padding: 0;
-		list-style: none;
-	}
-
-	.card-dots li {
-		width: 14px;
-		height: 3px;
-		border-radius: 2px;
-		background: rgba(255, 255, 255, 0.14);
-	}
-
-	.card-dots li.is-past {
-		background: rgba(167, 139, 250, 0.45);
-	}
-
-	.card-dots li.is-now {
-		width: 26px;
-		background: var(--accent-bright);
-		box-shadow: 0 0 8px rgba(167, 139, 250, 0.7);
-	}
-
-	/* ----- with JS: a zig-zag line with the stops hung on it ----- */
-	.mp.is-ready .mp-svg {
-		display: block;
+	.trail-svg {
 		position: absolute;
 		inset: 0;
+		width: 100%;
+		height: 100%;
 		overflow: visible;
 		pointer-events: none;
 	}
 
-	.mp-track,
-	.mp-prog {
-		stroke-width: 4;
-		stroke-linecap: round;
-		stroke-linejoin: round;
+	.trail-line {
+		fill: none;
+		stroke: none;
 	}
 
-	.mp-track {
-		stroke: rgba(167, 139, 250, 0.42);
-		stroke-width: 3;
+	/* the shapes are made by the script, so they carry no component attribute */
+	.mt :global(.trail-shapes use:nth-of-type(5n + 1)) {
+		fill: var(--shape-1);
 	}
 
-	.mp-prog {
-		stroke: url(#mpGrad);
-		filter: drop-shadow(0 0 5px rgba(139, 92, 246, 0.35));
+	.mt :global(.trail-shapes use:nth-of-type(5n + 2)) {
+		fill: var(--shape-2);
 	}
 
-	.mp.is-mobile .mp-track,
-	.mp.is-mobile .mp-prog {
-		stroke-width: 3;
+	.mt :global(.trail-shapes use:nth-of-type(5n + 3)) {
+		fill: var(--shape-3);
 	}
 
-	/* round heads at both ends of the line, with a dark offset shadow */
-	.cap-shadow {
-		fill: rgba(139, 92, 246, 0.16);
+	.mt :global(.trail-shapes use:nth-of-type(5n + 4)) {
+		fill: var(--shape-4);
 	}
 
-	.cap-dot {
-		fill: var(--accent-bright);
-		stroke: var(--bg);
-		stroke-width: 3;
-		filter: drop-shadow(0 0 6px rgba(139, 92, 246, 0.6));
+	.mt :global(.trail-shapes use:nth-of-type(5n + 5)) {
+		fill: var(--shape-5);
 	}
 
-	.mp.is-mobile .cap-shadow {
-		r: 13px;
-	}
-
-	.mp.is-mobile .cap-dot {
-		r: 6.5px;
-	}
-
-	.mp-pen {
-		r: 6px;
-		fill: #ffffff;
-		filter: drop-shadow(0 0 8px rgba(167, 139, 250, 0.9));
-	}
-
-	.mp.is-ready .mp-stops {
-		position: absolute;
-		inset: 0;
-	}
-
-	.mp.is-ready .stop {
-		position: absolute;
-		width: 0;
-		height: 0;
-		padding: 0;
-		border: 0;
-	}
-
-	.mp.is-ready .stop-dot {
-		display: block;
-		position: absolute;
-		left: -7px;
-		top: -7px;
-		width: 14px;
-		height: 14px;
-		background: var(--bg);
-		border: 2px solid var(--accent-bright);
-		border-radius: 50%;
-		box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.14);
-	}
-
-	/* ---- desktop: the icon tile is the node itself, with the line running
-	   through it, so each stop reads as one object ---- */
-	.mp.is-ready:not(.is-mobile) {
-		--tile: clamp(36px, 2.8vw, 46px);
-	}
-
-	.mp.is-ready:not(.is-mobile) .stop-dot {
-		display: none;
-	}
-
-	/* the line can pass behind a word, so the word gets a soft dark halo */
-	.mp.is-ready:not(.is-mobile) .stop-word {
-		translate: 0 var(--wy, 0px);
-		text-shadow: 0 0 16px var(--bg), 0 0 6px var(--bg), 0 0 2px var(--bg);
-	}
-
-	.mp.is-ready:not(.is-mobile) .stop-tile {
-		/* opaque, so the line stops at the tile instead of showing through it */
-		background:
-			linear-gradient(145deg, rgba(167, 139, 250, 0.22), rgba(109, 40, 217, 0.08)),
-			#0d0b14;
-	}
-
-	.mp.is-ready:not(.is-mobile) .stop[data-side='node-right'] .stop-body {
-		right: calc(var(--tile) / -2);
-	}
-
-	.mp.is-ready:not(.is-mobile) .stop[data-side='node-left'] .stop-body {
-		left: calc(var(--tile) / -2);
-	}
-
-	/* the explanation opens beside the word, on the side away from the node,
-	   so it never lands on the next step */
-	.mp.is-ready:not(.is-mobile) .stop-desc {
-		position: absolute;
-		top: 50%;
-		translate: 0 -50%;
-		width: max-content;
-		max-width: 30ch;
+	.steps {
+		position: relative;
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		row-gap: clamp(64px, 15vh, 170px);
 		margin: 0;
+		padding: 0;
+		list-style: none;
 	}
 
-	.mp.is-ready:not(.is-mobile) .stop[data-side='node-right'] .stop-desc {
-		right: calc(100% + 1.4rem);
+	.step {
+		max-width: 30em;
 	}
 
-	.mp.is-ready:not(.is-mobile) .stop[data-side='node-left'] .stop-desc {
-		left: calc(100% + 1.4rem);
+	/* one step per row, so the trail can swing from side to side between them */
+	.step:nth-child(1) { grid-row: 1; }
+	.step:nth-child(2) { grid-row: 2; }
+	.step:nth-child(3) { grid-row: 3; }
+	.step:nth-child(4) { grid-row: 4; }
+	.step:nth-child(5) { grid-row: 5; }
+	.step:nth-child(6) { grid-row: 6; }
+	.step:nth-child(7) { grid-row: 7; }
+
+	.step--left {
+		grid-column: 1;
 	}
 
-	.mp.is-ready:not(.is-mobile) .stop-desc::before {
-		display: none;
-	}
-
-	/* steps already passed settle back; the current one lights up. Hovering
-	   or focusing a passed step brings it forward again. */
-	.mp.is-ready:not(.is-mobile) .stop.is-reached:not(.is-current) .stop-row {
-		opacity: 0.6;
-		transition: opacity 0.4s ease;
-	}
-
-	.mp.is-ready:not(.is-mobile) .stop.is-reached:not(.is-current):hover .stop-row,
-	.mp.is-ready:not(.is-mobile) .stop.is-reached:not(.is-current):focus-within .stop-row {
-		opacity: 1;
-	}
-
-	/* the word of the step you're on glows softly in the line's violet */
-	.mp.is-ready:not(.is-mobile) .stop.is-current .stop-word {
-		color: #ffffff;
-		text-shadow: 0 0 30px rgba(167, 139, 250, 0.55), 0 0 10px rgba(139, 92, 246, 0.35), 0 0 4px var(--bg);
-	}
-
-	.mp.is-ready:not(.is-mobile) .stop.is-current .stop-tile {
-		box-shadow:
-			0 0 0 5px rgba(139, 92, 246, 0.22),
-			0 10px 30px rgba(109, 40, 217, 0.55),
-			inset 0 1px 0 rgba(255, 255, 255, 0.18);
-	}
-
-	.mp.is-ready .stop-body {
-		position: absolute;
-		top: 0;
-		width: max-content;
-		max-width: min(760px, 62vw);
-		transform: translateY(-50%);
-	}
-
-	/* the node is on the right, so its text goes to the left, and the other way round */
-	.mp.is-ready .stop[data-side='node-right'] .stop-body {
-		right: 30px;
+	.step--right {
+		grid-column: 2;
+		justify-self: end;
 		text-align: right;
 	}
 
-	.mp.is-ready .stop[data-side='node-right'] .stop-row {
-		justify-content: flex-end;
-	}
-
-	.mp.is-ready .stop[data-side='node-left'] .stop-body {
-		left: 30px;
-		text-align: left;
-	}
-
-	.mp.is-ready .stop[data-side='node-left'] .stop-row {
-		flex-direction: row-reverse;
-		justify-content: flex-end;
-	}
-
-	/* the description is a glass chip, so the line passing behind it blurs out */
-	.mp.is-ready .stop-desc {
-		position: relative;
-		padding: 0.85rem 1.05rem 0.9rem;
-		border: 1px solid transparent;
-		border-radius: 18px;
-		/* gradient edge: bright violet at the top corner fading to a hairline */
-		background:
-			linear-gradient(160deg, #14121d, #0b0b10) padding-box,
-			linear-gradient(150deg, rgba(167, 139, 250, 0.7), rgba(255, 255, 255, 0.1) 45%, rgba(109, 40, 217, 0.4)) border-box;
-		box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5), 0 0 28px rgba(109, 40, 217, 0.22);
-		transform: rotate(-1.5deg);
-	}
-
-	/* a small notch pointing back up toward the step */
-	.mp.is-ready .stop-desc::before {
-		content: '';
-		position: absolute;
-		top: -7px;
-		width: 12px;
-		height: 12px;
-		background: #14121d;
-		border-top: 1px solid rgba(167, 139, 250, 0.6);
-		border-left: 1px solid rgba(167, 139, 250, 0.6);
-		transform: rotate(45deg);
-	}
-
-	.mp.is-ready .stop[data-side='node-right'] .stop-desc::before {
-		right: 28px;
-	}
-
-	.mp.is-ready .stop[data-side='node-left'] .stop-desc::before {
-		left: 28px;
-	}
-
-	/* on devices with a mouse the card stays tucked away until its step is
-	   hovered or focused; touch screens keep it showing */
-	@media (hover: hover) and (pointer: fine) {
-		.mp.is-ready .stop-desc {
-			opacity: 0;
-			pointer-events: none;
-			transform: rotate(-1.5deg) translateY(-10px) scale(0.92);
-			transform-origin: top center;
-			transition: opacity 0.25s ease, transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-		}
-
-		.mp.is-ready .stop.is-reached:hover .stop-desc,
-		.mp.is-ready .stop.is-reached:focus-within .stop-desc,
-		.mp.is-ready .stop.is-current .stop-desc {
-			opacity: 1;
-			transform: rotate(-1.5deg);
-		}
-
-		.mp.is-ready .stop.is-reached .stop-row {
-			cursor: pointer;
-			outline: none;
-		}
-
-		.mp.is-ready .stop.is-reached .stop-tile {
-			position: relative;
-			transition: box-shadow 0.3s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-		}
-
-		.mp.is-ready .stop.is-reached .stop-tile::after {
-			content: '+';
-			position: absolute;
-			top: -7px;
-			right: -7px;
-			display: grid;
-			place-items: center;
-			width: 18px;
-			height: 18px;
-			border-radius: 50%;
-			background: var(--accent-bright);
-			color: #0a0a0d;
-			font-family: var(--mono);
-			font-size: 0.8rem;
-			font-weight: 700;
-			line-height: 1;
-			transition: transform 0.3s ease, opacity 0.3s ease;
-		}
-
-		.mp.is-ready .stop.is-reached:hover .stop-tile::after,
-		.mp.is-ready .stop.is-reached:focus-within .stop-tile::after {
-			transform: rotate(45deg) scale(0.85);
-			opacity: 0.7;
-		}
-
-		.mp.is-ready .stop.is-reached:hover .stop-tile,
-		.mp.is-ready .stop.is-reached:focus-within .stop-tile {
-			transform: rotate(0deg) scale(1.08);
-			box-shadow: 0 10px 28px rgba(109, 40, 217, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.18);
-		}
-
-		.mp.is-ready .stop-row:focus-visible .stop-word {
-			text-decoration: underline;
-			text-decoration-color: var(--accent-bright);
-			text-underline-offset: 6px;
-		}
-	}
-
-	/* phones: a straight timeline down the left. Each tile sits on the line, its
-	   word beside it, and the sentence underneath */
-	.mp.is-mobile .stop-body {
-		top: 0;
-		bottom: auto;
-		left: -19px;
-		right: auto;
-		transform: translateY(-19px);
-		width: max-content;
-		max-width: min(300px, calc(100vw - 84px));
-	}
-
-	.mp.is-mobile .stop[data-side] .stop-body {
-		left: -19px;
-		right: auto;
-		text-align: left;
-	}
-
-	.mp.is-mobile .stop-n,
-	.mp.is-mobile .stop-dot {
-		display: none;
-	}
-
-	/* the "+" hints at hover, which a phone doesn't have */
-	.mp.is-ready.is-mobile .stop.is-reached .stop-tile::after {
-		display: none;
-	}
-
-	.mp.is-mobile .stop-word {
-		font-size: 1.5rem;
-		white-space: nowrap;
-	}
-
-	.mp.is-mobile .stop-tile {
-		width: 38px;
-		height: 38px;
-		/* opaque, so the line stops at the tile */
-		background:
-			linear-gradient(145deg, rgba(167, 139, 250, 0.22), rgba(109, 40, 217, 0.08)),
-			#0d0b14;
-	}
-
-	/* the sentence is always there once its step is reached (no hover on a phone) */
-	.mp.is-ready.is-mobile .stop-desc {
-		opacity: 0;
-		pointer-events: auto;
-		transform: none;
-		margin: 0.55rem 0 0 calc(38px + 0.7rem);
-		transition: opacity 0.4s ease;
-	}
-
-	.mp.is-ready.is-mobile .stop.is-reached .stop-desc {
-		opacity: 1;
-	}
-
-	/* the step legend wraps onto three lines on a phone and crowds the line */
-	@media (max-width: 700px) {
-		.method-legend {
-			display: none;
-		}
-	}
-
-	.mp.is-mobile .card-text {
-		font-size: 0.82rem;
-	}
-
-	.mp.is-mobile .stop-desc {
-		padding: 0.7rem 0.9rem;
-	}
-
-	.mp.is-mobile .stop-desc::before {
-		display: none;
-	}
-
-	/* ---------- the slim step bar that follows you through the section ---------- */
-	:global(.method-sticky) {
-		position: fixed;
-		top: 78px;
-		left: 50%;
-		z-index: 90;
+	/* ---------- the step mark: big number and line drawing ---------- */
+	.vis {
 		display: flex;
 		align-items: center;
-		gap: 0.9rem;
-		padding: 0.5rem 1rem;
-		background: rgba(13, 16, 24, 0.88);
-		border: 1px solid rgba(167, 139, 250, 0.35);
-		border-radius: 999px;
-		box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
-		backdrop-filter: blur(10px);
-		-webkit-backdrop-filter: blur(10px);
-		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-		font-size: 0.72rem;
-		letter-spacing: 0.08em;
-		text-transform: uppercase;
-		white-space: nowrap;
-		color: #f3f3f1;
-		opacity: 0;
-		pointer-events: none;
-		transform: translate(-50%, -12px);
-		transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+		flex-wrap: wrap;
+		gap: clamp(0.6rem, 1.2vw, 1rem);
 	}
 
-	:global(.method-sticky.is-on) {
-		opacity: 1;
-		pointer-events: auto;
-		transform: translate(-50%, 0);
+	.step--right .vis {
+		flex-direction: row-reverse;
 	}
 
-	:global(.method-sticky .ms-count) {
+	/* the number is a quiet fill until its step is reached, then it lights up */
+	.vis-num {
+		font-size: clamp(64px, 7.5vw, 112px);
+		font-weight: 800;
+		letter-spacing: -0.05em;
+		line-height: 0.9;
+		font-variant-numeric: tabular-nums;
+		color: rgba(167, 139, 250, 0.18);
+		transition: color 0.4s ease;
+	}
+
+	.step.is-past .vis-num {
+		color: rgba(167, 139, 250, 0.38);
+	}
+
+	.step.is-current .vis-num {
+		background: linear-gradient(180deg, #c4b5fd, #7c5cf0);
+		-webkit-background-clip: text;
+		background-clip: text;
+		color: transparent;
+	}
+
+	.vis-icon {
+		flex: none;
+		width: clamp(46px, 4.6vw, 70px);
+		height: clamp(46px, 4.6vw, 70px);
+		color: var(--accent-soft);
+		transition: color 0.4s ease;
+	}
+
+	.step.is-current .vis-icon {
 		color: #c4b5fd;
 	}
 
-	:global(.method-sticky .ms-name) {
-		min-width: 5.5rem;
+	.step__title {
+		margin: 0.35em 0 0.2em;
+		font-size: clamp(32px, 3.8vw, 58px);
+		font-weight: 700;
+		letter-spacing: -0.035em;
+		line-height: 0.98;
 	}
 
-	:global(.method-sticky .ms-dots) {
-		display: flex;
-		gap: 7px;
+	.step__meta {
+		margin: 0;
+		font-family: var(--mono);
+		font-size: clamp(12px, 1vw, 14px);
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--muted);
 	}
 
-	:global(.method-sticky .ms-dot) {
-		position: relative;
-		width: 9px;
-		height: 9px;
-		padding: 0;
-		background: none;
-		border: 1.5px solid rgba(167, 139, 250, 0.6);
-		border-radius: 50%;
-		cursor: pointer;
-		transition: background-color 0.25s ease, box-shadow 0.25s ease;
+	.step__text {
+		margin: 0.9em 0 0;
+		font-size: clamp(15px, 1.15vw, 18px);
+		line-height: 1.55;
+		color: rgba(243, 243, 241, 0.85);
 	}
 
-	/* a larger invisible target than the dot itself */
-	:global(.method-sticky .ms-dot)::after {
-		content: '';
-		position: absolute;
-		inset: -9px -5px;
-	}
+	/* on a phone the steps stack in one column; the trail winds over the whole
+	   width, behind the words */
+	@media (max-width: 720px) {
+		.steps {
+			grid-template-columns: 1fr;
+			row-gap: 96px;
+		}
 
-	:global(.method-sticky .ms-dot.is-on) {
-		background: #a78bfa;
-	}
+		.step--right {
+			grid-column: 1;
+			justify-self: start;
+			text-align: left;
+		}
 
-	:global(.method-sticky .ms-dot.is-cur) {
-		box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.3);
-	}
+		.step--right .vis {
+			flex-direction: row;
+		}
 
-	:global(.method-sticky .ms-dot:focus-visible) {
-		outline: 2px solid #a78bfa;
-		outline-offset: 4px;
-	}
-
-	@media (max-width: 520px) {
-		:global(.method-sticky .ms-name) {
+		.method-legend {
 			display: none;
 		}
 	}
