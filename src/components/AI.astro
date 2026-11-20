@@ -32,7 +32,7 @@ const steps = ['Talk', 'Think', 'Act'];
 	<div class="ai-glow" aria-hidden="true"><span class="glow glow--a"></span><span class="glow glow--b"></span></div>
 
 	<div class="ai-inner">
-		<div class="ai-head">
+		<div class="ai-pin" id="aiPin"><div class="ai-head">
 			<div class="ai-eyebrow reveal" style="--reveal-order: 0">
 				<span class="eyebrow-idx">07</span>
 				<span class="eyebrow-dot" aria-hidden="true">&bull;</span>
@@ -113,7 +113,7 @@ const steps = ['Talk', 'Think', 'Act'];
 					<ul class="cards" id="cards">
 						{findings.map((f, i) => (
 							<li class="card">
-								<button type="button" class="card-btn" aria-label={`${f.count} ${f.label}. Mark as handled`}>
+								<button type="button" class="card-btn" aria-label={`${f.count} ${f.label}`}>
 									<span class="card-sweep" aria-hidden="true"></span>
 									<svg class="card-icon" viewBox="0 0 24 24" aria-hidden="true">
 										{icons[i].map((d) => (
@@ -134,10 +134,11 @@ const steps = ['Talk', 'Think', 'Act'];
 				</div>
 			</div>
 
-			<p class="sr-only" id="aiLive" aria-live="polite"></p>
+			<p class="sr-only" id="aiLive" aria-live="polite"></p><!-- /demo -->
 		</div>
 
-		<div class="ai-philosophy reveal" id="aiPhilosophy" style="--reveal-order: 3">
+		</div><!-- /aiPin -->
+			<div class="ai-philosophy reveal" id="aiPhilosophy" style="--reveal-order: 3">
 			<p class="philosophy-lede" id="philosophyLede">Software should finish the job, not just describe it.</p>
 
 			<a class="ai-cta" href="#contact">
@@ -719,6 +720,7 @@ const steps = ['Talk', 'Think', 'Act'];
 	}
 
 	.card-btn:disabled {
+		pointer-events: none;
 		cursor: default;
 	}
 
@@ -1231,7 +1233,7 @@ const steps = ['Talk', 'Think', 'Act'];
 		};
 
 		const setSummary = (text: string) => {
-			summary.textContent = text;
+			if (summary.textContent !== text) summary.textContent = text;
 		};
 
 		// which of Talk / Think / Act the demo is in (-1 = none yet)
@@ -1253,22 +1255,9 @@ const steps = ['Talk', 'Think', 'Act'];
 		};
 
 		let mainTl: gsap.core.Timeline | null = null;
-		let actionTl: gsap.core.Timeline | null = null;
-		let working = false;
-
-		// ---------- handling an item: one by one, or all the rest with the button ----------
-		const cardTimeline = (i: number) => {
-			const li = cards[i];
-			const sweep = li.querySelector<HTMLElement>('.card-sweep')!;
-			const badge = li.querySelector<HTMLElement>('.card-done')!;
-			const num = li.querySelector<HTMLElement>('.card-count')!;
-			const tl = gsap.timeline();
-			tl.fromTo(sweep, { xPercent: -110, opacity: 1 }, { xPercent: 110, opacity: 1, duration: 0.65, ease: 'power2.inOut', clearProps: 'transform,opacity' }, 0);
-			tl.call(() => markHandled(i), [], 0.25);
-			tl.fromTo(badge, { scale: 0.4, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.4, ease: 'back.out(3)', clearProps: 'opacity,transform' }, 0.27);
-			tl.fromTo(num, { scale: 1 }, { scale: 1.18, duration: 0.2, yoyo: true, repeat: 1, ease: 'power2.out', clearProps: 'transform' }, 0.25);
-			return tl;
-		};
+		let st: ScrollTrigger | null = null;
+		let phase = -1;
+		let celebrated = false;
 
 		const markHandled = (i: number) => {
 			if (handled[i]) return;
@@ -1421,70 +1410,24 @@ const steps = ['Talk', 'Think', 'Act'];
 			gsap.ticker.add(tick);
 		};
 
-		const finish = (instant: boolean) => {
+		const finish = () => {
 			setSummary(`All ${total} done`);
 			setStatus('done');
 			stepsEl.classList.add('is-complete');
 			announce(`Done. The agent handled all ${total} items.`);
-			if (!instant) {
-				burst();
-				gsap.fromTo(
-					bar,
-					{ boxShadow: '0 22px 56px -14px rgba(0,0,0,0.65), 0 0 0 0 rgba(52,211,153,0)' },
-					{ boxShadow: '0 22px 56px -14px rgba(0,0,0,0.65), 0 0 0 10px rgba(52,211,153,0.18)', duration: 0.5, yoyo: true, repeat: 1, ease: 'power2.out', clearProps: 'boxShadow' },
-				);
-				gsap.fromTo(summary, { y: 6, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: 'power2.out', clearProps: 'opacity,transform' });
-			}
 		};
-
-		const handleOne = (i: number) => {
-			if (handled[i] || working) return;
-			if (reduce) {
-				markHandled(i);
-				if (left === 0) finish(true);
-				return;
-			}
-			const tl = cardTimeline(i);
-			tl.call(
-				() => {
-					if (left === 0) finish(false);
-				},
-				[],
-				0.7,
-			);
-		};
-
-		// the agent finishes the job on its own: the cards are handled one after another
-		const finishByAgent = () => {
-			const todo = cards.map((_, i) => i).filter((i) => !handled[i]);
-			if (!todo.length) {
-				if (left === 0) finish(false);
-				return;
-			}
-			working = true;
-			cards.forEach((c) => (c.querySelector<HTMLButtonElement>('.card-btn')!.disabled = true));
-			setStatus('working');
-			setSummary(`${total - left} of ${total} done`);
-			actionTl = gsap.timeline();
-			todo.forEach((i, k) => {
-				actionTl!.add(cardTimeline(i), 0.2 + k * 0.7);
-			});
-			actionTl.call(() => finish(false), [], 0.2 + todo.length * 0.7 + 0.4);
-		};
-
-		cards.forEach((li, i) => li.querySelector('.card-btn')?.addEventListener('click', () => handleOne(i)));
 
 		// ---------- back to the start ----------
 		const reset = () => {
 			stopBlast?.();
+			st?.kill(true);
 			mainTl?.revert();
-			actionTl?.revert();
-			mainTl = actionTl = null;
-			working = false;
-			gsap.killTweensOf(bar, 'boxShadow');
+			mainTl = st = null;
+			celebrated = false;
+			phase = -1;
 			gsap.killTweensOf(summary);
-			gsap.set(bar, { clearProps: 'boxShadow' });
 			gsap.set(summary, { clearProps: 'opacity,transform' });
+			gsap.set([scanView, replyView], { clearProps: 'opacity,visibility' });
 			typedQuery.textContent = '';
 			queryCaret.classList.remove('is-done');
 			scanView.classList.remove('is-on');
@@ -1492,16 +1435,16 @@ const steps = ['Talk', 'Think', 'Act'];
 			linksSvg.innerHTML = '';
 			chips.forEach((c) => {
 				c.classList.remove('is-scanned');
-				c.querySelector('.src-count')!.textContent = '\u2014';
+				c.querySelector('.src-count')!.textContent = '—';
 			});
 			cards.forEach((c, i) => {
 				c.classList.remove('is-shown', 'is-done');
-				c.querySelector<HTMLButtonElement>('.card-btn')!.disabled = false;
+				// the agent does the work as you scroll, so the cards are not buttons to press
+				c.querySelector<HTMLButtonElement>('.card-btn')!.disabled = true;
 				c.querySelector('.card-count')!.textContent = String(counts[i]);
 				handled[i] = false;
 			});
 			left = total;
-			working = false;
 			setSummary(`${total} pending`);
 			linksSet(0);
 			setPhase(-1);
@@ -1516,7 +1459,7 @@ const steps = ['Talk', 'Think', 'Act'];
 			cards.forEach((_, i) => markHandled(i));
 			linksSet(2);
 			setPhase(2);
-			finish(true);
+			finish();
 		};
 
 		// the distance from one element to the middle of the agent
@@ -1557,7 +1500,10 @@ const steps = ['Talk', 'Think', 'Act'];
 			});
 		};
 
-		// ---------- the demo ----------
+		// ---------- the demo: scrubbed by scroll, Talk -> Think -> Act ----------
+		// The section pins in place and the scroll position is the playhead: scrolling down plays the three
+		// steps in order, scrolling back up rewinds them. State that is not a tween is derived from the
+		// playhead time in sync(), so it is always correct whichever way you scroll (or jump).
 		const play = () => {
 			reset();
 			if (!animated) {
@@ -1565,64 +1511,54 @@ const steps = ['Talk', 'Think', 'Act'];
 				return;
 			}
 
-			const tl = (mainTl = gsap.timeline());
+			const tl = (mainTl = gsap.timeline({ paused: true }));
 			const typed = { n: 0 };
 			const found = { n: 0 };
-			const typeTime = query.length * 0.026;
 			const links = buildLinks();
 
-			// 1 · Talk: the request types itself into the bar
-			tl.call(() => setPhase(0), [], 0.25);
-			tl.fromTo(bar, { boxShadow: '0 22px 56px -14px rgba(0,0,0,0.65), 0 0 0 0 rgba(167,139,250,0)' }, { boxShadow: '0 22px 56px -14px rgba(0,0,0,0.65), 0 0 0 4px rgba(167,139,250,0.22)', duration: 0.3 }, 0.25);
+			const THINK = 3.2;
+			const SENT = 2.1;
+			const REPLY = THINK + 1.0 + chips.length * 0.4 + 0.95;
+			const scannedAt = chips.map((_, i) => THINK + 1.0 + i * 0.4 + 0.7);
+			const doneAt = cards.map((_, i) => REPLY + 1.6 + i * 0.7 + 0.25);
+			const shadow = (spread: number, alpha: number) => `0 22px 56px -14px rgba(0,0,0,0.65), 0 0 0 ${spread}px rgba(167,139,250,${alpha})`;
+
+			// 1 · Talk: the request types itself into the bar, then is sent with Enter
+			tl.fromTo(bar, { boxShadow: shadow(0, 0) }, { boxShadow: shadow(4, 0.22), duration: 0.3 }, 0);
 			tl.to(
 				typed,
 				{
 					n: query.length,
-					duration: typeTime,
+					duration: 1.8,
 					ease: 'none',
 					onUpdate: () => {
 						typedQuery.textContent = query.slice(0, Math.round(typed.n));
 					},
 				},
-				0.3,
+				0.2,
 			);
-			// ...and is sent with Enter
-			tl.call(() => queryCaret.classList.add('is-done'));
-			tl.fromTo(kbd, { scale: 1 }, { scale: 0.8, duration: 0.09, yoyo: true, repeat: 1, ease: 'power2.out', clearProps: 'transform' });
-			tl.fromTo(
-				bar,
-				{ boxShadow: '0 22px 56px -14px rgba(0,0,0,0.65), 0 0 0 4px rgba(167,139,250,0.22)' },
-				{ boxShadow: '0 22px 56px -14px rgba(0,0,0,0.65), 0 0 0 22px rgba(167,139,250,0)', duration: 0.8, ease: 'power2.out', clearProps: 'boxShadow' },
-				'<',
-			);
+			tl.fromTo(kbd, { scale: 1 }, { scale: 0.8, duration: 0.12, yoyo: true, repeat: 1, ease: 'power2.out' }, SENT);
+			tl.fromTo(bar, { boxShadow: shadow(4, 0.22) }, { boxShadow: shadow(22, 0), duration: 0.8, ease: 'power2.out' }, SENT);
 
 			// 2 · Think: the sources fly into the agent, one by one
-			tl.addLabel('think', '+=0.3');
-			tl.call(
-				() => {
-					setPhase(1);
-					scanView.classList.add('is-on');
-				},
-				[],
-				'think',
-			);
-			tl.to(linkFills[0], { scaleX: 1, duration: 0.5, ease: 'power2.out' }, 'think');
+			tl.addLabel('think', THINK);
+			tl.fromTo(scanView, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.25 }, 'think');
+			tl.fromTo(linkFills[0], { scaleX: 0 }, { scaleX: 1, duration: 0.5, ease: 'power2.out' }, 'think');
 			tl.fromTo(core, { scale: 0.3, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.7, ease: 'back.out(2)' }, 'think');
-			tl.to(coreRing, { rotation: '+=720', duration: 3.6, ease: 'power1.inOut' }, 'think');
-			tl.to(coreOrbit, { rotation: '-=900', duration: 3.6, ease: 'power1.inOut' }, 'think');
+			tl.fromTo(coreRing, { rotation: 0 }, { rotation: 720, duration: 3.6, ease: 'none' }, 'think');
+			tl.fromTo(coreOrbit, { rotation: 0 }, { rotation: -900, duration: 3.6, ease: 'none' }, 'think');
 			tl.fromTo(chips, { opacity: 0, scale: 0.6, y: 18 }, { opacity: 1, scale: 1, y: 0, duration: 0.5, ease: 'back.out(2)', stagger: 0.12 }, 'think+=0.2');
-			// each source is read: a line draws to the agent and a pulse of light travels along it
 			chips.forEach((chip, i) => {
 				const at = 1.0 + i * 0.4;
 				const { path, pulse, len } = links[i];
 				const check = chip.querySelector<HTMLElement>('.src-check')!;
-				const bar = chip.querySelector<HTMLElement>('.src-bar i')!;
+				const fill = chip.querySelector<HTMLElement>('.src-bar i')!;
 				const countEl = chip.querySelector<HTMLElement>('.src-count')!;
 				const n = Number(chip.dataset.n ?? 0);
 				const unit = chip.dataset.unit ?? '';
 				const amount = { v: 0 };
 				const p = { v: 0 };
-				tl.to(path, { strokeDashoffset: 0, duration: 0.45, ease: 'power2.out' }, `think+=${at - 0.1}`);
+				tl.fromTo(path, { strokeDashoffset: len, opacity: 1 }, { strokeDashoffset: 0, duration: 0.45, ease: 'power2.out' }, `think+=${at - 0.1}`);
 				tl.set(pulse, { opacity: 1 }, `think+=${at + 0.1}`);
 				tl.to(
 					p,
@@ -1638,9 +1574,8 @@ const steps = ['Talk', 'Think', 'Act'];
 					},
 					`think+=${at + 0.1}`,
 				);
-				tl.fromTo(bar, { scaleX: 0 }, { scaleX: 1, duration: 0.6, ease: 'power2.in' }, `think+=${at + 0.1}`);
+				tl.fromTo(fill, { scaleX: 0 }, { scaleX: 1, duration: 0.6, ease: 'power2.in' }, `think+=${at + 0.1}`);
 				tl.set(pulse, { opacity: 0 }, `think+=${at + 0.7}`);
-				// the number found in that source counts up
 				tl.to(
 					amount,
 					{
@@ -1648,59 +1583,33 @@ const steps = ['Talk', 'Think', 'Act'];
 						duration: 0.7,
 						ease: 'power2.out',
 						onUpdate: () => {
-							countEl.textContent = `${Math.round(amount.v)} ${unit}`;
+							countEl.textContent = amount.v > 0 ? `${Math.round(amount.v)} ${unit}` : '—';
 						},
 					},
 					`think+=${at + 0.7}`,
 				);
-				tl.call(() => chip.classList.add('is-scanned'), [], `think+=${at + 0.7}`);
-				tl.fromTo(check, { scale: 0 }, { scale: 1, duration: 0.4, ease: 'back.out(3)', clearProps: 'transform' }, `think+=${at + 0.7}`);
+				tl.fromTo(check, { scale: 0 }, { scale: 1, duration: 0.4, ease: 'back.out(3)' }, `think+=${at + 0.7}`);
 				tl.fromTo(coreDot, { scale: 1 }, { scale: 1.32, duration: 0.14, yoyo: true, repeat: 1, ease: 'power2.out' }, `think+=${at + 0.7}`);
 				tl.to(path, { opacity: 0.25, duration: 0.4 }, `think+=${at + 0.8}`);
 			});
 
-			// 3 · Act: the agent bursts into the findings
-			tl.addLabel('reply', `think+=${1.0 + chips.length * 0.4 + 0.95}`);
-			tl.to(scanView, { opacity: 0, duration: 0.3 }, 'reply-=0.05');
+			// 3 · Act: the agent bursts into the findings, then handles them one by one
+			tl.addLabel('reply', REPLY);
+			tl.to(scanView, { autoAlpha: 0, duration: 0.3 }, 'reply-=0.05');
 			tl.fromTo(coreDot, { scale: 1 }, { scale: 2.2, duration: 0.35, ease: 'power3.out' }, 'reply-=0.2');
 			tl.fromTo(coreWave, { scale: 1, opacity: 0.9 }, { scale: 3.6, opacity: 0, duration: 0.9, ease: 'power2.out' }, 'reply-=0.2');
-			tl.call(
-				() => {
-					setPhase(2);
-					scanView.classList.remove('is-on');
-					replyView.classList.add('is-on');
-					setSummary('0 pending');
-					cards.forEach((c) => (c.querySelector('.card-count')!.textContent = '0'));
-					setStatus('ready');
-				},
-				[],
-				'reply',
-			);
-			tl.to(linkFills[1], { scaleX: 1, duration: 0.5, ease: 'power2.out' }, 'reply');
-			tl.fromTo(summary, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out', clearProps: 'opacity,transform' }, 'reply');
-			tl.to(
-				found,
-				{
-					n: total,
-					duration: 1,
-					ease: 'power2.out',
-					onUpdate: () => setSummary(`${Math.round(found.n)} pending`),
-				},
-				'reply',
-			);
+			tl.fromTo(replyView, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3 }, 'reply');
+			tl.fromTo(linkFills[1], { scaleX: 0 }, { scaleX: 1, duration: 0.5, ease: 'power2.out' }, 'reply');
+			tl.to(found, { n: total, duration: 1, ease: 'power2.out' }, 'reply');
 
 			cards.forEach((li, i) => {
 				const at = 0.05 + i * 0.13;
 				const num = li.querySelector<HTMLElement>('.card-count')!;
+				const sweep = li.querySelector<HTMLElement>('.card-sweep')!;
+				const badge = li.querySelector<HTMLElement>('.card-done')!;
 				const n = { v: 0 };
-				tl.call(() => li.classList.add('is-shown'), [], `reply+=${at}`);
-				tl.fromTo(li.querySelectorAll('.card-icon path'), { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.9, ease: 'power2.inOut', stagger: 0.12, clearProps: 'strokeDashoffset' }, `reply+=${at + 0.3}`);
-				tl.fromTo(
-					li,
-					{ opacity: 0, y: -70, scale: 0.4, filter: 'blur(10px)' },
-					{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)', duration: 0.8, ease: 'back.out(1.5)', clearProps: 'opacity,transform,filter' },
-					`reply+=${at}`,
-				);
+				tl.fromTo(li, { opacity: 0, y: -70, scale: 0.4, filter: 'blur(10px)' }, { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)', duration: 0.8, ease: 'back.out(1.5)' }, `reply+=${at}`);
+				tl.fromTo(li.querySelectorAll('.card-icon path'), { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.9, ease: 'power2.inOut', stagger: 0.12 }, `reply+=${at + 0.3}`);
 				tl.to(
 					n,
 					{
@@ -1713,12 +1622,70 @@ const steps = ['Talk', 'Think', 'Act'];
 					},
 					`reply+=${at + 0.15}`,
 				);
+				// the agent handles it: a light sweeps across, then the card turns to "Done"
+				const d = doneAt[i] - 0.25;
+				tl.fromTo(sweep, { xPercent: -110, opacity: 1 }, { xPercent: 110, opacity: 1, duration: 0.65, ease: 'power2.inOut' }, d);
+				tl.fromTo(badge, { scale: 0.4, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.4, ease: 'back.out(3)' }, d + 0.27);
+				tl.fromTo(num, { scale: 1 }, { scale: 1.18, duration: 0.2, yoyo: true, repeat: 1, ease: 'power2.out' }, d + 0.25);
 			});
+			// a short hold at the end, so the finished state rests on screen
+			tl.to({}, { duration: 0.6 }, doneAt[cards.length - 1] + 0.5);
 
-			// 4 · Act: the agent finishes the job, a card at a time
-			const doneAt = 0.05 + cards.length * 0.13 + 0.9;
-			tl.call(() => announce(`The agent found ${total} items and is handling them.`), [], `reply+=${doneAt - 0.5}`);
-			tl.call(finishByAgent, [], `reply+=${doneAt}`);
+			// everything that is not a tween follows the playhead
+			const inView = () => {
+				const r = demo.getBoundingClientRect();
+				return r.bottom > 0 && r.top < window.innerHeight;
+			};
+			let lastMode = '';
+			const sync = () => {
+				const t = tl.time();
+				const ph = t >= REPLY ? 2 : t >= THINK ? 1 : 0;
+				if (ph !== phase) {
+					phase = ph;
+					setPhase(ph);
+				}
+				queryCaret.classList.toggle('is-done', t >= SENT);
+				chips.forEach((c, i) => c.classList.toggle('is-scanned', t >= scannedAt[i]));
+				let doneCount = 0;
+				let doneTotal = 0;
+				cards.forEach((c, i) => {
+					const d = t >= doneAt[i];
+					c.classList.toggle('is-done', d);
+					if (d) {
+						doneCount++;
+						doneTotal += counts[i];
+					}
+				});
+				const all = doneCount === cards.length;
+				stepsEl.classList.toggle('is-complete', all);
+				setSummary(all ? `All ${total} done` : doneCount ? `${doneTotal} of ${total} done` : `${Math.round(found.n)} pending`);
+				const mode = all ? 'done' : ph === 0 ? 'active' : ph === 1 || doneCount ? 'working' : 'ready';
+				if (mode !== lastMode) {
+					lastMode = mode;
+					setStatus(mode as 'active' | 'working' | 'ready' | 'done');
+				}
+				if (all && !celebrated) {
+					celebrated = true;
+					announce(`Done. The agent handled all ${total} items.`);
+					if (inView()) burst();
+				} else if (!all) celebrated = false;
+			};
+			tl.eventCallback('onUpdate', sync);
+			sync();
+
+			// pin the demo while it plays, if it fits on the screen; otherwise it simply plays as it scrolls past
+			const pinEl = $('aiPin');
+			const canPin = pinEl.offsetHeight <= window.innerHeight - 80;
+			st = ScrollTrigger.create({
+				animation: tl,
+				trigger: pinEl,
+				start: canPin ? 'center center' : 'top 85%',
+				end: canPin ? () => `+=${Math.round(window.innerHeight * 3.4)}` : 'bottom 35%',
+				pin: canPin,
+				scrub: 0.6,
+				anticipatePin: 1,
+				invalidateOnRefresh: true,
+			});
 		};
 
 		// ---------- the pointer: cards tilt towards it, with a light that follows ----------
@@ -1814,32 +1781,32 @@ const steps = ['Talk', 'Think', 'Act'];
 			gsap.to(headWords, { yPercent: 0, rotate: 0, duration: 0.95, ease: 'power4.out', stagger: 0.09 });
 		});
 
-		// the demo plays on entry; after it has fully left the screen it may play again on return,
-		// but it never loops while it is still visible
+		// the bar and the steps arrive as the demo scrolls into view; the demo itself is driven by scroll
 		let entered = false;
-		let leftSince = false;
-		const playObserver = new IntersectionObserver(
+		const introObserver = new IntersectionObserver(
 			(entries) => {
-				entries.forEach((entry) => {
-					if (entry.intersectionRatio >= 0.35) {
-						if (!entered) {
-							entered = true;
-							section.classList.add('is-visible');
-							gsap.to(bar, { opacity: 1, y: 0, scale: 1, duration: 1, ease: 'power4.out', clearProps: 'opacity,transform' });
-							gsap.to(pills, { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out', stagger: 0.1, delay: 0.35, clearProps: 'opacity,transform' });
-							play();
-						} else if (leftSince) {
-							leftSince = false;
-							play();
-						}
-					} else if (entry.intersectionRatio === 0 && entered) {
-						leftSince = true;
-					}
-				});
+				if (entered || !entries.some((e) => e.intersectionRatio >= 0.35)) return;
+				entered = true;
+				introObserver.disconnect();
+				gsap.to(bar, { opacity: 1, y: 0, scale: 1, duration: 1, ease: 'power4.out', clearProps: 'opacity,transform' });
+				gsap.to(pills, { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out', stagger: 0.1, delay: 0.35, clearProps: 'opacity,transform' });
 			},
-			{ threshold: [0, 0.35] },
+			{ threshold: [0.35] },
 		);
-		playObserver.observe(demo);
+		introObserver.observe(demo);
+
+		// the demo is built once the layout is known, and again if the width changes
+		play();
+		let lastWidth = window.innerWidth;
+		let resizeTimer = 0;
+		window.addEventListener('resize', () => {
+			window.clearTimeout(resizeTimer);
+			resizeTimer = window.setTimeout(() => {
+				if (window.innerWidth === lastWidth) return;
+				lastWidth = window.innerWidth;
+				play();
+			}, 250);
+		});
 
 		// the button arrives once the closing line is in view
 		once(philosophy, 0.7, () => {
