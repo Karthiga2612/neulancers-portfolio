@@ -5,39 +5,47 @@
 //
 // Each step has a large step number with a small line drawing beside it that
 // draws itself as the step arrives. The number of the step you are on lights up.
+// "gets" is DRAFT copy (what you receive at that step) waiting for approval.
 const steps = [
 	{
 		label: 'Why?',
+		gets: 'A clear reason to build it, or a clear reason not to.',
 		desc: 'Before anything else, we ask why this needs to exist at all.',
 		icon: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1 1-1.1 1.8M12 17h.01"/>',
 	},
 	{
 		label: 'Problem',
+		gets: 'The real problem in plain words, and who it affects.',
 		desc: "We sit with the real problem, not the version that's easy to solve.",
 		icon: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
 	},
 	{
 		label: 'Think',
+		gets: 'A few options on paper and a recommended direction.',
 		desc: 'No tools yet. Just people, a whiteboard, and hard questions.',
 		icon: '<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3Z"/>',
 	},
 	{
 		label: 'Experiment',
+		gets: 'Small working tests, and what each one taught us.',
 		desc: 'Small, fast, disposable attempts — most of which will fail on purpose.',
 		icon: '<path d="M9 3h6M10 3v6L4.5 19a1.5 1.5 0 0 0 1.3 2.2h12.4A1.5 1.5 0 0 0 19.5 19L14 9V3"/><path d="M7.5 15h9"/>',
 	},
 	{
 		label: 'Build',
+		gets: 'A working product, and notes so your team can run it.',
 		desc: 'What survives the experiments gets built for real.',
 		icon: '<path d="M12 3 3.5 7.5v9L12 21l8.5-4.5v-9L12 3Z"/><path d="M12 12 3.5 7.5M12 12l8.5-4.5M12 12v9"/>',
 	},
 	{
 		label: 'Connect',
+		gets: 'Links to your existing systems and a plan to bring your team along.',
 		desc: 'Wired into the systems and people that already exist — not replacing them.',
 		icon: '<circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.2 10.8l7.6-3.6M8.2 13.2l7.6 3.6"/>',
 	},
 	{
 		label: 'Scale',
+		gets: 'A rollout to more teams and a way to measure the impact.',
 		desc: 'Once it works for one team, we make it work for everyone.',
 		icon: '<path d="M4 20 20 4M20 4h-7M20 4v7"/>',
 	},
@@ -67,16 +75,20 @@ const total = String(steps.length).padStart(2, '0');
 					<li data-index={i}><button type="button" class="legend-btn"><span>{`0${i + 1}`}</span>{step.label}</button></li>
 				))}
 			</ol>
+			<div class="method-tools reveal" style="--reveal-order: 4">
+				<p class="method-hint" data-method-hint><span class="mh-arrow" aria-hidden="true">&darr;</span>Scroll to reveal the next step</p>
+				<a href="#method-end" class="method-skip" data-method-skip>Skip to the end <span aria-hidden="true">&darr;</span></a>
+			</div>
 		</div>
 
-		<div class="mt" id="methodPath" data-trail-wrap>
+		<div class="mt" id="methodPath" data-trail-wrap data-focus>
 			<svg class="trail-svg" data-trail-svg aria-hidden="true" focusable="false">
 				<defs>
 					<symbol id="mtStar" viewBox="-10 -10 20 20"><path d="M0 -10C1.2 -2.5 2.5 -1.2 10 0C2.5 1.2 1.2 2.5 0 10C-1.2 2.5 -2.5 1.2 -10 0C-2.5 -1.2 -1.2 -2.5 0 -10Z"/></symbol>
-					<symbol id="mtFlower" viewBox="-10 -10 20 20"><circle cx="0.00" cy="-4.90" r="4.3"/><circle cx="4.66" cy="-1.51" r="4.3"/><circle cx="2.88" cy="3.96" r="4.3"/><circle cx="-2.88" cy="3.96" r="4.3"/><circle cx="-4.66" cy="-1.51" r="4.3"/><circle r="3.4"/></symbol>
-					<symbol id="mtRing" viewBox="-10 -10 20 20"><path d="M0 -9A9 9 0 1 1 0 9A9 9 0 1 1 0 -9ZM0 -4.5A4.5 4.5 0 1 0 0 4.5A4.5 4.5 0 1 0 0 -4.5Z" fill-rule="evenodd"/></symbol>
-					<symbol id="mtKite" viewBox="-10 -10 20 20"><path d="M0 -10L7 -1.5L0 10L-7 -1.5Z"/></symbol>
-					<symbol id="mtDrop" viewBox="-10 -10 20 20"><path d="M0 -10C4 -4 7.5 -0.5 7.5 3A7.5 7.5 0 0 1 -7.5 3C-7.5 -0.5 -4 -4 0 -10Z"/></symbol>
+					<symbol id="mtDot" viewBox="-10 -10 20 20"><circle r="3.6"/></symbol>
+					<symbol id="mtRing" viewBox="-10 -10 20 20"><circle r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+					<symbol id="mtPlus" viewBox="-10 -10 20 20"><path d="M-1.4 -8H1.4V-1.4H8V1.4H1.4V8H-1.4V1.4H-8V-1.4H-1.4Z"/></symbol>
+					<symbol id="mtDiamond" viewBox="-10 -10 20 20"><path d="M0 -8L8 0L0 8L-8 0Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
 				</defs>
 				<path class="trail-line" data-trail-line d="M0 0"/>
 				<g class="trail-shapes" data-trail-shapes></g>
@@ -86,18 +98,28 @@ const total = String(steps.length).padStart(2, '0');
 				{steps.map((step, i) => (
 					<li class={`step ${i % 2 === 0 ? 'step--left' : 'step--right'}`} data-step data-side={i % 2 === 0 ? 'left' : 'right'}>
 						<div class="vis" aria-hidden="true">
+							<span class="vis-bloom"></span>
+							<span class="vis-ring"></span>
+							<span class="vis-ring vis-ring--2"></span>
 							<span class="vis-num">{`0${i + 1}`}</span>
 							<svg class="vis-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" set:html={step.icon}></svg>
 						</div>
 						<h3 class="step__title">{step.label}</h3>
 						<p class="step__meta">{`Step 0${i + 1} of ${total}`}</p>
 						<p class="step__text">{step.desc}</p>
+						<p class="step__gets"><span class="step__rule" aria-hidden="true"></span><span class="step__gets-label">What you get</span>{" "}{step.gets}</p>
+						{i === 3 && (
+							<a class="step__cta" href="#contact">
+								<span>Know what&rsquo;s broken? Bring us a problem</span>
+								<span aria-hidden="true">&rarr;</span>
+							</a>
+						)}
 					</li>
 				))}
 			</ol>
 		</div>
 
-		<div class="method-end reveal" style="--reveal-order: 0">
+		<div class="method-end reveal" id="method-end" tabindex="-1" style="--reveal-order: 0">
 			<p class="method-footer">Technology is usually the last part of the conversation.</p>
 			<a href="#contact" class="method-cta">
 				<span>Bring us a problem</span>
@@ -120,7 +142,11 @@ const total = String(steps.length).padStart(2, '0');
 	   and end strung out along the whole way. */
 
 	/* ---- values to change ---- */
-	const COUNT = 24; // how many shapes travel along the trail
+	// how many shapes travel along the trail: fewer on phones and on weaker devices,
+	// which keeps every frame cheap
+	const LOW_POWER =
+		(navigator.hardwareConcurrency || 8) <= 4 || ((navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 8) <= 2;
+	const COUNT = LOW_POWER ? 14 : window.innerWidth <= 720 ? 18 : 24;
 	const SIZE = [26, 20]; // their size in pixels, on a computer and on a phone
 	// where the trip starts and ends: a point of the section meets a point of the
 	// screen. It starts as soon as the first step is coming into view (the demo
@@ -142,7 +168,19 @@ const total = String(steps.length).padStart(2, '0');
 		const steps = Array.from(wrap.querySelectorAll<HTMLElement>('[data-step]'));
 		const legend = Array.from(section.querySelectorAll<HTMLElement>('.method-legend li'));
 		const NS = 'http://www.w3.org/2000/svg';
-		const SHAPES = ['mtStar', 'mtFlower', 'mtRing', 'mtKite', 'mtDrop'];
+		const SHAPES = ['mtStar', 'mtDot', 'mtRing', 'mtPlus', 'mtDiamond'];
+		// the train shifts from lavender to sky blue as it travels, the same range
+		// as the rest of the site's glow
+		const HUES = ['#c4b5fd', '#a78bfa', '#8b8cf8', '#6d83f2', '#4f9cf0', '#38bdf8'];
+		const rgb = (c: string) => [1, 3, 5].map((k) => parseInt(c.slice(k, k + 2), 16));
+		const tint = (q: number) => {
+			const t = Math.max(0, Math.min(1, q)) * (HUES.length - 1);
+			const i = Math.min(HUES.length - 2, Math.floor(t));
+			const fr = t - i;
+			const a = rgb(HUES[i]);
+			const b = rgb(HUES[i + 1]);
+			return `rgb(${a.map((v, k) => Math.round(v + (b[k] - v) * fr)).join(',')})`;
+		};
 
 		// ---------- entrance for the heading block ----------
 		const revealEls = Array.from(section.querySelectorAll<HTMLElement>('.reveal'));
@@ -163,6 +201,8 @@ const total = String(steps.length).padStart(2, '0');
 		}
 
 		// ---------- the shapes ----------
+		// the soft glow is a filter on the whole group; weaker devices go without it
+		if (LOW_POWER) group.classList.add('is-lite');
 		const shapes: SVGUseElement[] = [];
 		for (let i = 0; i < COUNT; i += 1) {
 			const u = document.createElementNS(NS, 'use');
@@ -177,19 +217,34 @@ const total = String(steps.length).padStart(2, '0');
 		// curve through them (each piece leans towards the points before and after it)
 		let raw: unknown = null;
 		let size = SIZE[0];
+		// the box of each step in the trail's own coordinates, with a little margin;
+		// a shape inside the box of the step on screen fades out so it never sits on words
+		type Box = { x0: number; x1: number; y0: number; y1: number };
+		let boxes: Box[] = [];
 		const trail = () => {
 			const box = wrap.getBoundingClientRect();
 			const w = box.width;
 			const h = box.height;
 			const phone = window.innerWidth <= 720;
 			size = phone ? SIZE[1] : SIZE[0];
+			sizeShapes();
 			svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
 			const pts: Array<[number, number]> = [[w / 2, 0]];
+			// measured from layout (offsets), not from the box on screen, so a step
+			// that is popping in or out never bends the trail
+			const stepsEl = wrap.querySelector('.steps') as HTMLElement | null;
+			const base = stepsEl?.offsetTop ?? 0;
+			const baseX = stepsEl?.offsetLeft ?? 0;
+			boxes = steps.map((p) => ({
+				x0: baseX + p.offsetLeft - 16,
+				x1: baseX + p.offsetLeft + p.offsetWidth + 16,
+				y0: base + p.offsetTop - 12,
+				y1: base + p.offsetTop + p.offsetHeight + 12,
+			}));
 			steps.forEach((p, i) => {
-				const r = p.getBoundingClientRect();
 				const left = p.dataset.side === 'left';
 				const swing = phone ? (i % 2 ? -1 : 1) * SWING * 1.4 : (left ? 1 : -1) * SWING;
-				pts.push([w * (0.5 + swing), r.top - box.top + r.height / 2]);
+				pts.push([w * (0.5 + swing), base + p.offsetTop + p.offsetHeight / 2]);
 			});
 			pts.push([w / 2, h]);
 			let d = `M${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
@@ -205,32 +260,230 @@ const total = String(steps.length).padStart(2, '0');
 			line.setAttribute('d', d);
 			raw = MotionPathPlugin.getRawPath(line);
 			MotionPathPlugin.cacheRawPathMeasurements(raw as never);
+			layoutSig = layoutNow();
 		};
+		// A refresh also fires when only the browser chrome changes height (the
+		// address bar on a phone). The trail only depends on the width and on where
+		// the steps sit, so it is rebuilt only when one of those has changed.
+		let layoutSig = '';
+		const layoutNow = () => `${wrap.offsetWidth}x${wrap.offsetHeight}:${steps.map((s) => s.offsetTop).join(',')}`;
 
+		// Each shape's size never changes while you scroll, so it is set once (when the
+		// layout is built), not on every frame. A frame then writes only the position,
+		// plus opacity and colour when those actually changed.
+		const sizeShapes = () =>
+			shapes.forEach((u, i) => {
+				const sz = size * (1.2 - 0.6 * (i / COUNT));
+				u.setAttribute('width', sz.toFixed(1));
+				u.setAttribute('height', sz.toFixed(1));
+				u.setAttribute('x', (-sz / 2).toFixed(1));
+				u.setAttribute('y', (-sz / 2).toFixed(1));
+			});
+		const lastOpacity: string[] = [];
+		const lastColor: string[] = [];
 		const journey = { progress: 0 };
 		const place = () => {
 			if (!raw) return;
 			const gap = 1 / COUNT;
+			const box = shownStep >= 0 ? boxes[shownStep] : null;
 			shapes.forEach((u, i) => {
 				const p = Math.max(0, Math.min(0.999, journey.progress - i * gap));
-				// a shape that has not had its turn yet stays hidden instead of
-				// waiting in a pile at the entrance, so the train comes in one by one
-				u.style.opacity = journey.progress - i * gap > 0 ? '1' : '0';
 				const at = MotionPathPlugin.getPositionOnPath(raw as never, p) as { x: number; y: number };
-				u.setAttribute('width', String(size));
-				u.setAttribute('height', String(size));
-				u.setAttribute('x', (-size / 2).toFixed(1));
-				u.setAttribute('y', (-size / 2).toFixed(1));
+				const onWords = !!box && at.x > box.x0 && at.x < box.x1 && at.y > box.y0 && at.y < box.y1;
+				const level = 1 - 0.55 * (i / COUNT);
+				// a shape that has not had its turn yet stays hidden; one over the words fades
+				const opacity = journey.progress - i * gap > 0 ? String(onWords ? level * 0.15 : level) : '0';
+				if (lastOpacity[i] !== opacity) {
+					u.style.opacity = opacity;
+					lastOpacity[i] = opacity;
+				}
+				// a comet: a bright white head, then a tail that fades through the palette
+				const color = i === 0 ? '#ffffff' : tint(p);
+				if (lastColor[i] !== color) {
+					u.style.color = color;
+					lastColor[i] = color;
+				}
 				u.setAttribute('transform', `translate(${at.x.toFixed(1)} ${at.y.toFixed(1)}) rotate(${(p * SPIN).toFixed(1)})`);
 			});
 		};
 
+		// where a step should sit when it is jumped to: the middle of the screen, a little
+		// lower on short screens (a phone on its side) so it clears the header and chip
+		const mid = () => window.innerHeight / 2 + (window.innerHeight < 480 ? 45 : 0);
+
+		// ---------- the progress chip ----------
+		// A slim bar that stays on screen once the legend has scrolled away: which
+		// step you are on, how many there are, and a dot per step to jump to.
+		const N = steps.length;
+		const names = steps.map((s) => s.querySelector('.step__title')?.textContent?.trim() ?? '');
+		const chip = document.createElement('div');
+		chip.className = 'method-chip';
+		chip.setAttribute('role', 'navigation');
+		chip.setAttribute('aria-label', 'Method steps');
+		chip.innerHTML = `<span class="mc-count">01 / 0${N}</span><span class="mc-name">${names[0]}</span><span class="mc-dots">${steps
+			.map((_, i) => `<button type="button" class="mc-dot" aria-label="Go to step ${i + 1}: ${names[i]}"></button>`)
+			.join('')}</span>`;
+		document.body.appendChild(chip);
+		const mcCount = chip.querySelector<HTMLElement>('.mc-count')!;
+		const mcName = chip.querySelector<HTMLElement>('.mc-name')!;
+		const mcDots = Array.from(chip.querySelectorAll<HTMLButtonElement>('.mc-dot'));
+		mcDots.forEach((d, i) => d.addEventListener('click', () => legend[i].querySelector('button')?.click()));
+		const updateChip = (cur: number) => {
+			const c = Math.max(0, cur);
+			mcCount.textContent = `0${c + 1} / 0${N}`;
+			mcName.textContent = names[c];
+			mcDots.forEach((d, i) => {
+				d.classList.toggle('is-on', i <= c);
+				d.classList.toggle('is-cur', i === c);
+				if (i === c) d.setAttribute('aria-current', 'step');
+				else d.removeAttribute('aria-current');
+			});
+		};
+		// shown while the section is on screen and the heading and legend are not
+		const legendEl = section.querySelector<HTMLElement>('.method-legend');
+		const headEl = section.querySelector<HTMLElement>('.method-head');
+		let chipQueued = false;
+		const placeChip = () => {
+			chipQueued = false;
+			const sr = section.getBoundingClientRect();
+			const legendGone = !legendEl || legendEl.getBoundingClientRect().bottom < 76 || getComputedStyle(legendEl).display === 'none';
+			const headGone = !headEl || headEl.getBoundingClientRect().bottom < 76;
+			chip.classList.toggle('is-on', legendGone && headGone && sr.bottom > 240 && sr.top < window.innerHeight);
+		};
+		const queueChip = () => {
+			if (!chipQueued) {
+				chipQueued = true;
+				requestAnimationFrame(placeChip);
+			}
+		};
+		window.addEventListener('scroll', queueChip, { passive: true });
+		window.addEventListener('resize', queueChip);
+		placeChip();
+
 		// ---------- the current step ----------
-		// the last step whose top has risen above 62% of the screen, worked out
-		// from positions so it is right even after a jump
+		// Only the step you are on is shown; the others wait invisibly (opacity only,
+		// so they stay in the page for screen readers and find-in-page). The step
+		// nearest the middle of the screen is the current one, and it pops in when it
+		// takes over. With reduced motion every step stays visible.
+		const focusMode = !REDUCED;
+		if (focusMode) gsap.set(steps, { opacity: 0 });
+		else wrap.removeAttribute('data-focus');
+
+		// ---------- the scroll hint: first visit only ----------
+		// Hidden steps can leave people unsure that more is coming, so the first time
+		// through a hint says so; it goes away once step 2 is reached and stays away
+		// for the rest of the session.
+		const hintEl = section.querySelector<HTMLElement>('[data-method-hint]');
+		let hintSeen = false;
+		try {
+			hintSeen = window.sessionStorage.getItem('methodHintSeen') === '1';
+		} catch {
+			// storage can be blocked; the hint then shows once per page load
+		}
+		if (focusMode && !hintSeen) hintEl?.classList.add('is-active');
+		const retireHint = (cur: number) => {
+			if (cur < 1 || hintSeen) return;
+			hintSeen = true;
+			hintEl?.classList.remove('is-active');
+			try {
+				window.sessionStorage.setItem('methodHintSeen', '1');
+			} catch {
+				// ignore
+			}
+		};
+
+		// a step that has already been shown comes back with a short, quiet pop
+		const seen = new Set<number>();
+		const pop = (s: HTMLElement, idx: number) => {
+			const one = (sel: string) => s.querySelector<HTMLElement>(sel);
+			const all = (sel: string) => Array.from(s.querySelectorAll<HTMLElement>(sel));
+			const num = one('.vis-num');
+			const icon = one('.vis-icon');
+			const bloom = one('.vis-bloom');
+			const rule = one('.step__rule');
+			const rings = all('.vis-ring');
+			const digits = all('.dg');
+			const chars = all('.step__title .ch');
+			const kids = Array.from(s.querySelectorAll('.vis-icon > *'));
+			const sparks = all('.vis-spark');
+			const rest = all('.step__meta, .step__text, .step__gets, .step__cta');
+			const origin = s.dataset.side === 'right' ? '100% 50%' : '0% 50%';
+			const everything = [s, num, icon, bloom, rule, ...rings, ...digits, ...chars, ...kids, ...sparks, ...rest].filter(Boolean) as gsap.TweenTarget[];
+			gsap.killTweensOf(everything);
+
+			// the centre of the number, in the coordinates of the row it sits in
+			const cx = num ? num.offsetLeft + num.offsetWidth / 2 : 0;
+			const cy = num ? num.offsetTop + num.offsetHeight / 2 : 0;
+
+			// a step that has already been shown comes back with a short, quiet pop:
+			// everything is put to its finished state and only the step itself eases in
+			if (seen.has(idx)) {
+				gsap.set(digits, { yPercent: 0 });
+				gsap.set(chars, { yPercent: 0, opacity: 1, rotation: 0 });
+				gsap.set(kids, { strokeDashoffset: 0 });
+				gsap.set(icon, { scale: 1, rotation: 0, opacity: 1 });
+				gsap.set(rule, { scaleX: 1 });
+				gsap.set(bloom, { scale: 1, opacity: 0.35 });
+				gsap.set([...rings, ...sparks], { opacity: 0 });
+				gsap.set([num, ...rest], { clearProps: 'all' });
+				gsap.fromTo(s, { opacity: 0, scale: 0.96, y: 14, transformOrigin: origin }, { opacity: 1, scale: 1, y: 0, duration: 0.28, ease: 'power2.out' });
+				return;
+			}
+			seen.add(idx);
+
+			gsap.set(bloom, { x: cx - 150, y: cy - 150 });
+			gsap.set(rings, { x: cx - 60, y: cy - 60 });
+
+			// a few of the trail's own shapes burst out of the number
+			const angles = sparks.map((_, i) => (i / sparks.length) * Math.PI * 2 + (Math.random() - 0.5) * 0.7);
+			const radii = sparks.map(() => 64 + Math.random() * 56);
+			const sizes = sparks.map(() => 0.75 + Math.random() * 0.6);
+			const spins = sparks.map(() => (Math.random() - 0.5) * 240);
+
+			const tl = gsap.timeline();
+			// the whole step springs up out of its own corner
+			tl.fromTo(s, { opacity: 0, scale: 0.94, y: 26, transformOrigin: origin }, { opacity: 1, scale: 1, y: 0, duration: 0.6, ease: 'back.out(1.5)' }, 0);
+			// a soft violet bloom opens behind the number, then settles to a quiet glow
+			tl.fromTo(bloom, { scale: 0.35, opacity: 0 }, { scale: 1.1, opacity: 0.85, duration: 0.5, ease: 'power2.out' }, 0);
+			tl.to(bloom, { scale: 1, opacity: 0.35, duration: 0.9, ease: 'power2.inOut' }, 0.5);
+			// two ripples travel outwards from the number
+			tl.fromTo(rings, { scale: 0.5, opacity: 0.75 }, { scale: 2.6, opacity: 0, duration: 1, ease: 'power2.out', stagger: 0.14 }, 0.05);
+			// the digits roll up into place, and the number gives off one soft glow
+			tl.fromTo(digits, { yPercent: 115 }, { yPercent: 0, duration: 0.6, ease: 'back.out(1.8)', stagger: 0.09 }, 0.05);
+			tl.fromTo(num, { filter: 'drop-shadow(0 0 0px rgba(167,139,250,0))' }, { filter: 'drop-shadow(0 0 22px rgba(167,139,250,0.65))', duration: 0.35, ease: 'power2.out', yoyo: true, repeat: 1 }, 0.1);
+			// the drawing springs in, then draws itself
+			tl.fromTo(icon, { scale: 0.35, rotation: -28, opacity: 0, transformOrigin: '50% 50%' }, { scale: 1, rotation: 0, opacity: 1, duration: 0.65, ease: 'back.out(2.2)' }, 0.12);
+			tl.fromTo(kids, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.9, ease: 'power2.out', stagger: 0.12 }, 0.2);
+			// the burst
+			if (sparks.length) {
+				tl.fromTo(
+					sparks,
+					{ x: cx - 7, y: cy - 7, scale: 0, opacity: 1, rotation: 0 },
+					{
+						x: (i: number) => cx - 7 + Math.cos(angles[i]) * radii[i],
+						y: (i: number) => cy - 7 + Math.sin(angles[i]) * radii[i],
+						scale: (i: number) => sizes[i],
+						rotation: (i: number) => spins[i],
+						duration: 0.8,
+						ease: 'power3.out',
+					},
+					0.12,
+				);
+				tl.to(sparks, { opacity: 0, scale: 0, duration: 0.4, ease: 'power2.in', stagger: 0.02 }, 0.45);
+			}
+			// the title springs in one letter at a time
+			tl.fromTo(chars, { yPercent: 90, opacity: 0, rotation: 7 }, { yPercent: 0, opacity: 1, rotation: 0, duration: 0.55, ease: 'back.out(1.7)', stagger: 0.035 }, 0.18);
+			// the rest follows, and the hairline above "What you get" draws across
+			tl.fromTo(rest, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power2.out', stagger: 0.08 }, 0.3);
+			tl.fromTo(rule, { scaleX: 0 }, { scaleX: 1, duration: 0.6, ease: 'power2.out' }, 0.45);
+		};
+		const hide = (s: HTMLElement) =>
+			gsap.to(s, { opacity: 0, y: -12, scale: 0.97, duration: 0.25, ease: 'power2.in', overwrite: 'auto' });
+
 		let shownStep = -2;
 		const setCurrent = (cur: number) => {
 			if (cur === shownStep) return;
+			const prev = shownStep;
 			shownStep = cur;
 			legend.forEach((li, i) => {
 				li.classList.toggle('is-done', i <= cur);
@@ -243,39 +496,137 @@ const total = String(steps.length).padStart(2, '0');
 				s.classList.toggle('is-current', i === cur);
 				s.classList.toggle('is-past', i < cur);
 			});
+			// a step that is hidden must not be reachable by Tab (its focus ring would be invisible)
+			steps.forEach((s, i) => {
+				const open = !focusMode || i === cur;
+				s.querySelectorAll<HTMLElement>('a, button').forEach((el) => {
+					el.tabIndex = open ? 0 : -1;
+				});
+			});
+			updateChip(cur);
+			retireHint(cur);
+			// the shapes re-check which ones sit on the words of the step now on screen
+			place();
+			if (!focusMode) return;
+			if (prev >= 0 && prev !== cur) hide(steps[prev]);
+			if (cur >= 0) pop(steps[cur], cur);
 		};
 		const findCurrent = () => {
-			let cur = -1;
+			const vh = window.innerHeight;
+			// above the section nothing has been reached yet
+			if (wrap.getBoundingClientRect().top > vh * 0.85) {
+				setCurrent(-1);
+				return;
+			}
+			let best = 0;
+			let bestDist = Infinity;
 			steps.forEach((s, i) => {
-				if (s.getBoundingClientRect().top < window.innerHeight * 0.62) cur = i;
+				const r = s.getBoundingClientRect();
+				const dist = Math.abs(r.top + r.height / 2 - mid());
+				if (dist < bestDist) {
+					bestDist = dist;
+					best = i;
+				}
 			});
-			setCurrent(cur);
+			setCurrent(best);
 		};
+		if (REDUCED) {
+			let queued = false;
+			window.addEventListener(
+				'scroll',
+				() => {
+					if (queued) return;
+					queued = true;
+					requestAnimationFrame(() => {
+						queued = false;
+						findCurrent();
+					});
+				},
+				{ passive: true },
+			);
+		}
 
 		// legend buttons jump to their step
 		legend.forEach((li, i) =>
 			li.querySelector('button')?.addEventListener('click', () => {
 				const r = steps[i].getBoundingClientRect();
-				window.scrollTo({ top: window.scrollY + r.top - window.innerHeight * 0.35, behavior: REDUCED ? 'auto' : 'smooth' });
+				window.scrollTo({ top: window.scrollY + r.top + r.height / 2 - mid(), behavior: REDUCED ? 'auto' : 'smooth' });
 			}),
 		);
 
-		// ---------- the drawings draw themselves as their step arrives ----------
+		// ---------- keyboard: arrow keys step through the legend and the chip dots ----------
+		// With focus on one of the step buttons, Right/Down/Page Down go to the next
+		// step, Left/Up/Page Up to the previous one, Home and End to the first and
+		// last. Page scrolling is left alone everywhere else.
+		const stepByKeys = (buttons: HTMLButtonElement[]) => (e: KeyboardEvent) => {
+			const i = buttons.indexOf(document.activeElement as HTMLButtonElement);
+			if (i < 0) return;
+			let j = i;
+			if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'PageDown') j = Math.min(buttons.length - 1, i + 1);
+			else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'PageUp') j = Math.max(0, i - 1);
+			else if (e.key === 'Home') j = 0;
+			else if (e.key === 'End') j = buttons.length - 1;
+			else return;
+			e.preventDefault();
+			buttons[j].focus({ preventScroll: true });
+			buttons[j].click();
+		};
+		const legendButtons = legend.map((li) => li.querySelector('button')).filter((b): b is HTMLButtonElement => !!b);
+		section.querySelector('.method-legend')?.addEventListener('keydown', stepByKeys(legendButtons) as EventListener);
+		chip.querySelector('.mc-dots')?.addEventListener('keydown', stepByKeys(mcDots) as EventListener);
+
+		// ---------- skip to the end ----------
+		const skip = section.querySelector<HTMLAnchorElement>('[data-method-skip]');
+		const endEl = section.querySelector<HTMLElement>('#method-end');
+		skip?.addEventListener('click', (e) => {
+			if (!endEl) return;
+			e.preventDefault();
+			window.scrollTo({
+				top: window.scrollY + endEl.getBoundingClientRect().top - window.innerHeight * 0.3,
+				behavior: REDUCED ? 'auto' : 'smooth',
+			});
+			endEl.focus({ preventScroll: true });
+		});
+
+		// ---------- the pieces the pop animates ----------
+		// The number is split into digits (they roll up), and, when motion is on, the
+		// title into letters and a handful of burst shapes are added to each step.
+		// The words stay readable for screen readers: the title keeps a hidden copy.
 		steps.forEach((s) => {
-			const kids = Array.from(s.querySelectorAll<SVGElement>('.vis-icon > *'));
-			kids.forEach((k) => {
+			const num = s.querySelector<HTMLElement>('.vis-num');
+			if (num && !num.querySelector('.dg')) {
+				num.innerHTML = Array.from(num.textContent ?? '')
+					.map((c) => `<span class="dg">${c}</span>`)
+					.join('');
+			}
+			if (!focusMode) return;
+			const title = s.querySelector<HTMLElement>('.step__title');
+			if (title && !title.querySelector('.ch')) {
+				const text = title.textContent ?? '';
+				title.innerHTML = `<span class="sr-only">${text}</span><span aria-hidden="true">${Array.from(text)
+					.map((c) => `<span class="ch">${c}</span>`)
+					.join('')}</span>`;
+			}
+			const vis = s.querySelector<HTMLElement>('.vis');
+			if (vis && !vis.querySelector('.vis-spark')) {
+				for (let k = 0; k < 8; k += 1) {
+					const sp = document.createElement('span');
+					sp.className = 'vis-spark';
+					sp.setAttribute('aria-hidden', 'true');
+					sp.innerHTML = `<svg viewBox="-10 -10 20 20"><use href="#${SHAPES[k % SHAPES.length]}"/></svg>`;
+					sp.style.color = HUES[k % HUES.length];
+					vis.appendChild(sp);
+				}
+			}
+		});
+
+		// ---------- the drawings: ready to be drawn each time their step takes over ----------
+		steps.forEach((s) => {
+			s.querySelectorAll<SVGElement>('.vis-icon > *').forEach((k) => {
 				k.setAttribute('pathLength', '1');
 				k.style.strokeDasharray = '1';
-				k.style.strokeDashoffset = REDUCED ? '0' : '1';
+				k.style.strokeDashoffset = '0';
 			});
-			if (!REDUCED) {
-				ScrollTrigger.create({
-					trigger: s,
-					start: 'top 82%',
-					once: true,
-					onEnter: () => gsap.to(kids, { strokeDashoffset: 0, duration: 1, ease: 'power2.out', stagger: 0.14 }),
-				});
-			}
 		});
 
 		// ---------- start ----------
@@ -303,7 +654,9 @@ const total = String(steps.length).padStart(2, '0');
 				onUpdate: findCurrent,
 				onRefresh: findCurrent,
 			});
-			ScrollTrigger.addEventListener('refreshInit', trail);
+			ScrollTrigger.addEventListener('refreshInit', () => {
+				if (layoutNow() !== layoutSig) trail();
+			});
 			findCurrent();
 		};
 
@@ -420,6 +773,7 @@ const total = String(steps.length).padStart(2, '0');
 
 	.method-sub {
 		margin: 0 0 1.4rem;
+		text-wrap: pretty;
 		font-size: 1rem;
 		color: rgba(243, 243, 241, 0.7);
 	}
@@ -439,10 +793,11 @@ const total = String(steps.length).padStart(2, '0');
 		align-items: center;
 		gap: 0.5rem;
 		font-family: var(--mono);
-		font-size: 0.72rem;
+		font-size: 0.78rem;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
-		color: rgba(243, 243, 241, 0.5);
+		/* 0.6 of the ink colour is 6.7:1 on the page background (AA needs 4.5:1) */
+		color: rgba(243, 243, 241, 0.6);
 		transition: color 0.4s ease;
 	}
 
@@ -450,7 +805,9 @@ const total = String(steps.length).padStart(2, '0');
 		display: inline-flex;
 		align-items: center;
 		gap: 0.5rem;
-		padding: 0.2rem 0;
+		/* 44px tall: a comfortable touch target */
+		min-height: 44px;
+		padding: 0 0.3rem;
 		background: none;
 		border: 0;
 		font: inherit;
@@ -484,9 +841,10 @@ const total = String(steps.length).padStart(2, '0');
 		transition: background-color 0.4s ease, box-shadow 0.4s ease;
 	}
 
+	/* the number is dimmer than its word, but still above 4.5:1 (0.6 x 0.9 of the ink colour) */
 	.method-legend li span {
 		color: inherit;
-		opacity: 0.7;
+		opacity: 0.9;
 	}
 
 	.method-legend li.is-done {
@@ -517,18 +875,14 @@ const total = String(steps.length).padStart(2, '0');
 	   Behind them an svg as big as the whole list holds an invisible trail, drawn
 	   by the script between the steps, and the little shapes that travel along it. */
 	.method {
-		/* the shapes on the trail, in turn, lifted for a dark page */
-		--shape-1: #ff6b81;
-		--shape-2: #ffc247;
-		--shape-3: #3fd0be;
-		--shape-4: #a78bfa;
-		--shape-5: #f3f3f1;
 		--accent-soft: #8f7df0;
 	}
 
+	/* room above step 1 so it lands comfortably under the legend, and a shorter
+	   tail so the closing line does not float far below the last step */
 	.mt {
 		position: relative;
-		padding: clamp(0.5rem, 2vh, 1.5rem) 0 10vh;
+		padding: clamp(1.5rem, 6vh, 4rem) 0 clamp(2rem, 6vh, 4rem);
 	}
 
 	.trail-svg {
@@ -545,39 +899,56 @@ const total = String(steps.length).padStart(2, '0');
 		stroke: none;
 	}
 
-	/* the shapes are made by the script, so they carry no component attribute */
-	.mt :global(.trail-shapes use:nth-of-type(5n + 1)) {
-		fill: var(--shape-1);
+	/* the shapes are made by the script (so they carry no component attribute); each
+	   gets its colour from where it is on the trail. One soft violet glow sits on the
+	   whole group, not on every shape. */
+	.trail-shapes {
+		filter: drop-shadow(0 0 5px rgba(167, 139, 250, 0.55));
 	}
 
-	.mt :global(.trail-shapes use:nth-of-type(5n + 2)) {
-		fill: var(--shape-2);
+	.trail-shapes.is-lite {
+		filter: none;
 	}
 
-	.mt :global(.trail-shapes use:nth-of-type(5n + 3)) {
-		fill: var(--shape-3);
-	}
-
-	.mt :global(.trail-shapes use:nth-of-type(5n + 4)) {
-		fill: var(--shape-4);
-	}
-
-	.mt :global(.trail-shapes use:nth-of-type(5n + 5)) {
-		fill: var(--shape-5);
+	.mt :global(.trail-shapes use) {
+		fill: currentColor;
+		transition: opacity 0.2s ease;
 	}
 
 	.steps {
 		position: relative;
 		display: grid;
 		grid-template-columns: 1fr 1fr;
-		row-gap: clamp(64px, 15vh, 170px);
+		/* every step gets about 55% of the screen height of scrolling (its own height
+		   plus this gap), so the pace is steady on any screen */
+		row-gap: max(5rem, calc(55vh - 25rem));
 		margin: 0;
 		padding: 0;
 		list-style: none;
 	}
 
 	.step {
-		max-width: 30em;
+		position: relative;
+		isolation: isolate;
+		max-width: 34em;
+	}
+
+	/* focus mode: only the step you are on shows. Opacity only, so the others stay
+	   in the page for screen readers; the script (or the media query / noscript
+	   below) takes over from this starting state. */
+	.mt[data-focus] .step {
+		opacity: 0;
+	}
+
+	.mt[data-focus] .step:not(.is-current) {
+		pointer-events: none;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.mt[data-focus] .step {
+			opacity: 1;
+			pointer-events: auto;
+		}
 	}
 
 	/* one step per row, so the trail can swing from side to side between them */
@@ -601,6 +972,7 @@ const total = String(steps.length).padStart(2, '0');
 
 	/* ---------- the step mark: big number and line drawing ---------- */
 	.vis {
+		position: relative;
 		display: flex;
 		align-items: center;
 		flex-wrap: wrap;
@@ -613,7 +985,7 @@ const total = String(steps.length).padStart(2, '0');
 
 	/* the number is a quiet fill until its step is reached, then it lights up */
 	.vis-num {
-		font-size: clamp(64px, 7.5vw, 112px);
+		font-size: clamp(64px, 9vw, 140px);
 		font-weight: 800;
 		letter-spacing: -0.05em;
 		line-height: 0.9;
@@ -627,16 +999,90 @@ const total = String(steps.length).padStart(2, '0');
 	}
 
 	.step.is-current .vis-num {
+		color: #a78bfa;
+	}
+
+	/* each digit carries the gradient, so it still shows while the digits roll */
+	.step.is-current .vis-num :global(.dg) {
 		background: linear-gradient(180deg, #c4b5fd, #7c5cf0);
 		-webkit-background-clip: text;
 		background-clip: text;
 		color: transparent;
 	}
 
+	.vis-num {
+		display: inline-flex;
+		/* the digits roll up from below the number's own box */
+		overflow: hidden;
+		padding: 0.1em 0.03em;
+		margin: -0.1em -0.03em;
+	}
+
+	.vis-num :global(.dg) {
+		display: inline-block;
+	}
+
+	/* the bloom and ripples sit behind the step, the burst shapes in front */
+	.vis-bloom,
+	.vis-ring {
+		position: absolute;
+		left: 0;
+		top: 0;
+		z-index: -1;
+		border-radius: 50%;
+		opacity: 0;
+		pointer-events: none;
+	}
+
+	.vis-bloom {
+		width: 300px;
+		height: 300px;
+		background: radial-gradient(circle, rgba(139, 92, 246, 0.5), rgba(139, 92, 246, 0.12) 45%, transparent 68%);
+	}
+
+	.vis-ring {
+		width: 120px;
+		height: 120px;
+		border: 2px solid rgba(196, 181, 253, 0.8);
+	}
+
+	/* the burst shapes are made by the script */
+	.vis :global(.vis-spark) {
+		position: absolute;
+		left: 0;
+		top: 0;
+		z-index: 2;
+		width: 14px;
+		height: 14px;
+		opacity: 0;
+		pointer-events: none;
+	}
+
+	.vis :global(.vis-spark svg) {
+		display: block;
+		width: 100%;
+		height: 100%;
+		fill: currentColor;
+	}
+
+	.step__title :global(.ch) {
+		display: inline-block;
+	}
+
+	.step :global(.sr-only) {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		margin: -1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+
 	.vis-icon {
 		flex: none;
-		width: clamp(46px, 4.6vw, 70px);
-		height: clamp(46px, 4.6vw, 70px);
+		width: clamp(50px, 5.4vw, 84px);
+		height: clamp(50px, 5.4vw, 84px);
 		color: var(--accent-soft);
 		transition: color 0.4s ease;
 	}
@@ -647,7 +1093,7 @@ const total = String(steps.length).padStart(2, '0');
 
 	.step__title {
 		margin: 0.35em 0 0.2em;
-		font-size: clamp(32px, 3.8vw, 58px);
+		font-size: clamp(34px, 5vw, 76px);
 		font-weight: 700;
 		letter-spacing: -0.035em;
 		line-height: 0.98;
@@ -656,15 +1102,79 @@ const total = String(steps.length).padStart(2, '0');
 	.step__meta {
 		margin: 0;
 		font-family: var(--mono);
-		font-size: clamp(12px, 1vw, 14px);
+		font-size: clamp(13px, 1vw, 15px);
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		color: var(--muted);
 	}
 
+	/* what you get at this step */
+	.step__gets {
+		max-width: 34ch;
+		margin: 1.1em 0 0;
+		font-size: clamp(14px, 1.05vw, 17px);
+		line-height: 1.5;
+		color: rgba(243, 243, 241, 0.78);
+	}
+
+	.step--right .step__gets {
+		margin-left: auto;
+	}
+
+	.step__rule {
+		display: block;
+		height: 1px;
+		margin-bottom: 0.9em;
+		background: rgba(167, 139, 250, 0.28);
+		transform-origin: left center;
+	}
+
+	.step--right .step__rule {
+		transform-origin: right center;
+	}
+
+	.step__gets-label {
+		display: block;
+		margin-bottom: 0.3rem;
+		font-family: var(--mono);
+		font-size: 0.72rem;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--accent-bright);
+	}
+
+	/* the mid-way invitation, on the fourth step */
+	.step__cta {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.55em;
+		min-height: 44px;
+		margin-top: 1.3rem;
+		padding: 0.5rem 1.1rem;
+		background: rgba(109, 40, 217, 0.22);
+		border: 1px solid rgba(167, 139, 250, 0.55);
+		border-radius: 999px;
+		font-size: 0.92rem;
+		font-weight: 600;
+		line-height: 1.25;
+		color: #ffffff;
+		text-decoration: none;
+		transition: background-color 0.2s ease;
+	}
+
+	.step__cta:hover,
+	.step__cta:focus-visible {
+		background: var(--accent);
+	}
+
+	.step__cta:focus-visible {
+		outline: 2px solid var(--accent-bright);
+		outline-offset: 3px;
+	}
+
 	.step__text {
 		margin: 0.9em 0 0;
-		font-size: clamp(15px, 1.15vw, 18px);
+		font-size: clamp(15px, 1.3vw, 20px);
 		line-height: 1.55;
 		color: rgba(243, 243, 241, 0.85);
 	}
@@ -674,7 +1184,7 @@ const total = String(steps.length).padStart(2, '0');
 	@media (max-width: 720px) {
 		.steps {
 			grid-template-columns: 1fr;
-			row-gap: 96px;
+			row-gap: max(5rem, calc(55vh - 19rem));
 		}
 
 		.step--right {
@@ -689,6 +1199,187 @@ const total = String(steps.length).padStart(2, '0');
 
 		.method-legend {
 			display: none;
+		}
+	}
+
+	/* ---------- the scroll hint and the skip link ---------- */
+	.method-tools {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.2rem 1.5rem;
+		max-width: 42rem;
+		margin-top: 0.75rem;
+	}
+
+	/* shown only on the first visit, in focus mode (the script switches it on) */
+	.method-hint {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.55rem;
+		margin: 0;
+		font-family: var(--mono);
+		font-size: 0.74rem;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--muted);
+		opacity: 0;
+		visibility: hidden;
+		transition: opacity 0.4s ease, visibility 0.4s;
+	}
+
+	.method-hint.is-active {
+		opacity: 1;
+		visibility: visible;
+	}
+
+	.mh-arrow {
+		color: var(--accent-bright);
+		/* a gentle nudge three times, then it rests */
+		animation: mh-nudge 1.4s ease-in-out 3;
+	}
+
+	@keyframes mh-nudge {
+		0%,
+		100% {
+			transform: translateY(0);
+		}
+		50% {
+			transform: translateY(4px);
+		}
+	}
+
+	.method-skip {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		min-height: 44px;
+		font-family: var(--mono);
+		font-size: 0.74rem;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--accent-bright);
+		text-decoration: underline;
+		text-underline-offset: 4px;
+		text-decoration-color: rgba(167, 139, 250, 0.45);
+		transition: color 0.2s ease;
+	}
+
+	.method-skip:hover {
+		color: #ffffff;
+	}
+
+	.method-skip:focus-visible {
+		outline: 2px solid var(--accent-bright);
+		outline-offset: 3px;
+		border-radius: 4px;
+	}
+
+	.method-end:focus {
+		outline: none;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.mh-arrow {
+			animation: none;
+		}
+
+		.method-hint,
+		.method-skip {
+			transition: none;
+		}
+	}
+
+	/* ---------- the progress chip that follows you through the section ---------- */
+	:global(.method-chip) {
+		position: fixed;
+		top: 78px;
+		left: 50%;
+		z-index: 90;
+		display: flex;
+		align-items: center;
+		gap: 0.9rem;
+		padding: 0.5rem 1rem;
+		background: rgba(13, 16, 24, 0.96);
+		border: 1px solid rgba(167, 139, 250, 0.35);
+		border-radius: 999px;
+		box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+		backdrop-filter: blur(10px);
+		-webkit-backdrop-filter: blur(10px);
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.76rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		white-space: nowrap;
+		color: #f3f3f1;
+		opacity: 0;
+		pointer-events: none;
+		transform: translate(-50%, -12px);
+		transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+	}
+
+	:global(.method-chip.is-on) {
+		opacity: 1;
+		pointer-events: auto;
+		transform: translate(-50%, 0);
+	}
+
+	:global(.method-chip .mc-count) {
+		color: #c4b5fd;
+	}
+
+	:global(.method-chip .mc-name) {
+		min-width: 5.5rem;
+	}
+
+	:global(.method-chip .mc-dots) {
+		display: flex;
+		gap: 12px;
+	}
+
+	:global(.method-chip .mc-dot) {
+		position: relative;
+		width: 9px;
+		height: 9px;
+		padding: 0;
+		background: none;
+		border: 1.5px solid rgba(167, 139, 250, 0.6);
+		border-radius: 50%;
+		cursor: pointer;
+		transition: background-color 0.25s ease, box-shadow 0.25s ease;
+	}
+
+	/* a 44px-tall, dot-spaced target around each dot: much larger than the dot itself */
+	:global(.method-chip .mc-dot)::after {
+		content: '';
+		position: absolute;
+		inset: -19px -6px;
+	}
+
+	:global(.method-chip .mc-dot.is-on) {
+		background: #a78bfa;
+	}
+
+	:global(.method-chip .mc-dot.is-cur) {
+		box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.3);
+	}
+
+	:global(.method-chip .mc-dot:focus-visible) {
+		outline: 2px solid #a78bfa;
+		outline-offset: 4px;
+	}
+
+	@media (max-width: 520px) {
+		:global(.method-chip .mc-name) {
+			display: none;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		:global(.method-chip),
+		:global(.method-chip .mc-dot) {
+			transition: none;
 		}
 	}
 
@@ -761,6 +1452,11 @@ const total = String(steps.length).padStart(2, '0');
 		.method .reveal {
 			opacity: 1 !important;
 			transform: none !important;
+		}
+
+		/* without JS nothing can reveal a step, so show them all */
+		.mt[data-focus] .step {
+			opacity: 1 !important;
 		}
 	</style>
 </noscript>

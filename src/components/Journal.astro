@@ -1,54 +1,209 @@
 ---
+// Working notes from the studio, as big panels that stack up as you scroll. Every note comes with a small toy about its own topic that you can play with.
 const notes = [
-	{ tag: 'AI Agents', title: 'We tried building an AI agent that actually does the work.' },
-	{ tag: 'Automation', title: 'What happened when we connected WhatsApp to an ERP?' },
-	{ tag: 'Local AI', title: "Why we're experimenting with local AI." },
-	{ tag: 'Case study', title: 'We rebuilt a business workflow from zero.' },
-	{ tag: 'Finveda', title: 'What we learned building Finveda.' },
-	{ tag: 'Philosophy', title: 'Can traditional businesses become software companies?' },
+	{ tag: 'AI Agents', hue: '#a78bfa', toy: 'agent', title: 'We tried building an AI agent that actually does the work.' },
+	{ tag: 'Automation', hue: '#34d399', toy: 'chat', title: 'What happened when we connected WhatsApp to an ERP?' },
+	{ tag: 'Local AI', hue: '#60a5fa', toy: 'local', title: "Why we're experimenting with local AI." },
+	{ tag: 'Case study', hue: '#fbbf24', toy: 'steps', title: 'We rebuilt a business workflow from zero.' },
+	{ tag: 'Finveda', hue: '#f472b6', toy: 'chart', title: 'What we learned building Finveda.' },
+	{ tag: 'Philosophy', hue: '#2dd4bf', toy: 'grow', title: 'Can traditional businesses become software companies?' },
 ];
+const pad = (n: number) => String(n).padStart(2, '0');
+const tasks = ['Read emails', 'Update records', 'Send invoice', 'Notify team'];
+const stepNames = ['Enter', 'Check', 'Approve', 'Bill', 'Notify', 'Report'];
+const bars = [
+	{ v: 42, m: 'Jan' },
+	{ v: 68, m: 'Feb' },
+	{ v: 55, m: 'Mar' },
+	{ v: 90, m: 'Apr' },
+	{ v: 76, m: 'May' },
+];
+const tick = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m3.5 8.5 3 3 6-7"/></svg>';
 ---
 
 <section class="journal" id="journal">
 	<div class="journal-inner">
 		<div class="journal-head">
-			<div class="journal-eyebrow reveal" style="--reveal-order: 0">
+			<div class="journal-eyebrow reveal">
 				<span class="eyebrow-idx">11</span>
 				<span class="eyebrow-dot" aria-hidden="true">&bull;</span>
 				<span class="eyebrow-label">Journal / Experiments</span>
 			</div>
 
-			<h2 class="journal-heading reveal" style="--reveal-order: 1">Lab Notes</h2>
-			<p class="journal-not reveal" style="--reveal-order: 2">Working notes from the studio.</p>
+			<h2 class="journal-heading" id="journalHeading">Lab Notes</h2>
+			<p class="journal-not reveal">Working notes from the studio.</p>
 		</div>
 
-		<div class="journal-grid">
-			{notes.map((note, i) => (
-				<article class="note-card reveal" style={`--reveal-order: ${i + 3}`}>
-					<div class="note-top">
-						<span class="note-idx">{`0${i + 1}`}</span>
-						<span class="note-tag">{note.tag}</span>
+		<ol class="bench" id="log">
+			{notes.map((n, i) => (
+				<li class="entry" style={`--hue: ${n.hue}; --i: ${i}`}>
+					<div class="entry-body">
+						<p class="entry-meta">
+							<span class="entry-tag">{n.tag}</span>
+						</p>
+						<span class="entry-big" aria-hidden="true">{pad(i + 1)}</span>
+						<p class="entry-title" data-title={n.title}>{n.title}</p>
+
+						<div class="toy" data-toy={n.toy}>
+							{n.toy === 'agent' && (
+								<>
+									<ul class="ck">
+										{tasks.map((t) => (
+											<li>
+												<span class="box" set:html={tick} />
+												<span class="ck-t">{t}</span>
+											</li>
+										))}
+									</ul>
+									<div class="toy-foot">
+										<span class="bar"><i class="ck-bar"></i></span>
+										<button type="button" class="toy-btn">Run agent</button>
+									</div>
+								</>
+							)}
+
+							{n.toy === 'chat' && (
+								<>
+									<div class="chat">
+										<div class="phone">
+											<span class="phone-h">WhatsApp</span>
+											<span class="bubble">Order 20 cans</span>
+										</div>
+										<span class="chat-arrow" aria-hidden="true">&rarr;</span>
+										<div class="erp">
+											<span class="erp-h">ERP</span>
+											<div class="erp-rows"></div>
+										</div>
+									</div>
+									<div class="toy-foot">
+										<span></span>
+										<button type="button" class="toy-btn">Send message</button>
+									</div>
+								</>
+							)}
+
+							{n.toy === 'local' && (
+								<>
+									<div class="lo">
+										<div class="lo-box lo-dev">
+											<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+												<rect x="7" y="7" width="18" height="18" rx="3" />
+												<path d="M12 3v4M20 3v4M12 25v4M20 25v4M3 12h4M3 20h4M25 12h4M25 20h4" />
+												<rect x="12" y="12" width="8" height="8" rx="1.5" />
+											</svg>
+											<span>Your device</span>
+											<i class="lo-lock" aria-hidden="true"></i>
+										</div>
+										<span class="lo-link" aria-hidden="true"></span>
+										<div class="lo-box lo-cloud">
+											<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+												<path d="M9 23a6 6 0 0 1-.6-11.96A8 8 0 0 1 23.8 12 5.5 5.5 0 0 1 23 23H9Z" />
+											</svg>
+											<span>Cloud</span>
+										</div>
+										<i class="lo-dot" aria-hidden="true"></i>
+									</div>
+									<div class="toy-foot">
+										<span class="lo-note" aria-live="polite">Your data leaves the device</span>
+										<button type="button" class="sw" role="switch" aria-checked="false" aria-label="Run the AI locally">
+											<span class="sw-l">Cloud</span>
+											<span class="sw-track"><i></i></span>
+											<span class="sw-r">Local</span>
+										</button>
+									</div>
+								</>
+							)}
+
+							{n.toy === 'steps' && (
+								<>
+									<ol class="st">
+										{stepNames.map((s) => (
+											<li>
+												<span class="st-ico" set:html={tick} />
+												<span>{s}</span>
+											</li>
+										))}
+									</ol>
+									<div class="toy-foot">
+										<output class="st-out" aria-live="polite">0 of 6 automated</output>
+										<input class="rng" type="range" min="0" max="6" step="1" value="0" aria-label="Steps automated" />
+									</div>
+								</>
+							)}
+
+							{n.toy === 'chart' && (
+								<>
+									<div class="ch">
+										{bars.map((b) => (
+											<div class="ch-col" data-v={b.v}>
+												<span class="ch-num">{b.v}k</span>
+												<i class="ch-bar"></i>
+												<span class="ch-m">{b.m}</span>
+											</div>
+										))}
+									</div>
+									<div class="toy-foot">
+										<span></span>
+										<button type="button" class="toy-btn" aria-pressed="false">Make sense of it</button>
+									</div>
+								</>
+							)}
+
+							{n.toy === 'grow' && (
+								<>
+									<div class="gr">
+										<svg class="gr-shop" viewBox="0 0 120 90" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+											<path d="M12 36 20 14h80l8 22Z" />
+											<path d="M12 36a12 12 0 0 0 24 0 12 12 0 0 0 24 0 12 12 0 0 0 24 0 12 12 0 0 0 24 0" />
+											<path d="M20 48v34h80V48" />
+											<rect x="48" y="58" width="24" height="24" rx="2" />
+										</svg>
+										<div class="gr-app" aria-hidden="true">
+											<span class="gr-dots"><i></i><i></i><i></i></span>
+											<span class="gr-bar b1"></span>
+											<span class="gr-bar b2"></span>
+											<span class="gr-bar b3"></span>
+										</div>
+										<p class="gr-stat">
+											<b class="gr-num">12</b>
+											<span>orders a day</span>
+										</p>
+									</div>
+									<div class="toy-foot">
+										<span></span>
+										<button type="button" class="toy-btn" aria-pressed="false">Go digital</button>
+									</div>
+								</>
+							)}
+						</div>
 					</div>
-					<p class="note-title">{note.title}</p>
-					<span class="note-hint">
-						Lab notebook
-						<span class="hint-arrow" aria-hidden="true">&rarr;</span>
-					</span>
-				</article>
+				</li>
 			))}
-		</div>
+		</ol>
 
-		<p class="journal-footer reveal" style={`--reveal-order: ${notes.length + 3}`}>
-			Written while we build, including the parts that didn't work.
-		</p>
+		<p class="journal-footer" id="journalFooter">Written while we build, including the parts that didn't work.</p>
 	</div>
 </section>
 
+<noscript>
+	<style>
+		.journal .reveal,
+		.journal .journal-footer {
+			opacity: 1 !important;
+			transform: none !important;
+		}
+		.journal .toy-btn,
+		.journal .sw,
+		.journal .rng {
+			display: none;
+		}
+	</style>
+</noscript>
+
 <style>
 	.journal {
-		--card-bg: #0d1018;
-
 		position: relative;
+		overflow: clip;
 		background: var(--bg);
 		color: var(--ink);
 		font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
@@ -56,19 +211,17 @@ const notes = [
 	}
 
 	.journal-inner {
-		max-width: 1320px;
+		max-width: 1040px;
 		margin: 0 auto;
-		padding: clamp(56px, 7vw, 96px) clamp(20px, 4vw, 32px);
+		padding: clamp(56px, 7vw, 100px) clamp(20px, 4vw, 32px);
 	}
 
-	/* ---------- scroll-in reveal ---------- */
 	.reveal {
 		opacity: 0;
-		transform: translateY(18px);
+		transform: translateY(16px);
 		transition:
-			opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
-			transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-		transition-delay: calc(var(--reveal-order, 0) * 90ms);
+			opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+			transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
 	}
 
 	.journal.is-visible .reveal {
@@ -78,7 +231,7 @@ const notes = [
 
 	.journal-head {
 		max-width: 640px;
-		margin: 0 auto clamp(48px, 6vw, 72px);
+		margin: 0 auto clamp(40px, 6vw, 72px);
 		text-align: center;
 	}
 
@@ -109,6 +262,19 @@ const notes = [
 		font-size: clamp(2rem, 1.6vw + 1.7rem, 2.75rem);
 		font-weight: 700;
 		letter-spacing: -0.01em;
+		line-height: 1.15;
+	}
+
+	.journal :global(.w) {
+		display: inline-block;
+	}
+
+	.journal :global(.mw) {
+		display: inline-block;
+		overflow: hidden;
+		vertical-align: top;
+		padding-bottom: 0.14em;
+		margin-bottom: -0.14em;
 	}
 
 	.journal-not {
@@ -118,145 +284,1101 @@ const notes = [
 		color: var(--ink-faint);
 	}
 
-	/* ---------- notes grid ---------- */
-	.journal-grid {
-		display: grid;
-		grid-template-columns: repeat(3, 1fr);
-		gap: clamp(1rem, 2vw, 1.5rem);
-		margin-bottom: clamp(48px, 7vw, 72px);
-	}
-
-	.note-card {
+	/* ---------- big panels that stack as you scroll ---------- */
+	.bench {
 		display: flex;
 		flex-direction: column;
-		align-items: flex-start;
-		gap: 1.1rem;
-		min-height: 200px;
-		padding: clamp(1.5rem, 2vw, 2rem);
-		background: var(--card-bg);
-		border: 1px solid var(--border-soft);
+		gap: clamp(22px, 4vw, 48px);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.entry {
+		position: sticky;
+		top: calc(84px + var(--i, 0) * 14px);
+		min-width: 0;
+	}
+
+	.entry-body {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+		grid-template-rows: auto 1fr auto;
+		column-gap: clamp(24px, 4vw, 56px);
+		min-height: clamp(360px, 50vh, 440px);
+		padding: clamp(22px, 3vw, 40px);
+		border: 1px solid color-mix(in srgb, var(--hue) 30%, rgba(255, 255, 255, 0.08));
+		border-radius: 28px;
+		background: linear-gradient(135deg, color-mix(in srgb, var(--hue) 11%, #0d1018), #0d1018 62%);
+		position: relative;
+		transform-origin: 50% 0;
+		box-shadow: 0 -18px 40px -24px rgba(0, 0, 0, 0.9);
+	}
+
+	/* a solid dark veil: panels that sink back stay opaque, they never turn see-through */
+	.entry-body::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		z-index: 5;
+		border-radius: inherit;
+		background: #07080c;
+		opacity: var(--dim, 0);
+		pointer-events: none;
+	}
+
+	.entry-meta {
+		grid-column: 1;
+		grid-row: 1;
+		margin: 0;
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.74rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+	}
+
+	.entry-tag {
+		display: inline-block;
+		padding: 0.25rem 0.7rem;
+		border-radius: 999px;
+		background: color-mix(in srgb, var(--hue) 16%, transparent);
+		color: var(--hue);
+	}
+
+	.entry-big {
+		grid-column: 1;
+		grid-row: 2;
+		align-self: center;
+		font-size: clamp(5rem, 11vw, 8.5rem);
+		font-weight: 800;
+		line-height: 1;
+		letter-spacing: -0.04em;
+		color: transparent;
+		-webkit-text-stroke: 1.5px color-mix(in srgb, var(--hue) 60%, transparent);
+		font-variant-numeric: tabular-nums;
+		user-select: none;
+	}
+
+	.entry-title {
+		grid-column: 1;
+		grid-row: 3;
+		margin: 0;
+		font-size: clamp(1.3rem, 1.3vw + 1rem, 1.9rem);
+		font-weight: 600;
+		line-height: 1.25;
+		letter-spacing: -0.01em;
+		text-wrap: balance;
+		color: var(--ink);
+	}
+
+	/* ---------- the toys ---------- */
+	.toy {
+		display: flex;
+		flex-direction: column;
+		gap: 0.9rem;
+		grid-column: 2;
+		grid-row: 1 / 4;
+		align-self: center;
+		padding: 1.15rem 1.15rem 1rem;
+		border: 1px solid rgba(255, 255, 255, 0.09);
+		border-top: 2px solid var(--hue);
 		border-radius: 16px;
-		transition: border-color 0.3s ease, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+		background: linear-gradient(180deg, color-mix(in srgb, var(--hue) 7%, #10131b), #10131b);
+		text-align: left;
+		box-shadow: 0 18px 30px -22px rgba(0, 0, 0, 0.8);
 	}
 
-	.note-card:hover {
-		border-color: rgba(255, 255, 255, 0.22);
-		transform: translateY(-4px);
-	}
-
-	.note-top {
+	.toy-foot {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		width: 100%;
+		gap: 0.8rem;
+		min-height: 40px;
 	}
 
-	.note-idx {
-		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-		font-size: 0.75rem;
-		color: rgba(167, 139, 250, 0.5);
-	}
-
-	.note-tag {
-		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-		font-size: 0.68rem;
-		letter-spacing: 0.05em;
-		text-transform: uppercase;
-		color: var(--accent);
-		padding: 0.25rem 0.6rem;
-		border: 1px solid rgba(109, 40, 217, 0.35);
+	.toy-btn {
+		flex: none;
+		min-height: 40px;
+		padding: 0 1.05rem;
+		border: 1px solid color-mix(in srgb, var(--hue) 55%, transparent);
 		border-radius: 999px;
-	}
-
-	.note-title {
-		flex: 1;
-		margin: 0;
-		font-size: 1.08rem;
+		background: color-mix(in srgb, var(--hue) 14%, transparent);
+		color: var(--ink);
+		font: inherit;
+		font-size: 0.82rem;
 		font-weight: 600;
-		line-height: 1.45;
-		letter-spacing: -0.005em;
+		cursor: pointer;
+		transition:
+			background-color 0.2s,
+			transform 0.2s;
 	}
 
-	.note-hint {
-		display: inline-flex;
+	.toy-btn:hover,
+	.toy-btn:focus-visible {
+		background: color-mix(in srgb, var(--hue) 28%, transparent);
+		outline: none;
+	}
+
+	.toy-btn:active {
+		transform: scale(0.96);
+	}
+
+	.toy-btn[aria-disabled='true'] {
+		opacity: 0.55;
+		cursor: default;
+	}
+
+	.toy-btn:focus-visible,
+	.sw:focus-visible,
+	.rng:focus-visible {
+		outline: 2px solid var(--hue);
+		outline-offset: 3px;
+	}
+
+	/* 1 · agent checklist */
+	.ck {
+		display: grid;
+		gap: 6px;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.ck li {
+		display: flex;
 		align-items: center;
-		gap: 0.4rem;
-		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-		font-size: 0.7rem;
-		letter-spacing: 0.05em;
+		gap: 0.7rem;
+		padding: 0.5rem 0.6rem;
+		border-radius: 9px;
+		font-size: 0.88rem;
+		color: var(--ink);
+		transition: background-color 0.25s;
+	}
+
+	.ck li.active {
+		background: color-mix(in srgb, var(--hue) 16%, transparent);
+	}
+
+	.box {
+		display: grid;
+		place-items: center;
+		flex: none;
+		width: 20px;
+		height: 20px;
+		border: 1.5px solid rgba(255, 255, 255, 0.28);
+		border-radius: 6px;
+		color: transparent;
+		transition:
+			background-color 0.25s,
+			border-color 0.25s,
+			color 0.25s,
+			transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+	}
+
+	.box :global(svg) {
+		width: 13px;
+		height: 13px;
+	}
+
+	.ck li.done .box {
+		background: var(--hue);
+		border-color: var(--hue);
+		color: #0b0d12;
+		transform: scale(1.08);
+	}
+
+	.ck-t {
+		position: relative;
+		transition: color 0.25s;
+	}
+
+	.ck li.done .ck-t {
+		color: var(--ink-faint);
+		text-decoration: line-through;
+		text-decoration-color: color-mix(in srgb, var(--hue) 70%, transparent);
+	}
+
+	.bar {
+		flex: 1;
+		height: 4px;
+		border-radius: 4px;
+		background: rgba(255, 255, 255, 0.08);
+		overflow: hidden;
+	}
+
+	.ck-bar {
+		display: block;
+		height: 100%;
+		background: var(--hue);
+		transform-origin: left;
+		transform: scaleX(0);
+	}
+
+	/* 2 · whatsapp to erp */
+	.chat {
+		position: relative;
+		display: grid;
+		grid-template-columns: 1fr auto 1.15fr;
+		align-items: stretch;
+		gap: 0.6rem;
+		min-height: 128px;
+	}
+
+	.phone,
+	.erp {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		padding: 0.6rem;
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		border-radius: 12px;
+		background: rgba(255, 255, 255, 0.025);
+	}
+
+	.phone-h,
+	.erp-h {
+		font-family: 'JetBrains Mono', ui-monospace, monospace;
+		font-size: 0.64rem;
+		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		color: var(--ink-faint);
 	}
 
-	.hint-arrow {
-		transition: transform 0.2s ease;
+	.bubble {
+		align-self: flex-start;
+		padding: 0.4rem 0.5rem;
+		border-radius: 12px 12px 12px 3px;
+		background: color-mix(in srgb, var(--hue) 28%, #10131b);
+		font-size: 0.74rem;
+		line-height: 1.25;
 	}
 
-	.note-card:hover .hint-arrow {
-		transform: translateX(3px);
+	.chat-arrow {
+		align-self: center;
+		color: var(--ink-faint);
+	}
+
+	.erp-rows {
+		display: grid;
+		gap: 5px;
+	}
+
+	.toy :global(.erp-row) {
+		display: flex;
+		justify-content: space-between;
+		gap: 0.4rem;
+		padding: 0.32rem 0.5rem;
+		border-radius: 6px;
+		background: color-mix(in srgb, var(--hue) 13%, transparent);
+		font-family: 'JetBrains Mono', ui-monospace, monospace;
+		font-size: 0.68rem;
+		white-space: nowrap;
+	}
+
+	.toy :global(.erp-row b) {
+		color: var(--hue);
+		font-weight: 600;
+	}
+
+	.toy :global(.fly) {
+		position: absolute;
+		z-index: 3;
+		pointer-events: none;
+		padding: 0.45rem 0.65rem;
+		border-radius: 12px;
+		background: color-mix(in srgb, var(--hue) 40%, #10131b);
+		font-size: 0.8rem;
+		line-height: 1.25;
+		white-space: nowrap;
+	}
+
+	/* 3 · local or cloud */
+	.lo {
+		position: relative;
+		display: grid;
+		grid-template-columns: 1fr minmax(24px, 0.7fr) 1fr;
+		align-items: center;
+		min-height: 118px;
+	}
+
+	.lo-box {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.4rem;
+		padding: 0.85rem 0.5rem;
+		border: 1px solid rgba(255, 255, 255, 0.12);
+		border-radius: 14px;
+		background: rgba(255, 255, 255, 0.025);
+		font-size: 0.74rem;
+		color: var(--ink);
+		transition:
+			opacity 0.4s,
+			border-color 0.4s;
+	}
+
+	.lo-box :global(svg) {
+		width: 34px;
+		height: 34px;
+		color: var(--hue);
+	}
+
+	.lo-link {
+		height: 0;
+		border-top: 2px dashed rgba(255, 255, 255, 0.16);
+		transition: opacity 0.4s;
+	}
+
+	.lo-lock {
+		position: absolute;
+		top: 8px;
+		right: 8px;
+		width: 11px;
+		height: 8px;
+		border-radius: 2px;
+		background: #34d399;
+		opacity: 0;
+		transition: opacity 0.4s;
+	}
+
+	.lo-lock::before {
+		content: '';
+		position: absolute;
+		left: 2px;
+		top: -6px;
+		width: 7px;
+		height: 7px;
+		border: 2px solid #34d399;
+		border-bottom: 0;
+		border-radius: 6px 6px 0 0;
+		box-sizing: border-box;
+	}
+
+	.lo-dot {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 12px;
+		height: 12px;
+		margin: -6px 0 0 -6px;
+		border-radius: 50%;
+		background: var(--hue);
+		opacity: 0;
+	}
+
+	.lo.is-local .lo-cloud,
+	.lo.is-local .lo-link {
+		opacity: 0.25;
+	}
+
+	.lo.is-local .lo-lock {
+		opacity: 1;
+	}
+
+	.lo.is-local .lo-dev {
+		border-color: #34d399;
+	}
+
+	.lo.is-cloud .lo-cloud {
+		border-color: color-mix(in srgb, #fbbf24 60%, transparent);
+	}
+
+	.lo-note {
+		font-size: 0.8rem;
+		color: var(--ink-faint);
+	}
+
+	.sw {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.55rem;
+		min-height: 40px;
+		padding: 0;
+		border: 0;
+		background: transparent;
+		color: var(--ink-faint);
+		font: inherit;
+		font-size: 0.78rem;
+		font-weight: 600;
+		cursor: pointer;
+	}
+
+	.sw-track {
+		position: relative;
+		width: 44px;
+		height: 24px;
+		border-radius: 999px;
+		background: rgba(255, 255, 255, 0.12);
+		transition: background-color 0.25s;
+	}
+
+	.sw-track i {
+		position: absolute;
+		top: 3px;
+		left: 3px;
+		width: 18px;
+		height: 18px;
+		border-radius: 50%;
+		background: #fff;
+		transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+	}
+
+	.sw[aria-checked='true'] .sw-track {
+		background: var(--hue);
+	}
+
+	.sw[aria-checked='true'] .sw-track i {
+		transform: translateX(20px);
+	}
+
+	.sw[aria-checked='false'] .sw-l,
+	.sw[aria-checked='true'] .sw-r {
+		color: var(--ink);
+	}
+
+	/* 4 · automate the steps */
+	.st {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 7px;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.st li {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		padding: 0.55rem 0.6rem;
+		border: 1px dashed rgba(255, 255, 255, 0.2);
+		border-radius: 9px;
+		font-size: 0.8rem;
+		color: var(--ink-faint);
+		transition:
+			background-color 0.3s,
+			border-color 0.3s,
+			color 0.3s,
+			transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+	}
+
+	.st-ico {
+		display: grid;
+		place-items: center;
+		width: 16px;
+		height: 16px;
+		flex: none;
+		opacity: 0;
+		margin-right: -0.2rem;
+		width: 0;
+		transition:
+			opacity 0.3s,
+			width 0.3s;
+	}
+
+	.st-ico :global(svg) {
+		width: 14px;
+		height: 14px;
+	}
+
+	.st li.auto {
+		border-style: solid;
+		border-color: var(--hue);
+		background: color-mix(in srgb, var(--hue) 18%, transparent);
+		color: var(--ink);
+		transform: scale(1.04);
+	}
+
+	.st li.auto .st-ico {
+		opacity: 1;
+		width: 16px;
+		color: var(--hue);
+	}
+
+	.st-out {
+		font-size: 0.8rem;
+		color: var(--ink-faint);
+		white-space: nowrap;
+	}
+
+	.rng {
+		flex: 1;
+		min-width: 0;
+		height: 40px;
+		margin: 0;
+		background: transparent;
+		accent-color: var(--hue);
+		cursor: pointer;
+	}
+
+	/* 5 · messy numbers into a chart */
+	.ch {
+		display: flex;
+		align-items: flex-end;
+		justify-content: space-between;
+		gap: 0.5rem;
+		height: 160px;
+		padding: 0 0.3rem;
+	}
+
+	.ch-col {
+		position: relative;
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+		align-items: center;
+		justify-content: flex-end;
+		gap: 0.3rem;
+		height: 100%;
+	}
+
+	.ch-num {
+		font-family: 'JetBrains Mono', ui-monospace, monospace;
+		font-size: 0.74rem;
+		color: var(--ink);
+	}
+
+	.ch-bar {
+		display: block;
+		width: 100%;
+		max-width: 38px;
+		height: 0;
+		border-radius: 6px 6px 2px 2px;
+		background: linear-gradient(180deg, var(--hue), color-mix(in srgb, var(--hue) 40%, transparent));
+	}
+
+	.ch-m {
+		font-size: 0.66rem;
+		color: var(--ink-faint);
+		opacity: 0;
+	}
+
+	/* 6 · a shop goes digital */
+	.gr {
+		position: relative;
+		display: grid;
+		place-items: center;
+		height: 146px;
+	}
+
+	.gr-shop,
+	.gr-app {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		margin: -60px 0 0 -60px;
+	}
+
+	.gr-shop {
+		width: 120px;
+		height: 90px;
+		color: var(--ink-faint);
+	}
+
+	.gr-app {
+		display: flex;
+		flex-direction: column;
+		gap: 7px;
+		width: 120px;
+		height: 90px;
+		padding: 9px;
+		border: 2px solid var(--hue);
+		border-radius: 10px;
+		background: color-mix(in srgb, var(--hue) 10%, #10131b);
+		opacity: 0;
+	}
+
+	.gr-dots {
+		display: flex;
+		gap: 4px;
+	}
+
+	.gr-dots i {
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background: var(--hue);
+		opacity: 0.7;
+	}
+
+	.gr-bar {
+		display: block;
+		height: 9px;
+		border-radius: 5px;
+		background: color-mix(in srgb, var(--hue) 55%, transparent);
+		transform-origin: left;
+	}
+
+	.gr-bar.b1 {
+		width: 86%;
+	}
+	.gr-bar.b2 {
+		width: 62%;
+	}
+	.gr-bar.b3 {
+		width: 40%;
+	}
+
+	.gr-stat {
+		position: absolute;
+		right: 0;
+		bottom: 0;
+		display: flex;
+		align-items: baseline;
+		gap: 0.4rem;
+		margin: 0;
+		font-size: 0.74rem;
+		color: var(--ink-faint);
+	}
+
+	.gr-num {
+		font-size: 1.5rem;
+		line-height: 1;
+		color: var(--ink);
+		font-variant-numeric: tabular-nums;
 	}
 
 	.journal-footer {
-		margin: 0;
+		margin: clamp(40px, 6vw, 72px) 0 0;
 		text-align: center;
-		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-		font-size: 0.85rem;
+		font-size: 0.95rem;
 		color: var(--ink-faint);
 	}
 
-	/* ---------- responsive ---------- */
-	@media (max-width: 900px) {
-		.journal-grid {
-			grid-template-columns: repeat(2, 1fr);
+	/* phones, tablets and short screens: plain stacked panels, no sticky overlap */
+	@media (max-width: 860px), (max-height: 639px) {
+		.entry {
+			position: static;
 		}
-	}
-
-	@media (max-width: 560px) {
-		.journal-grid {
-			grid-template-columns: 1fr;
-		}
-
-		.note-card {
+		.entry-body {
+			grid-template-columns: minmax(0, 1fr);
+			grid-template-rows: none;
 			min-height: 0;
+			row-gap: 0;
+		}
+		.entry-meta,
+		.entry-big,
+		.entry-title,
+		.toy {
+			grid-column: 1;
+			grid-row: auto;
+		}
+		.entry-big {
+			font-size: 3.6rem;
+			margin: 0.2rem 0 0.2rem;
+		}
+		.entry-title {
+			margin-bottom: 1.2rem;
 		}
 	}
 
 	@media (prefers-reduced-motion: reduce) {
 		.reveal,
-		.note-card,
-		.hint-arrow {
+		.box,
+		.st li {
 			transition: none;
+		}
+		.entry {
+			position: static;
 		}
 	}
 </style>
 
-<noscript>
-	<style>
-		.journal .reveal {
-			opacity: 1 !important;
-			transform: none !important;
-		}
-	</style>
-</noscript>
-
 <script>
-	const section = document.getElementById('journal');
-	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	import { gsap } from 'gsap';
+	import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-	if (reduceMotion || !('IntersectionObserver' in window)) {
-		section?.classList.add('is-visible');
-	} else {
-		const revealObserver = new IntersectionObserver(
-			(entries) => {
-				entries.forEach((entry) => {
-					if (entry.isIntersecting) {
-						section?.classList.add('is-visible');
-						revealObserver.disconnect();
-					}
+	gsap.registerPlugin(ScrollTrigger);
+
+	const section = document.querySelector<HTMLElement>('#journal');
+	if (section) {
+		const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		const heading = section.querySelector<HTMLElement>('#journalHeading')!;
+		const footer = section.querySelector<HTMLElement>('#journalFooter')!;
+		const log = section.querySelector<HTMLElement>('#log')!;
+		const entries = [...log.querySelectorAll<HTMLElement>('.entry')];
+
+		// every toy returns demo(): a first run that plays once when its note lights up
+		type Toy = { demo: () => void; finish: () => void };
+		const q = <T extends HTMLElement>(el: HTMLElement, s: string) => el.querySelector<T>(s)!;
+		const qa = (el: HTMLElement, s: string) => [...el.querySelectorAll<HTMLElement>(s)];
+		const fin = (tl: gsap.core.Timeline) => {
+			if (reduce) tl.progress(1);
+			return tl;
+		};
+
+		// 1 · agent: ticks the tasks off one by one
+		const agent = (el: HTMLElement): Toy => {
+			const rows = qa(el, '.ck li');
+			const btn = q<HTMLButtonElement>(el, '.toy-btn');
+			const bar = q(el, '.ck-bar');
+			let tl: gsap.core.Timeline | undefined;
+			const clear = () => {
+				rows.forEach((r) => r.classList.remove('done', 'active'));
+				gsap.set(bar, { scaleX: 0 });
+			};
+			const run = () => {
+				if (tl?.isActive()) return;
+				clear();
+				btn.setAttribute('aria-disabled', 'true');
+				btn.textContent = 'Working…';
+				tl = gsap.timeline({
+					onComplete: () => {
+						btn.removeAttribute('aria-disabled');
+						btn.textContent = 'Run again';
+					},
 				});
-			},
-			{ threshold: 0.15 },
-		);
-		if (section) revealObserver.observe(section);
+				rows.forEach((r, i) => {
+					tl!.call(() => r.classList.add('active'), undefined, i * 0.8);
+					tl!.call(() => (r.classList.remove('active'), r.classList.add('done')), undefined, i * 0.8 + 0.55);
+				});
+				tl.to(bar, { scaleX: 1, duration: rows.length * 0.8, ease: 'none' }, 0);
+				fin(tl);
+			};
+			btn.addEventListener('click', run);
+			const finish = () => {
+				rows.forEach((r) => r.classList.add('done'));
+				gsap.set(bar, { scaleX: 1 });
+				btn.textContent = 'Run again';
+			};
+			return { demo: run, finish };
+		};
+
+		// 2 · chat: a message flies from the phone into the ERP and becomes a row
+		const chat = (el: HTMLElement): Toy => {
+			const btn = q<HTMLButtonElement>(el, '.toy-btn');
+			const wrap = q(el, '.chat');
+			const bubble = q(el, '.bubble');
+			const rows = q(el, '.erp-rows');
+			const qty = [20, 35, 12, 48, 27];
+			let n = 0;
+			let busy = false;
+			const addRow = (animate: boolean) => {
+				const k = qty[n % qty.length];
+				const row = document.createElement('div');
+				row.className = 'erp-row';
+				row.innerHTML = `<span>#${1040 + n}</span><span>${k} cans</span><b>&#10003;</b>`;
+				rows.appendChild(row);
+				if (rows.children.length > 3) rows.firstElementChild!.remove();
+				if (animate) gsap.from(row, { opacity: 0, x: -12, duration: 0.4, ease: 'power2.out' });
+				n += 1;
+				bubble.textContent = `Order ${qty[n % qty.length]} cans`;
+			};
+			const send = () => {
+				if (busy) return;
+				busy = true;
+				const w = wrap.getBoundingClientRect();
+				const b = bubble.getBoundingClientRect();
+				const r = rows.getBoundingClientRect();
+				const fly = document.createElement('span');
+				fly.className = 'fly';
+				fly.textContent = bubble.textContent;
+				fly.style.left = `${b.left - w.left}px`;
+				fly.style.top = `${b.top - w.top}px`;
+				wrap.appendChild(fly);
+				gsap.fromTo(bubble, { scale: 0.9 }, { scale: 1, duration: 0.4, ease: 'back.out(3)' });
+				const tl = gsap.timeline({
+					onComplete: () => {
+						fly.remove();
+						addRow(true);
+						busy = false;
+					},
+				});
+				tl.to(fly, {
+					x: r.left - b.left + 8,
+					y: r.top - b.top + 6 + rows.children.length * 30,
+					scale: 0.7,
+					duration: 0.85,
+					ease: 'power2.inOut',
+				});
+				tl.to(fly, { opacity: 0, duration: 0.15 }, '>-0.1');
+				fin(tl);
+			};
+			btn.addEventListener('click', send);
+			bubble.style.cursor = 'pointer';
+			bubble.addEventListener('click', send);
+			const finish = () => {
+				addRow(false);
+				addRow(false);
+			};
+			return { demo: send, finish };
+		};
+
+		// 3 · local: the data either leaves for the cloud or stays on the device
+		const local = (el: HTMLElement): Toy => {
+			const sw = q<HTMLButtonElement>(el, '.sw');
+			const stage = q(el, '.lo');
+			const dev = q(el, '.lo-dev');
+			const cloud = q(el, '.lo-cloud');
+			const dot = q(el, '.lo-dot');
+			const note = q(el, '.lo-note');
+			let tl: gsap.core.Timeline | undefined;
+			let on = false;
+			let visible = true;
+			const centre = (box: HTMLElement) => {
+				const s = stage.getBoundingClientRect();
+				const b = box.getBoundingClientRect();
+				return { x: b.left - s.left + b.width / 2, y: b.top - s.top + b.height / 2 };
+			};
+			const build = () => {
+				tl?.kill();
+				gsap.set(dot, { opacity: 0 });
+				stage.classList.toggle('is-local', on);
+				stage.classList.toggle('is-cloud', !on);
+				note.textContent = on ? 'Your data stays here' : 'Your data leaves the device';
+				if (reduce) return;
+				const a = centre(dev);
+				const c = centre(cloud);
+				tl = gsap.timeline({ repeat: -1, paused: !visible });
+				if (on) {
+					// loops inside the device
+					tl.set(dot, { x: a.x - 14, y: a.y + 4, opacity: 1 });
+					tl.to(dot, { x: a.x + 14, y: a.y + 4, duration: 0.7, ease: 'sine.inOut' });
+					tl.to(dot, { x: a.x, y: a.y - 14, duration: 0.5, ease: 'sine.inOut' });
+					tl.to(dot, { x: a.x - 14, y: a.y + 4, duration: 0.5, ease: 'sine.inOut' });
+				} else {
+					tl.set(dot, { x: a.x, y: a.y, opacity: 1 });
+					tl.to(dot, { x: c.x, y: c.y, duration: 0.9, ease: 'power2.inOut' });
+					tl.to(cloud, { borderColor: '#fbbf24', duration: 0.2 }, '>-0.05');
+					tl.to(dot, { x: a.x, y: a.y, duration: 0.9, ease: 'power2.inOut' }, '+=0.25');
+					tl.to(cloud, { borderColor: 'rgba(255,255,255,0.12)', duration: 0.3 }, '<');
+					tl.to({}, { duration: 0.3 });
+				}
+			};
+			sw.addEventListener('click', () => {
+				on = !on;
+				sw.setAttribute('aria-checked', String(on));
+				build();
+			});
+			ScrollTrigger.create({
+				trigger: el,
+				start: 'top bottom',
+				end: 'bottom top',
+				onToggle: (s) => {
+					visible = s.isActive;
+					tl?.paused(!visible);
+				},
+			});
+			window.addEventListener('resize', () => build());
+			build();
+			return {
+				demo: () => {},
+				finish: () => {
+					on = true;
+					sw.setAttribute('aria-checked', 'true');
+					build();
+				},
+			};
+		};
+
+		// 4 · steps: a slider turns manual steps into automatic ones
+		const steps = (el: HTMLElement): Toy => {
+			const chips = qa(el, '.st li');
+			const out = q(el, '.st-out');
+			const rng = q<HTMLInputElement>(el, '.rng');
+			const set = (n: number, animate: boolean) => {
+				chips.forEach((c, i) => {
+					const was = c.classList.contains('auto');
+					const now = i < n;
+					c.classList.toggle('auto', now);
+					if (animate && now && !was && !reduce) gsap.fromTo(c, { y: -4 }, { y: 0, duration: 0.4, ease: 'back.out(3)' });
+				});
+				out.textContent = `${n} of ${chips.length} automated`;
+			};
+			rng.addEventListener('input', () => {
+				gsap.killTweensOf(rng);
+				set(Number(rng.value), true);
+			});
+			return {
+				demo: () => {
+					const o = { v: 0 };
+					gsap.to(o, {
+						v: 3,
+						duration: 2,
+						ease: 'power1.inOut',
+						onUpdate: () => {
+							rng.value = String(Math.round(o.v));
+							set(Math.round(o.v), true);
+						},
+					});
+				},
+				finish: () => {
+					rng.value = String(chips.length);
+					set(chips.length, false);
+				},
+			};
+		};
+
+		// 5 · chart: scattered numbers line up into bars
+		const chart = (el: HTMLElement): Toy => {
+			const btn = q<HTMLButtonElement>(el, '.toy-btn');
+			const cols = qa(el, '.ch-col');
+			const raw = [
+				{ x: 6, y: -78, r: -14 },
+				{ x: -14, y: -22, r: 11 },
+				{ x: 8, y: -100, r: -7 },
+				{ x: -4, y: -46, r: 16 },
+				{ x: 10, y: -68, r: -12 },
+			];
+			let clear = false;
+			const apply = (animate: boolean) => {
+				const d = animate && !reduce ? 0.9 : 0;
+				cols.forEach((c, i) => {
+					const num = q(c, '.ch-num');
+					const bar = q(c, '.ch-bar');
+					const m = q(c, '.ch-m');
+					const v = Number(c.dataset.v);
+					gsap.to(num, {
+						x: clear ? 0 : raw[i].x,
+						y: clear ? 0 : raw[i].y,
+						rotation: clear ? 0 : raw[i].r,
+						color: clear ? '#e9edf5' : '#8892a6',
+						duration: d,
+						ease: 'back.out(1.3)',
+						delay: animate ? i * 0.06 : 0,
+						overwrite: 'auto',
+					});
+					gsap.to(bar, { height: clear ? v * 0.9 : 0, duration: d, ease: 'power3.out', delay: animate ? i * 0.08 : 0, overwrite: 'auto' });
+					gsap.to(m, { opacity: clear ? 1 : 0, duration: d ? 0.4 : 0, delay: animate ? 0.5 : 0, overwrite: 'auto' });
+				});
+				btn.textContent = clear ? 'Back to messy' : 'Make sense of it';
+				btn.setAttribute('aria-pressed', String(clear));
+			};
+			btn.addEventListener('click', () => {
+				clear = !clear;
+				apply(true);
+			});
+			apply(false);
+			return {
+				demo: () => {
+					clear = true;
+					apply(true);
+				},
+				finish: () => {
+					clear = true;
+					apply(false);
+				},
+			};
+		};
+
+		// 6 · grow: a shop turns into an app and the day's orders jump
+		const grow = (el: HTMLElement): Toy => {
+			const btn = q<HTMLButtonElement>(el, '.toy-btn');
+			const shop = q(el, '.gr-shop');
+			const app = q(el, '.gr-app');
+			const num = q(el, '.gr-num');
+			const bars = qa(el, '.gr-bar');
+			const o = { n: 12 };
+			let digital = false;
+			const apply = (animate: boolean) => {
+				const d = animate && !reduce ? 0.8 : 0;
+				gsap.to(shop, { opacity: digital ? 0 : 1, scale: digital ? 0.8 : 1, duration: d, ease: 'power2.inOut', overwrite: 'auto' });
+				gsap.to(app, { opacity: digital ? 1 : 0, scale: digital ? 1 : 1.15, duration: d, ease: 'back.out(1.4)', overwrite: 'auto' });
+				if (digital) gsap.fromTo(bars, { scaleX: 0 }, { scaleX: 1, duration: d, stagger: d ? 0.12 : 0, delay: d ? 0.35 : 0, ease: 'power2.out', overwrite: 'auto' });
+				gsap.to(o, {
+					n: digital ? 480 : 12,
+					duration: d ? 1.4 : 0,
+					ease: 'power2.out',
+					overwrite: 'auto',
+					onUpdate: () => (num.textContent = String(Math.round(o.n))),
+				});
+				btn.textContent = digital ? 'Back to the shop' : 'Go digital';
+				btn.setAttribute('aria-pressed', String(digital));
+			};
+			btn.addEventListener('click', () => {
+				digital = !digital;
+				apply(true);
+			});
+			gsap.set(app, { opacity: 0 });
+			return {
+				demo: () => {
+					digital = true;
+					apply(true);
+				},
+				finish: () => {
+					digital = true;
+					apply(false);
+				},
+			};
+		};
+
+		const makers: Record<string, (el: HTMLElement) => Toy> = { agent, chat, local, steps, chart, grow };
+		const toys = entries.map((entry) => {
+			const el = entry.querySelector<HTMLElement>('.toy')!;
+			return makers[el.dataset.toy ?? '']?.(el);
+		});
+
+		// heading: masked words that rise in
+		const text = heading.textContent ?? '';
+		heading.setAttribute('aria-label', text);
+		heading.textContent = '';
+		const hw = text.split(' ').map((t, k, a) => {
+			const mw = document.createElement('span');
+			mw.className = 'mw';
+			mw.setAttribute('aria-hidden', 'true');
+			const w = document.createElement('span');
+			w.className = 'w';
+			w.textContent = t;
+			mw.appendChild(w);
+			heading.appendChild(mw);
+			if (k < a.length - 1) heading.appendChild(document.createTextNode(' '));
+			return w;
+		});
+
+		let io: IntersectionObserver | undefined;
+		const reveal = () => {
+			section.classList.add('is-visible');
+			if (!reduce) gsap.from(hw, { yPercent: 110, duration: 0.8, ease: 'power3.out', stagger: 0.1 });
+		};
+		if (reduce || !('IntersectionObserver' in window)) reveal();
+		else {
+			io = new IntersectionObserver(
+				(es) => {
+					if (es.some((e) => e.isIntersecting)) {
+						io!.disconnect();
+						reveal();
+					}
+				},
+				{ threshold: 0.2 },
+			);
+			io.observe(section);
+		}
+
+		if (reduce) {
+			// finished picture, no motion; the toys still work when used
+			toys.forEach((t) => t?.finish());
+		} else {
+			// the cards rise in one after another; each toy plays a short demo once when its card arrives
+			gsap.set(entries, { opacity: 0, y: 44, scale: 0.96 });
+			ScrollTrigger.batch(entries, {
+				start: 'top 88%',
+				onEnter: (batch) => {
+					gsap.to(batch, { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: 'power3.out', stagger: 0.14, overwrite: true });
+					batch.forEach((el, k) => {
+						const i = entries.indexOf(el as HTMLElement);
+						gsap.delayedCall(0.6 + k * 0.14, () => toys[i]?.demo());
+					});
+				},
+			});
+			// each panel sinks back a little as the next one slides over it
+			const mm = gsap.matchMedia();
+			mm.add('(min-width: 861px) and (min-height: 640px)', () => {
+				entries.slice(0, -1).forEach((entry, i) => {
+					gsap.to(entry.querySelector('.entry-body'), {
+						scale: 0.92,
+						'--dim': 0.6,
+						ease: 'none',
+						scrollTrigger: { trigger: entries[i + 1], start: 'top 88%', end: 'top 26%', scrub: 0.4 },
+					});
+				});
+			});
+			gsap.from(footer, {
+				opacity: 0,
+				y: 10,
+				duration: 0.7,
+				scrollTrigger: { trigger: footer, start: 'top 94%', once: true },
+			});
+		}
 	}
 </script>

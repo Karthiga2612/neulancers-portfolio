@@ -1,9 +1,43 @@
 ---
-const layers = ['Python', 'Django', 'APIs', 'AI', 'Automation', 'Data', 'Infrastructure'];
-const tags = ['Open source', 'Cloud', 'Local AI', 'APIs', 'Automation', 'Custom software'];
+// The layers of what we build with, top to bottom. DRAFT copy: the one-line descriptions need approval.
+const layers = [
+	{ name: 'Python', color: '#60a5fa', desc: 'The language behind most of what we build.', icon: ['M8 7l-4 5 4 5', 'M16 7l4 5-4 5', 'M13.5 5l-3 14'] },
+	{ name: 'Django', color: '#34d399', desc: 'Fast, secure web apps and admin tools.', icon: ['M3 5h18v14H3z', 'M3 9h18', 'M7 7h.01', 'M10 7h.01'] },
+	{ name: 'APIs', color: '#fbbf24', desc: 'How your systems talk to each other.', icon: ['M4 9h13l-3-3', 'M20 15H7l3 3'] },
+	{ name: 'AI', color: '#a78bfa', desc: 'Models that read, decide and write.', icon: ['M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z'] },
+	{ name: 'Automation', color: '#f472b6', desc: 'Jobs that run without anyone pressing a button.', icon: ['M20 12a8 8 0 11-3-6.2', 'M20 4v4h-4'] },
+	{ name: 'Data', color: '#2dd4bf', desc: 'Where information lives and gets cleaned.', icon: ['M5 6c0-1.7 3.1-3 7-3s7 1.3 7 3-3.1 3-7 3-7-1.3-7-3z', 'M5 6v12c0 1.7 3.1 3 7 3s7-1.3 7-3V6', 'M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3'] },
+	{ name: 'Infrastructure', color: '#94a3b8', desc: 'Servers, cloud, or your own hardware.', icon: ['M4 5h16v5H4z', 'M4 14h16v5H4z', 'M8 7.5h.01', 'M8 16.5h.01'] },
+];
+
+// one short, true "did you know" for each layer, in the same order. DRAFT: worth a quick fact-check before launch.
+const facts = [
+	'Python is named after the comedy group Monty Python, not the snake.',
+	'Django is named after the jazz guitarist Django Reinhardt.',
+	'Every time an app shows you the weather, it is asking another system for it through an API.',
+	'The phrase "artificial intelligence" goes back to a 1956 summer workshop at Dartmouth College.',
+	'The word "automation" was popularised in the 1940s, in car factories.',
+	'"Data" comes from the Latin for "things given".',
+	'The "cloud" is a real place: rooms full of computers in buildings called data centres.',
+];
+
+// the things we care about, and which layers each one touches (indexes into the list above)
+const tags = [
+	{ name: 'Open source', layers: [0, 1, 5, 6] },
+	{ name: 'Cloud', layers: [2, 5, 6] },
+	{ name: 'Local AI', layers: [0, 3, 6] },
+	{ name: 'APIs', layers: [1, 2, 4] },
+	{ name: 'Automation', layers: [2, 3, 4] },
+	{ name: 'Custom software', layers: [0, 1, 2, 5] },
+];
+
+const layerTags = layers.map((_, i) => tags.filter((t) => t.layers.includes(i)).map((t) => t.name));
+const last = layers.length - 1;
 ---
 
 <section class="stack" id="stack">
+	<div class="stack-glow-bg" aria-hidden="true"></div>
+
 	<div class="stack-inner">
 		<div class="stack-head">
 			<div class="stack-eyebrow reveal" style="--reveal-order: 0">
@@ -15,25 +49,75 @@ const tags = ['Open source', 'Cloud', 'Local AI', 'APIs', 'Automation', 'Custom 
 			<h2 class="stack-heading reveal" style="--reveal-order: 1">Under the hood</h2>
 		</div>
 
-		<div class="stack-pipeline reveal" id="stackPipeline" style="--reveal-order: 2">
-			{layers.map((layer, i) => (
-				<>
-					<span class="layer-node" data-index={i}>{layer}</span>
-					{i < layers.length - 1 && (
-						<span class="layer-connector" aria-hidden="true">
-							<span class="connector-line"></span>
-							<span class="connector-pulse"></span>
-						</span>
-					)}
-				</>
-			))}
+		<div class="stack-wrap" id="stackWrap">
+			<!-- the stack: seven slabs in 3D. Drag to turn it, point at a slab to lift the ones above it. -->
+			<div
+				class="stack-stage"
+				id="stackStage"
+				tabindex="0"
+				role="group"
+				aria-label="Interactive diagram of our technology stack. Drag to rotate it, or use the left and right arrow keys. The layer names are listed beside it."
+			>
+				<span class="stage-glow" id="stackGlow" aria-hidden="true"></span>
+
+				<div class="stage3d" aria-hidden="true">
+					<div class="look" id="stackLook">
+						<div class="tilt" id="stackTilt">
+							<span class="ground" id="stackGround"></span>
+							<div class="sway" id="stackSway">
+								<div class="spin" id="stackSpin">
+									{layers.map((l, i) => (
+										<div class="slab" data-i={i} data-desc={l.desc} data-fact={facts[i]} data-tags={layerTags[i].join('|')} style={`--c: ${l.color}; --k: ${last - i}`}>
+											<div class="slab-face">
+												<svg class="slab-icon" viewBox="0 0 24 24" aria-hidden="true">
+													{l.icon.map((d) => (
+														<path d={d} />
+													))}
+												</svg>
+											</div>
+										</div>
+									))}
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+			</div>
+
+			<ol class="layer-labels" id="layerLabels" aria-label="Layers of the stack, top to bottom">
+				{layers.map((l, i) => (
+					<li class="layer-item">
+						<button type="button" class="layer-label" data-i={i} style={`--c: ${l.color}`} aria-pressed="false">
+							<span class="ll-dot" aria-hidden="true"></span>
+							<span class="ll-name">{l.name}</span>
+						</button>
+					</li>
+				))}
+			</ol>
+
+			<svg class="leaders" id="stackLeaders" aria-hidden="true">
+				{layers.map(() => (
+					<>
+						<path class="leader-line"></path>
+						<circle class="leader-dot" r="3.5"></circle>
+					</>
+				))}
+			</svg>
 		</div>
 
-		<p class="stack-statement reveal" style="--reveal-order: 3">We use whatever technology solves the problem.</p>
+		<div class="readout reveal" id="readout" aria-live="polite" style="--reveal-order: 3">
+			<p class="ro-name" id="roName"></p>
+			<p class="ro-desc" id="roDesc">We use whatever technology solves the problem.</p>
+			<p class="ro-fact" id="roFact" hidden><span class="ro-fact-label">Did you know</span><span id="roFactText"></span></p>
+			<div class="ro-chips" id="roChips"></div>
+		</div>
 
-		<div class="stack-tags reveal" style="--reveal-order: 4">
-			{tags.map((tag) => (
-				<span class="stack-tag">{tag}</span>
+		<div class="stack-tags reveal" role="group" aria-label="Pick what matters to you to see which layers it touches" style="--reveal-order: 4">
+			{tags.map((t, i) => (
+				<button type="button" class="stack-tag" data-i={i} data-name={t.name} data-layers={t.layers.join(',')} aria-pressed="false">
+					{t.name}
+				</button>
 			))}
 		</div>
 	</div>
@@ -41,7 +125,10 @@ const tags = ['Open source', 'Cloud', 'Local AI', 'APIs', 'Automation', 'Custom 
 
 <style>
 	.stack {
+		--accent-bright: #a78bfa;
+
 		position: relative;
+		overflow: clip;
 		/* lifted band: a deliberate change of pace between AI and People */
 		background: #0e1016;
 		color: var(--ink);
@@ -49,12 +136,21 @@ const tags = ['Open source', 'Cloud', 'Local AI', 'APIs', 'Automation', 'Custom 
 		border-top: 1px solid var(--border-soft);
 	}
 
+	.stack-glow-bg {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		background:
+			radial-gradient(ellipse 50% 40% at 50% 46%, rgba(109, 40, 217, 0.14), transparent 70%),
+			radial-gradient(ellipse 30% 30% at 82% 78%, rgba(56, 189, 248, 0.06), transparent 70%);
+	}
+
 	.stack-inner {
-		max-width: 1000px;
+		position: relative;
+		z-index: 1;
+		max-width: 1100px;
 		margin: 0 auto;
-		/* compact on purpose: a quick technical beat between the heavier
-		   AI and People sections, not a full-height stop */
-		padding: clamp(48px, 6vw, 80px) clamp(20px, 4vw, 32px);
+		padding: clamp(56px, 7vw, 96px) clamp(20px, 4vw, 32px);
 	}
 
 	/* ---------- scroll-in reveal ---------- */
@@ -74,7 +170,7 @@ const tags = ['Open source', 'Cloud', 'Local AI', 'APIs', 'Automation', 'Custom 
 
 	.stack-head {
 		text-align: center;
-		margin-bottom: clamp(32px, 4vw, 48px);
+		margin-bottom: clamp(8px, 2vw, 24px);
 	}
 
 	.stack-eyebrow {
@@ -106,120 +202,417 @@ const tags = ['Open source', 'Cloud', 'Local AI', 'APIs', 'Automation', 'Custom 
 		letter-spacing: -0.01em;
 	}
 
-	/* ---------- pipeline ---------- */
-	.stack-pipeline {
-		display: flex;
+	/* ---------- the diagram: stack on the left, names on the right, lines between ---------- */
+	.stack-wrap {
+		position: relative;
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
 		align-items: center;
-		justify-content: center;
-		flex-wrap: wrap;
-		row-gap: 1.5rem;
-		margin-bottom: clamp(32px, 4vw, 48px);
 	}
 
-	.layer-node {
+	.stack-stage {
+		--s: clamp(200px, 36vw, 330px);
+
+		position: relative;
+		height: clamp(400px, 78vw, 440px);
+		border-radius: 24px;
+		cursor: grab;
+		touch-action: pan-y;
+		user-select: none;
+		-webkit-user-select: none;
+	}
+
+	.stack-stage:active {
+		cursor: grabbing;
+	}
+
+	.stack-stage:focus-visible {
+		outline: 2px solid var(--accent-bright);
+		outline-offset: 4px;
+	}
+
+	/* a soft light behind the stack that takes the colour of the layer you are on */
+	.stage-glow {
+		position: absolute;
+		left: 50%;
+		top: 52%;
+		width: 60%;
+		height: 60%;
+		border-radius: 50%;
+		background: #6d28d9;
+		opacity: 0.2;
+		filter: blur(90px);
+		transform: translate(-50%, -50%);
+		pointer-events: none;
+	}
+
+	.stage3d {
+		position: absolute;
+		inset: 0;
+		perspective: 1500px;
+	}
+
+	.look,
+	.tilt,
+	.sway,
+	.spin {
+		position: absolute;
+		inset: 0;
+		transform-style: preserve-3d;
+	}
+
+	.ground {
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		width: calc(var(--s) * 1.6);
+		height: calc(var(--s) * 1.6);
+		margin: calc(var(--s) * -0.8) 0 0 calc(var(--s) * -0.8);
+		border-radius: 50%;
+		background: radial-gradient(closest-side, rgba(0, 0, 0, 0.6), transparent);
+	}
+
+	.slab {
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		width: var(--s);
+		height: var(--s);
+		margin: calc(var(--s) / -2) 0 0 calc(var(--s) / -2);
+		transform-style: preserve-3d;
+	}
+
+	/* each slab is a slice of glass in its own colour, with a faint circuit grid etched in */
+	.slab-face {
+		position: absolute;
+		inset: 0;
+		overflow: hidden;
+		border-radius: calc(var(--s) * 0.09);
+		background: linear-gradient(150deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03) 60%);
+		background: linear-gradient(150deg, color-mix(in srgb, var(--c) 24%, rgba(255, 255, 255, 0.06)), rgba(255, 255, 255, 0.025) 62%);
+		border: 1.5px solid rgba(255, 255, 255, 0.2);
+		border: 1.5px solid color-mix(in srgb, var(--c) 48%, rgba(255, 255, 255, 0.1));
+		box-shadow:
+			0 0 calc(var(--flash, 0) * 36px) calc(var(--flash, 0) * 4px) color-mix(in srgb, var(--c) 75%, transparent),
+			inset 0 0 40px rgba(0, 0, 0, 0.28);
+		transition: opacity 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+	}
+
+	.slab-face::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		background-image:
+			linear-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px),
+			linear-gradient(90deg, rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+		background-size: calc(var(--s) / 10) calc(var(--s) / 10);
+		-webkit-mask-image: radial-gradient(circle at 50% 50%, #000 20%, transparent 78%);
+		mask-image: radial-gradient(circle at 50% 50%, #000 20%, transparent 78%);
+	}
+
+	/* the chip in the middle */
+	.slab-face::after {
+		content: '';
+		position: absolute;
+		left: 36%;
+		top: 36%;
+		width: 28%;
+		height: 28%;
+		border-radius: 18%;
+		border: 1.5px solid rgba(255, 255, 255, 0.3);
+		border: 1.5px solid color-mix(in srgb, var(--c) 70%, transparent);
+		background: rgba(255, 255, 255, 0.05);
+		background: color-mix(in srgb, var(--c) 16%, transparent);
+		box-shadow: inset 0 0 18px color-mix(in srgb, var(--c) 30%, transparent);
+	}
+
+	/* the layer's symbol, drawn inside the chip (the readable names are listed beside the stack) */
+	.slab-icon {
+		position: absolute;
+		left: 36%;
+		top: 36%;
+		z-index: 1;
+		box-sizing: border-box;
+		width: 28%;
+		height: 28%;
+		/* padding in % is measured against the slab, so this stays a small inset */
+		padding: 5.5%;
+		fill: none;
+		stroke: var(--c);
+		stroke-width: 1.7;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+		filter: drop-shadow(0 0 6px color-mix(in srgb, var(--c) 70%, transparent));
+	}
+
+	.slab.is-dim .slab-face {
+		opacity: 0.32;
+	}
+
+	.slab.is-match .slab-face {
+		border-color: var(--c);
+		box-shadow:
+			0 0 34px 2px color-mix(in srgb, var(--c) 60%, transparent),
+			inset 0 0 30px color-mix(in srgb, var(--c) 18%, transparent);
+	}
+
+	.slab.is-sel .slab-face {
+		border-color: var(--c);
+		box-shadow:
+			0 0 56px 6px color-mix(in srgb, var(--c) 60%, transparent),
+			inset 0 0 44px color-mix(in srgb, var(--c) 26%, transparent);
+	}
+
+	/* ---------- the names beside the stack ---------- */
+	.layer-labels {
+		list-style: none;
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 0.5rem;
+		margin: 0.5rem 0 0;
+		padding: 0;
+	}
+
+	.layer-label {
+		position: relative;
+		display: flex;
+		align-items: center;
+		gap: 0.65rem;
+		min-height: 44px;
+		padding: 0.45rem 1rem 0.45rem 0.85rem;
+		background: rgba(255, 255, 255, 0.03);
+		border: 1px solid var(--border-soft);
+		border-radius: 14px;
+		color: var(--muted);
+		font: inherit;
+		cursor: pointer;
+		transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, opacity 0.3s ease;
+	}
+
+	.ll-dot {
+		width: 9px;
+		height: 9px;
+		border-radius: 50%;
+		background: var(--c);
+		box-shadow: 0 0 10px color-mix(in srgb, var(--c) 70%, transparent);
+	}
+
+	.ll-name {
 		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-		font-size: clamp(0.85rem, 0.5vw + 0.75rem, 1rem);
+		font-size: 0.86rem;
 		font-weight: 600;
 		letter-spacing: 0.01em;
 		color: var(--ink);
-		padding: 0.65rem 1.15rem;
-		background: rgba(255, 255, 255, 0.03);
-		border: 1px solid var(--border-soft);
-		border-radius: 999px;
-		white-space: nowrap;
-		transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
 	}
 
-	.layer-node.is-current {
-		border-color: var(--accent);
-		background: rgba(109, 40, 217, 0.16);
-		color: #ffffff;
+	.layer-label:hover,
+	.layer-label.is-sel {
+		background: rgba(255, 255, 255, 0.06);
+		background: color-mix(in srgb, var(--c) 14%, rgba(255, 255, 255, 0.03));
+		border-color: var(--c);
 	}
 
-	.layer-connector {
-		position: relative;
-		width: clamp(24px, 3vw, 48px);
-		height: 1px;
-		margin: 0 0.15rem;
-		flex-shrink: 0;
+	.layer-label[aria-pressed='true'] {
+		background: color-mix(in srgb, var(--c) 24%, rgba(255, 255, 255, 0.04));
+		border-color: var(--c);
+		box-shadow: 0 0 0 1px var(--c);
 	}
 
-	.connector-line {
-		position: absolute;
-		inset: 0;
-		background: var(--border-soft);
+	.layer-label.is-dim {
+		opacity: 0.4;
 	}
 
-	.connector-pulse {
-		position: absolute;
-		top: 50%;
-		left: 0;
-		width: 6px;
-		height: 6px;
-		border-radius: 50%;
-		background: var(--accent);
-		box-shadow: 0 0 8px 1px rgba(109, 40, 217, 0.7);
-		transform: translate(-50%, -50%);
-		opacity: 0;
+	.layer-label.is-match {
+		border-color: var(--c);
 	}
 
-	.layer-connector.is-active .connector-pulse {
-		animation: pulse-travel 0.6s ease-in-out forwards;
+	.layer-label:focus-visible,
+	.stack-tag:focus-visible {
+		outline: 2px solid var(--accent-bright);
+		outline-offset: 3px;
 	}
 
-	@keyframes pulse-travel {
-		0% {
-			left: 0;
-			opacity: 1;
+	.leaders {
+		display: none;
+	}
+
+	/* ---------- wide screens: names to the right of the stack, joined to it by lines ---------- */
+	@media (min-width: 900px) {
+		.stack-wrap {
+			grid-template-columns: minmax(0, 1fr) 250px;
+			column-gap: 56px;
 		}
-		90% {
-			opacity: 1;
+
+		.stack-stage {
+			height: clamp(470px, 50vw, 580px);
 		}
-		100% {
-			left: 100%;
-			opacity: 0;
+
+		.layer-labels {
+			flex-direction: column;
+			flex-wrap: nowrap;
+			align-items: stretch;
+			justify-content: center;
+			gap: 0.55rem;
+			margin: 0;
+		}
+
+		.leaders {
+			display: block;
+			position: absolute;
+			inset: 0;
+			width: 100%;
+			height: 100%;
+			overflow: visible;
+			pointer-events: none;
+		}
+
+		.leader-line {
+			fill: none;
+			stroke: var(--ink-faint);
+			stroke-width: 1.2;
+			opacity: 0.4;
+			transition: opacity 0.3s ease;
+		}
+
+		.leader-dot {
+			fill: var(--accent-bright);
+			opacity: 0.5;
 		}
 	}
 
-	/* ---------- statement + tags ---------- */
-	.stack-statement {
-		margin: 0 0 1.5rem;
+	/* ---------- what you are pointing at ---------- */
+	.readout {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+		min-height: 176px;
+		max-width: 640px;
+		margin: clamp(10px, 2vw, 20px) auto 0;
+		padding: 1.1rem 1.5rem;
 		text-align: center;
-		font-size: clamp(1.15rem, 1vw + 0.95rem, 1.5rem);
+		background: rgba(255, 255, 255, 0.025);
+		border: 1px solid var(--border-soft);
+		border-radius: 20px;
+	}
+
+	.ro-name {
+		margin: 0;
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.78rem;
+		font-weight: 700;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--c, var(--accent-bright));
+	}
+
+	.ro-name:empty {
+		display: none;
+	}
+
+	.ro-desc {
+		margin: 0;
+		font-size: clamp(1.05rem, 0.8vw + 0.9rem, 1.35rem);
 		font-weight: 600;
 		letter-spacing: -0.01em;
+		line-height: 1.35;
 	}
 
+	/* a small, interesting fact about the layer */
+	.ro-fact {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		justify-content: center;
+		gap: 0.2rem 0.6rem;
+		max-width: 52ch;
+		margin: 0.1rem 0 0.2rem;
+		font-size: 0.92rem;
+		line-height: 1.5;
+		color: var(--muted);
+	}
+
+	.ro-fact[hidden] {
+		display: none;
+	}
+
+	.ro-fact-label {
+		padding: 0.1rem 0.55rem;
+		border: 1px solid color-mix(in srgb, var(--c, var(--accent-bright)) 55%, transparent);
+		border-radius: 999px;
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.64rem;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--c, var(--accent-bright));
+		white-space: nowrap;
+	}
+
+	.ro-chips {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 0.4rem;
+	}
+
+	.ro-chips:empty {
+		display: none;
+	}
+
+	.stack :global(.ro-chip) {
+		padding: 0.2rem 0.6rem;
+		border: 1px solid var(--border-soft);
+		border-radius: 999px;
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.68rem;
+		letter-spacing: 0.04em;
+		color: var(--ink-faint);
+	}
+
+	/* ---------- the things we care about: pick one to see the layers it touches ---------- */
 	.stack-tags {
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		flex-wrap: wrap;
-		gap: 0.5rem;
+		gap: 0.55rem;
+		margin-top: clamp(14px, 2vw, 22px);
 	}
 
 	.stack-tag {
+		min-height: 44px;
+		padding: 0.4rem 1.1rem;
+		background: rgba(255, 255, 255, 0.03);
+		border: 1px solid var(--border-soft);
+		border-radius: 999px;
+		color: var(--muted);
 		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-		font-size: 0.72rem;
-		letter-spacing: 0.04em;
-		color: var(--ink-faint);
+		font-size: 0.8rem;
+		letter-spacing: 0.03em;
+		cursor: pointer;
+		transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
 	}
 
-	.stack-tag:not(:last-child)::after {
-		content: '\00b7';
-		margin-left: 0.6rem;
-		color: var(--ink-faint);
+	.stack-tag:hover {
+		border-color: rgba(255, 255, 255, 0.25);
+		color: var(--ink);
+	}
+
+	.stack-tag[aria-pressed='true'] {
+		background: rgba(109, 40, 217, 0.22);
+		border-color: var(--accent-bright);
+		color: #ffffff;
 	}
 
 	@media (prefers-reduced-motion: reduce) {
 		.reveal,
-		.layer-node {
+		.slab-face,
+		.layer-label,
+		.stack-tag {
 			transition: none;
-		}
-
-		.connector-pulse {
-			animation: none !important;
-			opacity: 0 !important;
 		}
 	}
 </style>
@@ -230,85 +623,421 @@ const tags = ['Open source', 'Cloud', 'Local AI', 'APIs', 'Automation', 'Custom 
 			opacity: 1 !important;
 			transform: none !important;
 		}
+
+		/* with no script the stack still shows, held at a fixed angle */
+		.stack .tilt {
+			transform: rotateX(60deg);
+		}
+
+		.stack .spin {
+			transform: rotate(-38deg);
+		}
+
+		.stack .slab {
+			transform: translateZ(calc(var(--k) * 34px));
+		}
 	</style>
 </noscript>
 
 <script>
+	import { gsap } from 'gsap';
+
 	const section = document.getElementById('stack');
-	const pipeline = document.getElementById('stackPipeline');
-	const nodes = Array.from(document.querySelectorAll('.layer-node')) as HTMLElement[];
-	const connectors = Array.from(document.querySelectorAll('.layer-connector')) as HTMLElement[];
-	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	if (section) init(section);
 
-	if (reduceMotion || !('IntersectionObserver' in window)) {
-		section?.classList.add('is-visible');
-	} else {
-		const revealObserver = new IntersectionObserver(
-			(entries) => {
-				entries.forEach((entry) => {
-					if (entry.isIntersecting) {
-						section?.classList.add('is-visible');
-						revealObserver.disconnect();
-					}
+	function init(section: HTMLElement) {
+		const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+		const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		const canObserve = 'IntersectionObserver' in window;
+		const animated = !reduce && canObserve;
+
+		const wrap = $('stackWrap');
+		const stage = $('stackStage');
+		const look = $('stackLook');
+		const tilt = $('stackTilt');
+		const sway = $('stackSway');
+		const spin = $('stackSpin');
+		const ground = $('stackGround');
+		const glow = $('stackGlow');
+		const svg = $('stackLeaders') as unknown as SVGSVGElement;
+		const roName = $('roName');
+		const roDesc = $('roDesc');
+		const roChips = $('roChips');
+		const roFact = $('roFact');
+		const roFactText = $('roFactText');
+
+		const slabs = Array.from(spin.querySelectorAll<HTMLElement>('.slab'));
+		const faces = slabs.map((s) => s.querySelector<HTMLElement>('.slab-face')!);
+		const labels = Array.from(section.querySelectorAll<HTMLElement>('.layer-label'));
+		const tagBtns = Array.from(section.querySelectorAll<HTMLElement>('.stack-tag'));
+		const lines = Array.from(svg.querySelectorAll<SVGPathElement>('.leader-line'));
+		const dots = Array.from(svg.querySelectorAll<SVGCircleElement>('.leader-dot'));
+		const N = slabs.length;
+
+		const colors = slabs.map((s) => s.style.getPropertyValue('--c').trim());
+		const names = labels.map((l) => l.querySelector('.ll-name')!.textContent ?? '');
+		const descs = slabs.map((s) => s.dataset.desc ?? '');
+		const factsOf = slabs.map((s) => s.dataset.fact ?? '');
+		const tagsOf = slabs.map((s) => (s.dataset.tags ? s.dataset.tags.split('|') : []));
+		const tagLayers = tagBtns.map((b) => (b.dataset.layers ?? '').split(',').map(Number));
+		const tagNames = tagBtns.map((b) => b.dataset.name ?? '');
+		const defaultText = roDesc.textContent ?? '';
+
+		const state = { explode: 0.38, sel: -1, pinned: -1, filter: -1 };
+		const phone = () => window.innerWidth < 700;
+		const gap = () => 12 + state.explode * 58 * (phone() ? 0.7 : 1);
+		const zFor = (i: number) => {
+			const base = (N - 1 - i) * gap();
+			// the layers above the one you are on lift off it, so you can see it
+			const lift = state.sel >= 0 ? (i < state.sel ? 46 : i === state.sel ? 10 : 0) : 0;
+			return base + lift;
+		};
+
+		// put every slab at its height; the whole stack is shifted down so it stays centred as it grows
+		const layout = (dur = 0.6) => {
+			const d = reduce ? 0 : dur;
+			slabs.forEach((el, i) => gsap.to(el, { z: zFor(i), duration: d, ease: 'power3.out', overwrite: 'auto' }));
+			gsap.to(tilt, { y: 0.435 * (N - 1) * gap(), duration: d, ease: 'power3.out', overwrite: 'auto' });
+			gsap.to(ground, { scale: 1 + state.explode * 0.35, opacity: 1 - state.explode * 0.35, duration: d, ease: 'power3.out', overwrite: 'auto' });
+		};
+
+		// ---------- the readout under the diagram ----------
+		let swapTl: gsap.core.Timeline | null = null;
+		const showReadout = () => {
+			let name = '';
+			let desc = defaultText;
+			let chips: string[] = [];
+			let fact = '';
+			let color = '';
+			if (state.sel >= 0) {
+				name = names[state.sel];
+				desc = descs[state.sel];
+				fact = factsOf[state.sel];
+				chips = tagsOf[state.sel];
+				color = colors[state.sel];
+			} else if (state.filter >= 0) {
+				name = tagNames[state.filter];
+				desc = tagLayers[state.filter].map((i) => names[i]).join('  ·  ');
+				color = '#a78bfa';
+			}
+			const apply = () => {
+				roName.textContent = name;
+				roName.style.setProperty('--c', color);
+				roDesc.textContent = desc;
+				roFactText.textContent = fact;
+				roFact.hidden = fact === '';
+				roFact.style.setProperty('--c', color);
+				roChips.innerHTML = '';
+				chips.forEach((c) => {
+					const el = document.createElement('span');
+					el.className = 'ro-chip';
+					el.textContent = c;
+					roChips.appendChild(el);
 				});
-			},
-			{ threshold: 0.15 },
-		);
-		if (section) revealObserver.observe(section);
-	}
+			};
+			swapTl?.kill();
+			if (reduce) {
+				apply();
+				return;
+			}
+			const parts = [roName, roDesc, roFact, roChips];
+			swapTl = gsap.timeline();
+			swapTl.to(parts, { opacity: 0, y: -6, duration: 0.14, ease: 'power1.in' });
+			swapTl.call(apply);
+			swapTl.fromTo(parts, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out', stagger: 0.05, clearProps: 'opacity,transform' });
+		};
 
-	// once the pipeline is in view, step through each node/connector in
-	// sequence, then loop — echoes the arc-pulse traveling motif from the
-	// hero without needing that section's full coordinate math
-	if (pipeline && nodes.length && !reduceMotion) {
-		let current = 0;
-		let timer: ReturnType<typeof setTimeout> | null = null;
+		// ---------- which slab is picked, and which tag is on ----------
+		const applyStates = () => {
+			const match = state.filter >= 0 ? new Set(tagLayers[state.filter]) : null;
+			slabs.forEach((el, i) => {
+				const isSel = i === state.sel;
+				const isMatch = !!match && match.has(i) && state.sel < 0;
+				const isDim = (state.sel >= 0 && !isSel) || (state.sel < 0 && !!match && !match.has(i));
+				el.classList.toggle('is-sel', isSel);
+				el.classList.toggle('is-match', isMatch);
+				el.classList.toggle('is-dim', isDim);
+				labels[i].classList.toggle('is-sel', isSel);
+				labels[i].classList.toggle('is-match', isMatch);
+				labels[i].classList.toggle('is-dim', isDim);
+				labels[i].setAttribute('aria-pressed', String(i === state.pinned));
+			});
+			tagBtns.forEach((b, i) => b.setAttribute('aria-pressed', String(i === state.filter)));
+			const c = state.sel >= 0 ? colors[state.sel] : state.filter >= 0 ? '#a78bfa' : '#6d28d9';
+			gsap.to(glow, { backgroundColor: c, duration: reduce ? 0 : 0.7, ease: 'power2.out', overwrite: 'auto' });
+			gsap.to(glow, { opacity: state.sel >= 0 || state.filter >= 0 ? 0.34 : 0.2, duration: reduce ? 0 : 0.5, overwrite: 'auto' });
+			idle();
+		};
 
-		const setActive = (index: number) => {
-			nodes.forEach((n, i) => n.classList.toggle('is-current', i === index));
-			connectors.forEach((c, i) => {
-				c.classList.remove('is-active');
-				if (i === index) {
-					// restart the pulse animation
-					void c.offsetWidth;
-					c.classList.add('is-active');
+		let clearT: ReturnType<typeof setTimeout> | undefined;
+		let interacted = false;
+		const softClear = () => {
+			clearTimeout(clearT);
+			clearT = setTimeout(() => {
+				if (state.pinned < 0) setSel(-1);
+			}, 140);
+		};
+		const touched = () => {
+			interacted = true;
+		};
+
+		const setSel = (i: number) => {
+			if (i >= 0) clearTimeout(clearT);
+			if (state.sel === i) return;
+			state.sel = i;
+			applyStates();
+			layout(0.55);
+			showReadout();
+		};
+
+		const setFilter = (i: number) => {
+			state.filter = state.filter === i ? -1 : i;
+			applyStates();
+			showReadout();
+			// the layers it touches flash, one after another
+			if (state.filter >= 0 && !reduce) {
+				const hit = tagLayers[state.filter];
+				hit.forEach((li, k) => {
+					gsap.fromTo(faces[li], { '--flash': 0 }, { '--flash': 1, duration: 0.3, yoyo: true, repeat: 1, ease: 'power2.out', delay: k * 0.09 });
+				});
+			}
+		};
+
+		// ---------- the idle life of the stack: a slow sway, and a pulse of light climbing the layers ----------
+		let visible = false;
+		let entered = false;
+		let dragging = false;
+		const swayTl = gsap.fromTo(sway, { rotation: -5 }, { rotation: 5, duration: 5, ease: 'sine.inOut', yoyo: true, repeat: -1, paused: true });
+		const pulseTl = gsap.timeline({ repeat: -1, repeatDelay: 2.6, paused: true });
+		for (let k = 0; k < N; k++) {
+			const i = N - 1 - k;
+			pulseTl.fromTo(faces[i], { '--flash': 0 }, { '--flash': 0.85, duration: 0.28, yoyo: true, repeat: 1, ease: 'power2.out' }, k * 0.2);
+		}
+		function idle() {
+			const should = animated && visible && entered && !dragging && state.sel < 0 && state.filter < 0;
+			if (should) {
+				swayTl.play();
+				pulseTl.play();
+			} else {
+				swayTl.pause();
+				if (pulseTl.isActive() || pulseTl.paused() === false) pulseTl.pause();
+				gsap.to(faces, { '--flash': 0, duration: 0.3, overwrite: 'auto' });
+			}
+		}
+
+		// ---------- turning the stack with the pointer ----------
+		let drag: { x: number; startRz: number; moved: boolean; lastX: number; lastT: number; v: number } | null = null;
+		const rzNow = () => Number(gsap.getProperty(spin, 'rotation'));
+
+		const hitIndex = (e: PointerEvent) => {
+			const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
+			const s = el?.closest<HTMLElement>('.slab');
+			return s ? Number(s.dataset.i) : -1;
+		};
+
+		const lookRX = gsap.quickTo(look, 'rotationX', { duration: 0.8, ease: 'power3.out' });
+		const lookRY = gsap.quickTo(look, 'rotationY', { duration: 0.8, ease: 'power3.out' });
+
+		stage.addEventListener('pointerdown', (e) => {
+			touched();
+			if (e.pointerType === 'mouse' && e.button !== 0) return;
+			gsap.killTweensOf(spin, 'rotation');
+			drag = { x: e.clientX, startRz: rzNow(), moved: false, lastX: e.clientX, lastT: performance.now(), v: 0 };
+			stage.setPointerCapture(e.pointerId);
+		});
+
+		stage.addEventListener('pointermove', (e) => {
+			if (drag) {
+				const dx = e.clientX - drag.x;
+				if (!drag.moved && Math.abs(dx) > 4) {
+					drag.moved = true;
+					dragging = true;
+					idle();
 				}
+				if (drag.moved) {
+					gsap.set(spin, { rotation: drag.startRz + dx * 0.45 });
+					const now = performance.now();
+					const dt = Math.max(1, now - drag.lastT);
+					drag.v = 0.8 * drag.v + 0.2 * ((e.clientX - drag.lastX) / dt);
+					drag.lastX = e.clientX;
+					drag.lastT = now;
+				}
+				return;
+			}
+			if (e.pointerType !== 'mouse') return;
+			touched();
+			const r = stage.getBoundingClientRect();
+			lookRY(((e.clientX - r.left) / r.width - 0.5) * 8);
+			lookRX(-((e.clientY - r.top) / r.height - 0.5) * 5);
+			if (state.pinned < 0) {
+				const hit = hitIndex(e);
+				if (hit >= 0) setSel(hit);
+				else softClear();
+			}
+		});
+
+		const endDrag = (e: PointerEvent) => {
+			if (!drag) return;
+			const d = drag;
+			drag = null;
+			if (stage.hasPointerCapture(e.pointerId)) stage.releasePointerCapture(e.pointerId);
+			if (d.moved) {
+				dragging = false;
+				// let it coast to a stop
+				if (!reduce) {
+					const deg = Math.max(-220, Math.min(220, d.v * 0.45 * 320));
+					gsap.to(spin, { rotation: `+=${deg}`, duration: 1.5, ease: 'power3.out' });
+				}
+				idle();
+				return;
+			}
+			// a tap or click: pin that layer (or let go of it)
+			const hit = hitIndex(e);
+			state.pinned = hit >= 0 && state.pinned !== hit ? hit : -1;
+			setSel(state.pinned >= 0 ? state.pinned : e.pointerType === 'mouse' ? hit : -1);
+			applyStates();
+		};
+		stage.addEventListener('pointerup', endDrag);
+		stage.addEventListener('pointercancel', endDrag);
+
+		stage.addEventListener('pointerleave', (e) => {
+			if (e.pointerType !== 'mouse' || drag) return;
+			lookRX(0);
+			lookRY(0);
+			if (state.pinned < 0) softClear();
+		});
+
+		stage.addEventListener('keydown', (e) => {
+			touched();
+			if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+				e.preventDefault();
+				gsap.to(spin, { rotation: `${e.key === 'ArrowLeft' ? '-' : '+'}=16`, duration: reduce ? 0 : 0.45, ease: 'power3.out', overwrite: 'auto' });
+			} else if (e.key === 'Escape') {
+				state.pinned = -1;
+				setSel(-1);
+				applyStates();
+			}
+		});
+
+		// ---------- the names and the tags ----------
+		labels.forEach((btn, i) => {
+			btn.addEventListener('pointerenter', (e) => {
+				if (e.pointerType === 'mouse' && state.pinned < 0) setSel(i);
+			});
+			btn.addEventListener('pointerleave', (e) => {
+				if (e.pointerType === 'mouse' && state.pinned < 0) softClear();
+			});
+			btn.addEventListener('focus', () => {
+				if (state.pinned < 0) setSel(i);
+			});
+			btn.addEventListener('blur', () => {
+				if (state.pinned < 0) softClear();
+			});
+			btn.addEventListener('click', () => {
+				touched();
+				state.pinned = state.pinned === i ? -1 : i;
+				if (state.pinned >= 0) setSel(i);
+				applyStates();
+			});
+		});
+		tagBtns.forEach((btn, i) =>
+			btn.addEventListener('click', () => {
+				touched();
+				setFilter(i);
+			}),
+		);
+
+		// ---------- the lines from each slab to its name ----------
+		const wide = window.matchMedia('(min-width: 900px)');
+		const draw = () => {
+			if (!visible || !wide.matches) return;
+			const w = wrap.getBoundingClientRect();
+			svg.setAttribute('viewBox', `0 0 ${w.width} ${w.height}`);
+			slabs.forEach((sl, i) => {
+				const r = sl.getBoundingClientRect();
+				const l = labels[i].getBoundingClientRect();
+				const ax = r.left + r.width * 0.96 - w.left;
+				const ay = r.top + r.height / 2 - w.top;
+				const bx = l.left - w.left - 8;
+				const by = l.top + l.height / 2 - w.top;
+				const mx = ax + (bx - ax) * 0.55;
+				lines[i].setAttribute('d', `M ${ax} ${ay} C ${mx} ${ay}, ${mx} ${by}, ${bx} ${by}`);
+				dots[i].setAttribute('cx', String(ax));
+				dots[i].setAttribute('cy', String(ay));
+				const on = i === state.sel;
+				lines[i].style.stroke = on ? colors[i] : '';
+				lines[i].style.opacity = on ? '1' : state.sel >= 0 ? '0.15' : '';
+				dots[i].style.fill = colors[i];
+				dots[i].style.opacity = on ? '1' : state.sel >= 0 ? '0.2' : '0.55';
+			});
+		};
+		gsap.ticker.add(draw);
+
+		// ---------- start: the stack at rest, then (if motion is welcome) it builds itself ----------
+		gsap.set(tilt, { rotationX: 60 });
+		gsap.set(spin, { rotation: -38 });
+		gsap.set(ground, { z: -16 });
+		layout(0);
+		applyStates();
+
+		if (!animated) {
+			section.classList.add('is-visible');
+			visible = true;
+			entered = true;
+			return;
+		}
+
+		gsap.set(slabs, { opacity: 0 });
+		gsap.set(labels, { opacity: 0, x: 36 });
+		gsap.set(svg, { opacity: 0 });
+
+		const enter = () => {
+			entered = true;
+			gsap.fromTo(tilt, { rotationX: 86 }, { rotationX: 60, duration: 1.7, ease: 'power3.out' });
+			gsap.fromTo(spin, { rotation: -178 }, { rotation: -38, duration: 2, ease: 'power3.out' });
+			// the layers drop into place, the foundation first
+			slabs.forEach((el, i) => {
+				const k = N - 1 - i;
+				gsap.fromTo(el, { z: zFor(i) + 380, opacity: 0 }, { z: zFor(i), opacity: 1, duration: 1.15, ease: 'power3.out', delay: 0.2 + k * 0.12 });
+			});
+			gsap.to(labels, { opacity: 1, x: 0, duration: 0.7, ease: 'power3.out', stagger: 0.07, delay: 0.7, clearProps: 'transform' });
+			gsap.to(svg, { opacity: 1, duration: 0.8, delay: 1.5 });
+			gsap.delayedCall(2.6, idle);
+			// if nobody has touched it yet, show what it can do: lift a layer for a moment, then let go
+			gsap.delayedCall(4.4, () => {
+				if (interacted || state.pinned >= 0 || state.filter >= 0 || !visible) return;
+				setSel(3);
+				gsap.delayedCall(2.4, () => {
+					if (!interacted && state.pinned < 0 && state.sel === 3) setSel(-1);
+				});
 			});
 		};
 
-		const step = () => {
-			setActive(current);
-			const atLast = current === nodes.length - 1;
-			timer = setTimeout(
-				() => {
-					current = atLast ? 0 : current + 1;
-					step();
-				},
-				atLast ? 2200 : 900,
-			);
-		};
-
-		const start = () => {
-			if (!timer) step();
-		};
-		const stop = () => {
-			if (timer) {
-				clearTimeout(timer);
-				timer = null;
-			}
-			nodes.forEach((n) => n.classList.remove('is-current'));
-			connectors.forEach((c) => c.classList.remove('is-active'));
-		};
-
-		const playObserver = new IntersectionObserver(
+		const io = new IntersectionObserver(
 			(entries) => {
 				entries.forEach((entry) => {
-					if (entry.isIntersecting) start();
-					else stop();
+					visible = entry.isIntersecting;
+					if (entry.isIntersecting) {
+						section.classList.add('is-visible');
+						if (!entered && entry.intersectionRatio > 0.3) enter();
+					}
+					idle();
 				});
 			},
-			{ threshold: 0.4 },
+			{ threshold: [0, 0.3] },
 		);
-		playObserver.observe(pipeline);
+		io.observe(stage);
+
+		// the heading and the controls fade in as soon as the section comes into view
+		const revealIo = new IntersectionObserver(
+			(entries) => {
+				if (entries.some((e) => e.isIntersecting)) {
+					section.classList.add('is-visible');
+					revealIo.disconnect();
+				}
+			},
+			{ threshold: 0.12 },
+		);
+		revealIo.observe(section);
 	}
 </script>

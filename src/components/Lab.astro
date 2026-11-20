@@ -150,6 +150,7 @@ const mail = (subject: string) => `mailto:hello@neulancers.com?subject=${encodeU
 					</li>
 				))}
 			</ol>
+			<span class="idx-marker" aria-hidden="true"></span>
 			</div>
 
 			<div class="spec" id="labSpec">
@@ -216,6 +217,97 @@ const mail = (subject: string) => `mailto:hello@neulancers.com?subject=${encodeU
 			const segs = el.querySelectorAll<HTMLElement>('.track li.is-on i');
 			gsap.fromTo(strokes, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.9, stagger: 0.06, ease: 'power2.out' });
 			gsap.fromTo(segs, { scaleX: 0 }, { scaleX: 1, duration: 0.5, stagger: 0.08, ease: 'power3.out', transformOrigin: 'left center' });
+			// the stage this experiment has reached flashes once when the track has filled
+			const here = segs[segs.length - 1];
+			if (here && !reduce) {
+				gsap.fromTo(
+					here,
+					{ boxShadow: '0 0 0 0 rgba(167,139,250,0)' },
+					{ boxShadow: '0 0 12px 1px rgba(167,139,250,0.95)', duration: 0.35, yoyo: true, repeat: 1, ease: 'power2.out', delay: 0.08 * segs.length + 0.45 },
+				);
+			}
+		};
+
+		// ---------- the sliding marker ----------
+		// One highlight glides from row to row (a soft band with a bright left edge)
+		// instead of each row switching on by itself. Wide screens only.
+		const marker = main.querySelector<HTMLElement>('.idx-marker')!;
+		const placeMarker = (i: number, animate: boolean) => {
+			if (!wide.matches) return;
+			if (i < 0) {
+				gsap.to(marker, { opacity: 0, duration: 0.2, overwrite: true });
+				return;
+			}
+			const y = rows[i].offsetTop;
+			const height = rows[i].offsetHeight;
+			if (!animate || reduce) gsap.set(marker, { y, height, opacity: 1 });
+			else gsap.to(marker, { y, height, opacity: 1, duration: 0.55, ease: 'power3.out', overwrite: true });
+		};
+
+		// ---------- split text, so letters and words can be staggered ----------
+		// The heading and the panel titles become letters, the panel text becomes
+		// words. A title keeps a hidden copy of itself so screen readers still read it.
+		const toLetters = (el: HTMLElement) => {
+			const text = el.textContent ?? '';
+			el.textContent = '';
+			const sr = document.createElement('span');
+			sr.className = 'sr-only';
+			sr.textContent = text;
+			const vis = document.createElement('span');
+			vis.setAttribute('aria-hidden', 'true');
+			Array.from(text).forEach((c) => {
+				const sp = document.createElement('span');
+				sp.className = 'ch';
+				sp.textContent = c === ' ' ? '\u00a0' : c;
+				vis.appendChild(sp);
+			});
+			el.append(sr, vis);
+		};
+		const toWords = (el: HTMLElement) => {
+			const words = (el.textContent ?? '').split(/\s+/).filter(Boolean);
+			el.textContent = '';
+			words.forEach((w, k) => {
+				const sp = document.createElement('span');
+				sp.className = 'w';
+				sp.textContent = w;
+				el.appendChild(sp);
+				if (k < words.length - 1) el.appendChild(document.createTextNode(' '));
+			});
+		};
+		if (!reduce) {
+			const heading = root.querySelector<HTMLElement>('.lab-heading');
+			if (heading) toLetters(heading);
+			specs.forEach((sp) => {
+				const title = sp.querySelector<HTMLElement>('.spec-title');
+				if (title) toLetters(title);
+				const text = sp.querySelector<HTMLElement>('.spec-text');
+				if (text) toWords(text);
+			});
+		}
+
+		// ---------- a panel builds itself, part by part ----------
+		const choreograph = (next: HTMLElement, delay: number) => {
+			const one = (sel: string) => next.querySelector<HTMLElement>(sel);
+			const chip = one('.spec-chip');
+			const art = one('.spec-art');
+			const kicker = one('.spec-kicker');
+			const cta = one('.spec-cta');
+			const chars = Array.from(next.querySelectorAll<HTMLElement>('.spec-title .ch'));
+			const words = Array.from(next.querySelectorAll<HTMLElement>('.spec-text .w'));
+			gsap.killTweensOf([next, chip, kicker, cta, ...chars, ...words]);
+			// the drawing's x/y belong to the pointer drift (quickTo): clear only its scale and opacity
+			gsap.killTweensOf(art, 'scale,opacity');
+			const tl = gsap.timeline({ delay });
+			tl.fromTo(next, { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: 0.3, ease: 'power2.out' }, 0);
+			// the drawing eases in while its strokes draw
+			tl.fromTo(art, { scale: 0.93, opacity: 0, transformOrigin: '50% 50%' }, { scale: 1, opacity: 1, duration: 0.6, ease: 'power3.out' }, 0.05);
+			// the stage chip pops
+			tl.fromTo(chip, { scale: 0.5, opacity: 0, transformOrigin: '100% 0%' }, { scale: 1, opacity: 1, duration: 0.45, ease: 'back.out(2.4)' }, 0.18);
+			tl.fromTo(kicker, { x: -14, opacity: 0 }, { x: 0, opacity: 1, duration: 0.4, ease: 'power2.out' }, 0.24);
+			// the title springs in a letter at a time, the notebook text follows word by word
+			tl.fromTo(chars, { yPercent: 100, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 0.5, ease: 'back.out(1.6)', stagger: 0.025 }, 0.28);
+			tl.fromTo(words, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out', stagger: 0.012 }, 0.42);
+			tl.fromTo(cta, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }, 0.78);
 		};
 
 		const show = (i: number, animate = true) => {
@@ -230,6 +322,7 @@ const mail = (subject: string) => `mailto:hello@neulancers.com?subject=${encodeU
 			items.forEach((li, k) => li.classList.toggle('is-active', k === i));
 			rows.forEach((b, k) => (k === i ? b.setAttribute('aria-current', 'true') : b.removeAttribute('aria-current')));
 			arm();
+			placeMarker(i, animate);
 
 			if (!wide.matches) return; // the mobile accordion is pure CSS off is-active
 
@@ -248,7 +341,7 @@ const mail = (subject: string) => `mailto:hello@neulancers.com?subject=${encodeU
 				return;
 			}
 			if (old) gsap.to(old, { autoAlpha: 0, y: -10, duration: 0.2, ease: 'power2.in' });
-			gsap.fromTo(next, { autoAlpha: 0, y: 14 }, { autoAlpha: 1, y: 0, duration: 0.45, delay: old ? 0.12 : 0, ease: 'power3.out' });
+			choreograph(next, old ? 0.12 : 0);
 			drawIn(next);
 		};
 
@@ -323,6 +416,46 @@ const mail = (subject: string) => `mailto:hello@neulancers.com?subject=${encodeU
 		});
 		document.addEventListener('visibilitychange', sync);
 
+		// ---------- depth: the drawing drifts with the pointer, and a soft light follows it ----------
+		const drift = specs.map((sp) => {
+			const art = sp.querySelector<SVGElement>('.spec-art')!;
+			return {
+				x: gsap.quickTo(art, 'x', { duration: 0.6, ease: 'power2.out' }),
+				y: gsap.quickTo(art, 'y', { duration: 0.6, ease: 'power2.out' }),
+			};
+		});
+		if (!reduce) {
+			spec.addEventListener('pointermove', (e) => {
+				if (e.pointerType !== 'mouse' || !wide.matches) return;
+				const r = spec.getBoundingClientRect();
+				const px = e.clientX - r.left;
+				const py = e.clientY - r.top;
+				spec.style.setProperty('--mx', px + 'px');
+				spec.style.setProperty('--my', py + 'px');
+				spec.style.setProperty('--spot', '1');
+				if (cur >= 0 && drift[cur]) {
+					drift[cur].x((px / r.width - 0.5) * 2 * 10);
+					drift[cur].y((py / r.height - 0.5) * 2 * 8);
+				}
+			});
+			spec.addEventListener('pointerleave', () => {
+				spec.style.setProperty('--spot', '0');
+				if (cur >= 0 && drift[cur]) {
+					drift[cur].x(0);
+					drift[cur].y(0);
+				}
+			});
+		}
+
+		// the marker follows the active row if the layout moves under it
+		let relayout: ReturnType<typeof setTimeout>;
+		const relayoutMarker = () => {
+			clearTimeout(relayout);
+			relayout = setTimeout(() => placeMarker(cur, false), 150);
+		};
+		window.addEventListener('resize', relayoutMarker);
+		if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => placeMarker(cur, false));
+
 		wide.addEventListener('change', () => {
 			cur = -2;
 			if (wide.matches) show(0, false);
@@ -346,7 +479,17 @@ const mail = (subject: string) => `mailto:hello@neulancers.com?subject=${encodeU
 					onComplete: () => (el.textContent = pad(to)),
 				});
 			});
-			if (cur >= 0 && wide.matches) drawIn(specs[cur]);
+			// the heading's letters spring in, the rows slide in one after another and the
+			// panel is wiped open from the left; then the first note builds itself
+			gsap.from(root.querySelectorAll('.lab-heading .ch'), { yPercent: 100, opacity: 0, rotation: 6, duration: 0.6, ease: 'back.out(1.7)', stagger: 0.05, delay: 0.15 });
+			gsap.from(items, { opacity: 0, x: -26, duration: 0.7, ease: 'power3.out', stagger: 0.07, delay: 0.4, clearProps: 'opacity,transform' });
+			if (wide.matches) {
+				gsap.from(spec, { clipPath: 'inset(0% 100% 0% 0% round 20px)', duration: 0.9, ease: 'power3.inOut', delay: 0.45, clearProps: 'clipPath' });
+				if (cur >= 0) {
+					choreograph(specs[cur], 0.75);
+					gsap.delayedCall(0.7, () => drawIn(specs[cur]));
+				}
+			}
 		};
 
 		if (wide.matches) show(0, false);
@@ -479,7 +622,7 @@ const mail = (subject: string) => `mailto:hello@neulancers.com?subject=${encodeU
 		max-width: 6.5rem;
 		padding-bottom: 0.2rem;
 		font-family: var(--mono);
-		font-size: 0.68rem;
+		font-size: 0.75rem;
 		letter-spacing: 0.08em;
 		line-height: 1.4;
 		text-transform: uppercase;
@@ -521,6 +664,25 @@ const mail = (subject: string) => `mailto:hello@neulancers.com?subject=${encodeU
 		align-items: start;
 	}
 
+	.idx-col {
+		position: relative;
+	}
+
+	/* one highlight that glides between the rows (the script moves it); the row's
+	   own left bar is only used when the script is not running */
+	.idx-marker {
+		position: absolute;
+		left: 0;
+		top: 0;
+		z-index: 0;
+		width: 100%;
+		height: 0;
+		background: linear-gradient(90deg, rgba(139, 92, 246, 0.16), rgba(139, 92, 246, 0.04) 55%, transparent);
+		box-shadow: inset 2px 0 0 var(--accent-bright);
+		opacity: 0;
+		pointer-events: none;
+	}
+
 	.idx {
 		margin: 0;
 		padding: 0;
@@ -534,6 +696,7 @@ const mail = (subject: string) => `mailto:hello@neulancers.com?subject=${encodeU
 
 	.row {
 		position: relative;
+		z-index: 1;
 		display: grid;
 		grid-template-columns: 2.6rem minmax(0, 1fr) auto 1.2rem;
 		grid-template-areas:
@@ -596,7 +759,7 @@ const mail = (subject: string) => `mailto:hello@neulancers.com?subject=${encodeU
 		border: 1px solid var(--border-soft);
 		border-radius: 999px;
 		font-family: var(--mono);
-		font-size: 0.66rem;
+		font-size: 0.72rem;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		color: var(--muted);
@@ -647,6 +810,33 @@ const mail = (subject: string) => `mailto:hello@neulancers.com?subject=${encodeU
 		outline-offset: -2px;
 	}
 
+	@media (min-width: 901px) {
+		/* the marker draws the bar on wide screens */
+		.row::before {
+			display: none;
+		}
+	}
+
+	/* the pieces the script splits the text into */
+	.lab-heading :global(.ch),
+	.spec-title :global(.ch) {
+		display: inline-block;
+	}
+
+	.spec-text :global(.w) {
+		display: inline-block;
+	}
+
+	.lab :global(.sr-only) {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		margin: -1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+
 	/* ---------- the preview panel (wide screens) ---------- */
 	.spec {
 		position: sticky;
@@ -659,6 +849,18 @@ const mail = (subject: string) => `mailto:hello@neulancers.com?subject=${encodeU
 			rgba(16, 19, 25, 0.92);
 		border: 1px solid rgba(255, 255, 255, 0.09);
 		border-radius: 20px;
+	}
+
+	/* a soft light that follows the pointer over the panel */
+	.spec::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+		background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 30%), rgba(167, 139, 250, 0.14), transparent 70%);
+		opacity: var(--spot, 0);
+		transition: opacity 0.3s ease;
+		pointer-events: none;
 	}
 
 	.spec-item {
@@ -885,7 +1087,8 @@ const mail = (subject: string) => `mailto:hello@neulancers.com?subject=${encodeU
 		}
 
 		.spec,
-		.idx-hint {
+		.idx-hint,
+		.idx-marker {
 			display: none;
 		}
 
@@ -960,7 +1163,7 @@ const mail = (subject: string) => `mailto:hello@neulancers.com?subject=${encodeU
 
 		/* five labels share a phone-width row, so they have to be small */
 		.track span {
-			font-size: 0.5rem;
+			font-size: 0.62rem;
 			letter-spacing: 0;
 		}
 	}
@@ -971,7 +1174,8 @@ const mail = (subject: string) => `mailto:hello@neulancers.com?subject=${encodeU
 		.row::before,
 		.row-arrow,
 		.row-detail,
-		.spec-cta {
+		.spec-cta,
+		.spec::after {
 			transition: none;
 		}
 

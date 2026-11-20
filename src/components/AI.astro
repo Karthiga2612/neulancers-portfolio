@@ -1,115 +1,149 @@
 ---
 const query = 'Find the pending work from this week.';
-const summary = "I've found 7 items.";
 
 const findings = [
-	{ count: 3, label: 'require documents' },
-	{ count: 2, label: 'require client action' },
-	{ count: 1, label: 'is waiting for approval' },
-	{ count: 1, label: 'is ready to close' },
+	{ count: 3, label: 'need documents' },
+	{ count: 2, label: 'need the client' },
+	{ count: 1, label: 'awaiting approval' },
+	{ count: 1, label: 'ready to close' },
 ];
 
-const scanTargets = ['Calendar', 'Email', 'Documents', 'Task system'];
+const total = findings.reduce((n, f) => n + f.count, 0);
 
-const flow = ['Talk', 'Think', 'Act'];
+const sources = [
+	{ name: 'Calendar', n: 12, unit: 'events', color: '#60a5fa', icon: ['M4 6h16v14H4z', 'M4 10h16', 'M8 3v4', 'M16 3v4'] },
+	{ name: 'Email', n: 48, unit: 'emails', color: '#f472b6', icon: ['M3 6h18v12H3z', 'M3 7l9 7 9-7'] },
+	{ name: 'Documents', n: 31, unit: 'files', color: '#fbbf24', icon: ['M7 3h7l5 5v13H7z', 'M14 3v5h5', 'M10 13h6', 'M10 17h6'] },
+	{ name: 'Tasks', n: 9, unit: 'tasks', color: '#2dd4bf', icon: ['M4 6l2 2 3-3', 'M12 7h8', 'M4 14l2 2 3-3', 'M12 15h8'] },
+];
+
+// a small line icon for each finding (documents, client, approval, ready to close)
+const icons = [
+	['M7 3h7l5 5v13H7z', 'M14 3v5h5', 'M10 13h6', 'M10 17h6'],
+	['M12 12a4 4 0 100-8 4 4 0 000 8z', 'M4 21c0-4 3.6-7 8-7s8 3 8 7'],
+	['M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z', 'M9 12l2 2 4-4'],
+	['M6 21V4', 'M6 5h11l-2 4 2 4H6'],
+];
+
+const steps = ['Talk', 'Think', 'Act'];
 ---
 
-<section class="ai" id="ai">
+<section class="ai" id="ai" data-query={query}>
+	<div class="ai-glow" aria-hidden="true"><span class="glow glow--a"></span><span class="glow glow--b"></span></div>
+
 	<div class="ai-inner">
 		<div class="ai-head">
 			<div class="ai-eyebrow reveal" style="--reveal-order: 0">
 				<span class="eyebrow-idx">07</span>
 				<span class="eyebrow-dot" aria-hidden="true">&bull;</span>
-				<span class="eyebrow-label">The AI Section</span>
+				<span class="eyebrow-label">AI that does the work</span>
 			</div>
 
-			<h2 class="ai-heading reveal" style="--reveal-order: 1">What happens when software can think?</h2>
+			<h2 class="ai-heading" id="aiHeading">What happens when software can think?</h2>
 		</div>
 
-		<div class="ai-demo reveal" id="aiDemo" style="--reveal-order: 2">
-			<div class="demo-bar">
-				<span class="demo-dot"></span>
-				<span class="demo-dot"></span>
-				<span class="demo-dot"></span>
-				<span class="demo-title">neulancers &mdash; agent</span>
+		<div class="cmd" id="aiDemo" role="group" aria-label="Demo: an AI agent finds this week's pending work and handles it">
+			<!-- the request, typed into a command bar -->
+			<div class="cmd-bar" id="cmdBar">
+				<svg class="cmd-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+					<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z"></path>
+					<path d="M19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8L19 16z"></path>
+				</svg>
+
+				<p class="cmd-text"><span id="typedQuery"><noscript>{query}</noscript></span><span class="caret" id="queryCaret"></span></p>
+
+				<kbd class="cmd-enter" id="cmdEnter" aria-hidden="true">&crarr;</kbd>
 
 				<span class="demo-status" id="demoStatus">
 					<span class="status-dot" id="statusDot" aria-hidden="true"></span>
 					<span class="status-text" id="statusText">Agent active</span>
 				</span>
-
-				<button type="button" class="demo-replay" id="demoReplay" aria-label="Replay demo">
-					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-						<path d="M1 4v6h6"></path>
-						<path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
-					</svg>
-				</button>
 			</div>
 
-			<div class="demo-body" id="demoBody">
-				<div class="msg msg--you" id="msgYou">
-					<span class="msg-role">You</span>
-					<p class="msg-text"><span id="typedQuery"></span><span class="caret" id="queryCaret"></span></p>
-				</div>
-
-				<div class="msg msg--ai" id="msgAi">
-					<span class="msg-role">Agent</span>
-
-					<div class="agent-progress" id="agentProgress" aria-hidden="true">
-						<span class="progress-label">Thinking</span>
-						<span class="progress-track"><span class="progress-fill" id="progressFill"></span></span>
-						<span class="progress-label">Acting</span>
-					</div>
-
-					<div class="msg-thinking" id="msgThinking">
-						<span></span><span></span><span></span>
-					</div>
-
-					<div class="msg-scan" id="msgScan">
-						<p class="scan-label">Scanning connected systems&hellip;</p>
-						<ul class="scan-list" id="scanList">
-							{scanTargets.map((t) => (
-								<li class="scan-item">
-									<span class="scan-check" aria-hidden="true">&check;</span>
-									<span class="scan-name">{t}</span>
-								</li>
-							))}
-						</ul>
-					</div>
-
-					<div class="msg-reply" id="msgReply">
-						<p class="reply-summary" id="replySummary">{summary}</p>
-						<ul class="reply-list" id="replyList">
-							{findings.map((f) => (
-								<li class="reply-item">
-									<span class="item-count">{f.count}</span>
-									<span class="item-label">{f.label}</span>
-									<span class="item-arrow" aria-hidden="true">&rarr;</span>
-								</li>
-							))}
-						</ul>
-						<button type="button" class="reply-action" id="replyAction">
-							<span>Take action</span>
-							<span class="action-arrow" aria-hidden="true">&rarr;</span>
-						</button>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<div class="ai-philosophy reveal" style="--reveal-order: 3">
-			<p class="philosophy-lede">We&rsquo;re interested in AI that doesn&rsquo;t stop at conversation.</p>
-
-			<div class="philosophy-flow" aria-hidden="true">
-				{flow.map((step, i) => (
+			<!-- where the demo is: Talk, Think, Act -->
+			<ol class="ai-steps" id="aiSteps" aria-label="How the agent works">
+				{steps.map((name, i) => (
 					<>
-						<span class="flow-step">{step}</span>
-						{i < flow.length - 1 && <span class="flow-arrow">&rarr;</span>}
+						<li class="ai-step">
+							<span class="step-dot" aria-hidden="true"></span>
+							<span class="step-name">{name}</span>
+						</li>
+						{i < steps.length - 1 && (
+							<li class="pill-link" aria-hidden="true">
+								<span class="link-fill"></span>
+							</li>
+						)}
 					</>
 				))}
+			</ol>
+
+			<div class="cmd-stage" id="cmdStage">
+				<!-- thinking: the sources fly into the agent -->
+				<div class="scan-view" id="scanView" aria-hidden="true">
+					<svg class="links" id="links" aria-hidden="true"></svg>
+					{sources.map((src, i) => (
+						<span class={`src src-${i}`} style={`--c: ${src.color}`} data-n={src.n} data-unit={src.unit}>
+							<span class="src-icon">
+								<svg viewBox="0 0 24 24" aria-hidden="true">
+									{src.icon.map((d) => (
+										<path d={d} />
+									))}
+								</svg>
+							</span>
+							<span class="src-body">
+								<span class="src-name">{src.name}</span>
+								<span class="src-count">&mdash;</span>
+							</span>
+							<span class="src-check">&check;</span>
+							<span class="src-bar"><i></i></span>
+						</span>
+					))}
+					<div class="core" id="core">
+						<span class="core-wave" id="coreWave"></span>
+						<span class="core-orbit" id="coreOrbit"><i></i><i></i><i></i></span>
+						<span class="core-ring" id="coreRing"></span>
+						<span class="core-dot" id="coreDot"></span>
+					</div>
+				</div>
+
+				<!-- the result: one card per finding -->
+				<div class="reply-view" id="replyView">
+					<p class="reply-summary" id="replySummary">{total} pending</p>
+
+					<ul class="cards" id="cards">
+						{findings.map((f, i) => (
+							<li class="card">
+								<button type="button" class="card-btn" aria-label={`${f.count} ${f.label}. Mark as handled`}>
+									<span class="card-sweep" aria-hidden="true"></span>
+									<svg class="card-icon" viewBox="0 0 24 24" aria-hidden="true">
+										{icons[i].map((d) => (
+											<path d={d} pathLength="1" />
+										))}
+									</svg>
+									<span class="card-count">{f.count}</span>
+									<span class="card-label">{f.label}</span>
+									<span class="card-meta" aria-hidden="true">
+										<span class="card-arrow">&rarr;</span>
+										<span class="card-done">&check; Done</span>
+									</span>
+								</button>
+							</li>
+						))}
+					</ul>
+
+				</div>
 			</div>
 
-			<p class="philosophy-footer">Software should finish the job, not just describe it.</p>
+			<p class="sr-only" id="aiLive" aria-live="polite"></p>
+		</div>
+
+		<div class="ai-philosophy reveal" id="aiPhilosophy" style="--reveal-order: 3">
+			<p class="philosophy-lede" id="philosophyLede">Software should finish the job, not just describe it.</p>
+
+			<a class="ai-cta" href="#contact">
+				<span>Build one with us</span>
+				<span aria-hidden="true">&rarr;</span>
+			</a>
 		</div>
 	</div>
 </section>
@@ -121,6 +155,7 @@ const flow = ['Talk', 'Think', 'Act'];
 		--panel-bg: #0d1018;
 
 		position: relative;
+		overflow: clip;
 		background: var(--bg);
 		color: var(--ink);
 		font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
@@ -128,6 +163,8 @@ const flow = ['Talk', 'Think', 'Act'];
 	}
 
 	.ai-inner {
+		position: relative;
+		z-index: 1;
 		max-width: 1320px;
 		margin: 0 auto;
 		padding: clamp(64px, 9vw, 112px) clamp(20px, 4vw, 32px);
@@ -148,9 +185,40 @@ const flow = ['Talk', 'Think', 'Act'];
 		transform: translateY(0);
 	}
 
+	/* slow drifting light behind everything */
+	.ai-glow {
+		position: absolute;
+		inset: 0;
+		z-index: 0;
+		pointer-events: none;
+	}
+
+	.glow {
+		position: absolute;
+		border-radius: 50%;
+		filter: blur(90px);
+		will-change: transform;
+	}
+
+	.glow--a {
+		top: 24%;
+		left: 6%;
+		width: 420px;
+		height: 420px;
+		background: rgba(109, 40, 217, 0.22);
+	}
+
+	.glow--b {
+		top: 44%;
+		right: 4%;
+		width: 360px;
+		height: 360px;
+		background: rgba(56, 189, 248, 0.1);
+	}
+
 	.ai-head {
 		max-width: 620px;
-		margin: 0 auto clamp(24px, 3vw, 32px);
+		margin: 0 auto clamp(28px, 3.5vw, 44px);
 		text-align: center;
 	}
 
@@ -184,45 +252,119 @@ const flow = ['Talk', 'Think', 'Act'];
 		line-height: 1.15;
 	}
 
-	/* ---------- demo terminal: the centerpiece ---------- */
-	.ai-demo {
-		width: 100%;
-		max-width: 1120px;
-		margin: 0 auto;
-		background: var(--panel-bg);
-		border: 1px solid var(--border-soft);
-		border-radius: 18px;
-		overflow: hidden;
-		box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+	/* words the script splits text into; each heading word sits in a mask and rises into view */
+	.ai :global(.w) {
+		display: inline-block;
 	}
 
-	.demo-bar {
+	.ai :global(.mw) {
+		display: inline-block;
+		overflow: hidden;
+		vertical-align: top;
+		padding-bottom: 0.14em;
+		margin-bottom: -0.14em;
+	}
+
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		margin: -1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+
+	/* ---------- the demo ---------- */
+	.cmd {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: clamp(18px, 2.4vw, 28px);
+		width: 100%;
+		max-width: 960px;
+		margin: 0 auto;
+	}
+
+	/* ---------- the command bar ---------- */
+	.cmd-bar {
+		position: relative;
 		display: flex;
 		align-items: center;
-		gap: 0.5rem;
-		padding: 0.85rem 1.1rem;
-		border-bottom: 1px solid var(--border-soft);
-		background: rgba(255, 255, 255, 0.02);
+		gap: 0.9rem;
+		width: 100%;
+		max-width: 760px;
+		min-height: 64px;
+		padding: 0.8rem 1rem 0.8rem 1.35rem;
+		background: var(--panel-bg);
+		border: 1px solid rgba(167, 139, 250, 0.3);
+		border-radius: 34px;
+		box-shadow:
+			0 22px 56px -14px rgba(0, 0, 0, 0.65),
+			inset 0 1px 0 rgba(255, 255, 255, 0.05);
 	}
 
-	.demo-dot {
-		width: 9px;
-		height: 9px;
-		border-radius: 50%;
-		background: rgba(255, 255, 255, 0.14);
+	.cmd-icon {
+		flex-shrink: 0;
+		width: 22px;
+		height: 22px;
+		color: var(--accent-bright);
 	}
 
-	.demo-title {
-		margin-left: 0.5rem;
+	.cmd-text {
+		flex: 1;
+		min-width: 0;
+		margin: 0;
 		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-		font-size: 0.72rem;
-		letter-spacing: 0.04em;
+		font-size: clamp(0.92rem, 0.3vw + 0.85rem, 1.05rem);
+		line-height: 1.45;
+		color: var(--ink);
+	}
+
+	.caret {
+		display: inline-block;
+		width: 2px;
+		height: 1.05em;
+		margin-left: 2px;
+		background: var(--accent-bright);
+		vertical-align: -0.18em;
+		animation: caret-blink 0.9s step-end infinite;
+	}
+
+	.caret.is-done {
+		display: none;
+	}
+
+	@keyframes caret-blink {
+		0%,
+		100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0;
+		}
+	}
+
+	.cmd-enter {
+		flex-shrink: 0;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 28px;
+		height: 28px;
+		padding: 0 0.4rem;
+		border: 1px solid var(--border-soft);
+		border-bottom-width: 2px;
+		border-radius: 8px;
+		background: rgba(255, 255, 255, 0.04);
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.8rem;
 		color: var(--ink-faint);
 	}
 
-	/* ---------- agent status pill ---------- */
+	/* ---------- agent status ---------- */
 	.demo-status {
-		margin-left: auto;
+		flex-shrink: 0;
 		display: inline-flex;
 		align-items: center;
 		gap: 0.45rem;
@@ -248,8 +390,14 @@ const flow = ['Talk', 'Think', 'Act'];
 		box-shadow: none;
 	}
 
-	.demo-status.is-ready {
-		color: var(--ink-faint);
+	.demo-status.is-done .status-dot {
+		animation: none;
+		background: #34d399;
+		box-shadow: 0 0 8px 1px rgba(52, 211, 153, 0.55);
+	}
+
+	.demo-status.is-done {
+		color: #a7f3d0;
 	}
 
 	@keyframes statusPulse {
@@ -262,449 +410,719 @@ const flow = ['Talk', 'Think', 'Act'];
 		}
 	}
 
-	.demo-replay {
-		margin-left: 0.85rem;
-		display: inline-flex;
+	.card-btn:focus-visible {
+		outline: 2px solid var(--accent-bright);
+		outline-offset: 3px;
+	}
+
+	/* ---------- Talk -> Think -> Act ---------- */
+	.ai-steps {
+		list-style: none;
+		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 26px;
-		height: 26px;
-		padding: 0;
-		flex-shrink: 0;
-		background: none;
-		border: 1px solid var(--border-soft);
-		border-radius: 999px;
-		color: var(--ink-faint);
-		cursor: pointer;
-		transition: color 0.2s ease, border-color 0.2s ease;
-	}
-
-	.demo-replay svg {
-		width: 13px;
-		height: 13px;
-	}
-
-	.demo-replay:hover {
-		color: var(--ink);
-		border-color: rgba(255, 255, 255, 0.22);
-	}
-
-	.demo-body {
-		padding: clamp(1.5rem, 3vw, 2.25rem);
-		display: flex;
-		flex-direction: column;
-		gap: 1.6rem;
-	}
-
-	.msg {
-		display: flex;
-		flex-direction: column;
-		align-items: flex-start;
-		gap: 0.5rem;
-	}
-
-	.msg-role {
-		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-		font-size: 0.68rem;
-		letter-spacing: 0.08em;
-		text-transform: uppercase;
-		color: var(--ink-faint);
-	}
-
-	.msg--you .msg-text {
 		margin: 0;
-		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-		font-size: clamp(0.92rem, 0.3vw + 0.85rem, 1rem);
-		color: var(--ink);
+		padding: 0;
 	}
 
-	.caret {
-		display: inline-block;
-		width: 2px;
-		height: 1em;
-		margin-left: 2px;
-		background: var(--accent);
-		vertical-align: -0.15em;
-		animation: caret-blink 0.9s step-end infinite;
-	}
-
-	.caret.is-done {
-		display: none;
-	}
-
-	@keyframes caret-blink {
-		0%,
-		100% {
-			opacity: 1;
-		}
-		50% {
-			opacity: 0;
-		}
-	}
-
-	/* ---------- ai response ---------- */
-	.msg--ai {
-		width: 100%;
-		opacity: 0;
-		transition: opacity 0.4s ease;
-	}
-
-	.msg--ai.is-active {
-		opacity: 1;
-	}
-
-	/* ---------- thinking → acting indicator ----------
-	   Extremely subtle: a thin track with a small fill that advances as the
-	   agent moves from reading the request to returning a result. */
-	.agent-progress {
-		display: none;
+	.ai-step {
+		display: inline-flex;
 		align-items: center;
 		gap: 0.5rem;
-		margin: 0.15rem 0 0.9rem;
+		padding: 0.45rem 1rem 0.45rem 0.8rem;
+		border: 1px solid var(--border-soft);
+		border-radius: 999px;
+		background: rgba(255, 255, 255, 0.02);
+		transition: background-color 0.3s ease, border-color 0.3s ease;
 	}
 
-	.msg--ai.is-active .agent-progress {
-		display: flex;
+	.step-dot {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: var(--border-soft);
+		transition: background-color 0.3s ease, box-shadow 0.3s ease;
 	}
 
-	.progress-label {
+	.step-name {
 		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-		font-size: 0.6rem;
-		letter-spacing: 0.08em;
-		text-transform: uppercase;
+		font-size: 0.82rem;
+		font-weight: 700;
+		letter-spacing: 0.04em;
 		color: var(--ink-faint);
+		transition: color 0.3s ease;
 	}
 
-	.progress-track {
+	.ai-step.is-active,
+	.ai-step.is-past {
+		background: rgba(109, 40, 217, 0.14);
+		border-color: rgba(167, 139, 250, 0.55);
+	}
+
+	.ai-step.is-active .step-dot,
+	.ai-step.is-past .step-dot {
+		background: var(--accent-bright);
+	}
+
+	.ai-step.is-active .step-dot {
+		box-shadow: 0 0 10px 2px rgba(167, 139, 250, 0.8);
+	}
+
+	.ai-step.is-active .step-name,
+	.ai-step.is-past .step-name {
+		color: var(--ink);
+	}
+
+	.pill-link {
 		position: relative;
-		flex: 1;
-		max-width: 160px;
+		width: clamp(28px, 7vw, 76px);
 		height: 2px;
 		background: var(--border-soft);
-		border-radius: 2px;
 		overflow: hidden;
 	}
 
-	.progress-fill {
+	.link-fill {
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(to right, var(--accent), var(--accent-bright));
+		transform: scaleX(0);
+		transform-origin: left center;
+	}
+
+	/* the whole job is done: everything turns green */
+	.ai-steps.is-complete .ai-step {
+		background: rgba(52, 211, 153, 0.08);
+		border-color: rgba(52, 211, 153, 0.4);
+	}
+
+	.ai-steps.is-complete .step-dot {
+		background: #34d399;
+		box-shadow: none;
+	}
+
+	.ai-steps.is-complete .link-fill {
+		background: #34d399;
+	}
+
+	/* ---------- the stage: scan and result share the same space ---------- */
+	.cmd-stage {
+		position: relative;
+		display: grid;
+		width: 100%;
+		min-height: 300px;
+	}
+
+	.scan-view,
+	.reply-view {
+		grid-area: 1 / 1;
+		opacity: 0;
+		visibility: hidden;
+	}
+
+	.scan-view.is-on,
+	.reply-view.is-on {
+		opacity: 1;
+		visibility: visible;
+	}
+
+	/* ---------- thinking: sources fly into the agent ---------- */
+	.scan-view {
+		position: relative;
+	}
+
+	/* each source is a small glass card with its own colour */
+	.src {
+		position: absolute;
+		z-index: 1;
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		min-width: 176px;
+		padding: 0.7rem 1rem 0.85rem 0.75rem;
+		background: linear-gradient(145deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.02));
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		border: 1px solid color-mix(in srgb, var(--c) 30%, rgba(255, 255, 255, 0.08));
+		border-radius: 16px;
+		overflow: hidden;
+		box-shadow:
+			0 14px 32px -14px rgba(0, 0, 0, 0.7),
+			inset 0 1px 0 rgba(255, 255, 255, 0.08);
+		white-space: nowrap;
+		transition: border-color 0.4s ease, box-shadow 0.4s ease;
+	}
+
+	.src-icon {
+		flex-shrink: 0;
+		display: grid;
+		place-items: center;
+		width: 38px;
+		height: 38px;
+		border-radius: 12px;
+		background: rgba(255, 255, 255, 0.06);
+		background: color-mix(in srgb, var(--c) 16%, transparent);
+		box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 38%, transparent);
+	}
+
+	.src-icon svg {
+		width: 20px;
+		height: 20px;
+		fill: none;
+		stroke: var(--c);
+		stroke-width: 1.7;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+
+	.src-body {
+		display: flex;
+		flex-direction: column;
+		gap: 0.15rem;
+		min-width: 0;
+	}
+
+	.src-name {
+		font-size: 0.9rem;
+		font-weight: 600;
+		letter-spacing: -0.005em;
+		color: var(--ink);
+	}
+
+	.src-count {
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.74rem;
+		font-variant-numeric: tabular-nums;
+		color: var(--ink-faint);
+		transition: color 0.3s ease;
+	}
+
+	/* a line along the bottom fills while the source is being read */
+	.src-bar {
+		position: absolute;
+		left: 0;
+		bottom: 0;
+		width: 100%;
+		height: 3px;
+		background: rgba(255, 255, 255, 0.06);
+	}
+
+	.src-bar :global(i) {
 		display: block;
 		height: 100%;
-		width: 8%;
-		background: linear-gradient(to right, var(--accent), var(--accent-bright));
-		border-radius: 2px;
-		transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+		background: var(--c);
+		transform: scaleX(0);
+		transform-origin: left center;
 	}
 
-	.msg-thinking {
-		display: none;
-		gap: 5px;
-		height: 1.2rem;
-		align-items: center;
+	.src-0 {
+		left: 3%;
+		top: 14%;
 	}
 
-	.msg--ai.is-thinking .msg-thinking {
-		display: flex;
+	.src-1 {
+		right: 3%;
+		top: 14%;
 	}
 
-	.msg-thinking span {
-		width: 5px;
-		height: 5px;
+	.src-2 {
+		left: 9%;
+		bottom: 12%;
+	}
+
+	.src-3 {
+		right: 9%;
+		bottom: 12%;
+	}
+
+	.core {
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		width: 110px;
+		height: 110px;
+		margin: -55px 0 0 -55px;
+	}
+
+	.core-ring {
+		position: absolute;
+		inset: 0;
+		border: 1.5px dashed rgba(167, 139, 250, 0.7);
 		border-radius: 50%;
-		background: var(--ink-faint);
-		animation: think-bounce 1.1s ease-in-out infinite;
 	}
 
-	.msg-thinking span:nth-child(2) {
-		animation-delay: 0.15s;
+	.core-dot {
+		position: absolute;
+		inset: 30px;
+		border-radius: 50%;
+		background: radial-gradient(circle at 35% 30%, #ede9fe, #a78bfa 45%, #6d28d9 100%);
+		box-shadow:
+			0 0 34px 8px rgba(139, 92, 246, 0.55),
+			0 0 80px 20px rgba(109, 40, 217, 0.3);
 	}
 
-	.msg-thinking span:nth-child(3) {
-		animation-delay: 0.3s;
-	}
-
-	@keyframes think-bounce {
-		0%,
-		60%,
-		100% {
-			transform: translateY(0);
-			opacity: 0.5;
-		}
-		30% {
-			transform: translateY(-4px);
-			opacity: 1;
-		}
-	}
-
-	/* ---------- scanning phase ---------- */
-	.msg-scan {
-		display: none;
+	/* ---------- the result: cards ---------- */
+	.reply-view {
+		display: flex;
 		flex-direction: column;
-		gap: 0.6rem;
-		width: 100%;
-		opacity: 0;
-		transition: opacity 0.3s ease;
-	}
-
-	.msg--ai.is-scanning .msg-scan {
-		display: flex;
-		opacity: 1;
-	}
-
-	.scan-label {
-		margin: 0;
-		font-size: 0.85rem;
-		color: var(--muted);
-	}
-
-	.scan-list {
-		list-style: none;
-		margin: 0;
-		padding: 0;
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.5rem 1.25rem;
-	}
-
-	.scan-item {
-		display: flex;
 		align-items: center;
-		gap: 0.4rem;
-		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-		font-size: 0.78rem;
-		color: var(--ink-faint);
-		opacity: 0;
-		transform: translateY(4px);
-		transition: opacity 0.3s ease, transform 0.3s ease;
-	}
-
-	.scan-item.is-shown {
-		opacity: 1;
-		transform: translateY(0);
-	}
-
-	.scan-check {
-		color: var(--accent-bright);
-		font-weight: 700;
-	}
-
-	.msg-reply {
-		display: none;
-		flex-direction: column;
-		align-items: flex-start;
-		gap: 0.9rem;
-		width: 100%;
-	}
-
-	.msg--ai.is-replying .msg-reply {
-		display: flex;
+		justify-content: center;
+		gap: 1.4rem;
 	}
 
 	.reply-summary {
 		margin: 0;
-		font-size: clamp(0.98rem, 0.3vw + 0.9rem, 1.08rem);
-		font-weight: 600;
-		color: var(--ink);
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.8rem;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--muted);
 	}
 
-	.reply-list {
+	.cards {
 		list-style: none;
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: 14px;
+		width: 100%;
 		margin: 0;
 		padding: 0;
-		display: flex;
-		flex-direction: column;
-		gap: 0.55rem;
-		width: 100%;
 	}
 
-	/* ---------- interactive result rows ---------- */
-	.reply-item {
+	.card {
 		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-		padding: 0.65rem 0.9rem;
+		opacity: 0;
+		will-change: transform;
+	}
+
+	.card.is-shown {
+		opacity: 1;
+	}
+
+	.card-btn {
+		position: relative;
+		overflow: hidden;
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 0.9rem;
+		width: 100%;
+		min-height: 172px;
+		padding: 1.2rem 1.2rem 1rem;
 		background: rgba(255, 255, 255, 0.03);
 		border: 1px solid var(--border-soft);
-		border-radius: 10px;
-		font-size: 0.9rem;
+		border-radius: 20px;
 		color: var(--muted);
-		opacity: 0;
-		transform: translateX(-6px);
-		transition:
-			opacity 0.35s ease,
-			transform 0.3s ease,
-			background-color 0.25s ease,
-			border-color 0.25s ease;
+		font: inherit;
+		text-align: left;
+		cursor: pointer;
+		transition: background-color 0.25s ease, border-color 0.25s ease;
+	}
+
+	.card-btn:disabled {
 		cursor: default;
 	}
 
-	.reply-item.is-shown {
-		opacity: 1;
-		transform: translateX(0);
+	/* a soft light follows the pointer across a card */
+	.card-btn::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		background: radial-gradient(180px circle at var(--mx, 50%) var(--my, 0%), rgba(167, 139, 250, 0.16), transparent 70%);
+		opacity: var(--spot, 0);
+		transition: opacity 0.3s ease;
+		pointer-events: none;
 	}
 
-	.reply-item.is-shown:hover {
+	.card:not(.is-done) .card-btn:hover {
 		background: rgba(255, 255, 255, 0.06);
-		border-color: rgba(255, 255, 255, 0.18);
+		border-color: rgba(167, 139, 250, 0.5);
 	}
 
-	.item-count {
-		flex-shrink: 0;
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		min-width: 22px;
-		height: 22px;
-		padding: 0 0.3rem;
-		background: rgba(109, 40, 217, 0.16);
-		border-radius: 999px;
-		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-		font-size: 0.75rem;
-		font-weight: 700;
-		color: #c4b5fd;
-		transition: color 0.25s ease, background-color 0.25s ease;
-	}
-
-	.reply-item.is-shown:hover .item-count {
-		color: #e9d8fd;
-		background: rgba(109, 40, 217, 0.28);
-	}
-
-	.item-label {
-		flex: 1;
-	}
-
-	.item-arrow {
-		flex-shrink: 0;
-		color: var(--ink-faint);
+	.card-sweep {
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(100deg, transparent 20%, rgba(167, 139, 250, 0.35) 50%, transparent 80%);
 		opacity: 0;
-		transform: translateX(-3px);
-		transition: opacity 0.25s ease, transform 0.25s ease, color 0.25s ease;
+		pointer-events: none;
 	}
 
-	.reply-item.is-shown:hover .item-arrow {
+	.card-count {
+		position: relative;
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: clamp(2.8rem, 3vw + 1.4rem, 4rem);
+		font-weight: 700;
+		line-height: 1;
+		letter-spacing: -0.04em;
+		font-variant-numeric: tabular-nums;
+		background: linear-gradient(135deg, #ffffff 20%, #a78bfa 100%);
+		-webkit-background-clip: text;
+		background-clip: text;
+		color: transparent;
+	}
+
+	.card-label {
+		position: relative;
+		font-size: 0.95rem;
+		line-height: 1.3;
+		color: var(--ink);
+	}
+
+	.card-meta {
+		position: relative;
+		display: flex;
+		align-items: center;
+		min-height: 24px;
+		margin-top: auto;
+	}
+
+	.card-arrow {
+		color: var(--ink-faint);
+		opacity: 0.55;
+		transition: transform 0.25s ease, opacity 0.25s ease, color 0.25s ease;
+	}
+
+	.card:not(.is-done) .card-btn:hover .card-arrow,
+	.card-btn:focus-visible .card-arrow {
 		opacity: 1;
-		transform: translateX(2px);
+		transform: translateX(4px);
 		color: var(--accent-bright);
 	}
 
-	/* ---------- CTA, integrated with the terminal ---------- */
-	.reply-action {
-		display: inline-flex;
+	.card-done {
+		display: none;
 		align-items: center;
-		gap: 0.5rem;
-		margin-top: 0.3rem;
-		padding: 0.6rem 1.2rem;
-		background: var(--accent);
-		border: 1px solid rgba(167, 139, 250, 0.4);
+		padding: 0.15rem 0.65rem;
+		background: rgba(52, 211, 153, 0.14);
+		border: 1px solid rgba(52, 211, 153, 0.4);
 		border-radius: 999px;
-		color: #ffffff;
-		font-size: 0.85rem;
-		font-weight: 600;
-		cursor: pointer;
-		opacity: 0;
-		transform: translateY(4px);
-		transition:
-			opacity 0.35s ease,
-			transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
-			background-color 0.15s ease,
-			box-shadow 0.25s ease;
+		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.68rem;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: #a7f3d0;
 	}
 
-	.reply-action.is-shown {
-		opacity: 1;
-		transform: translateY(0);
+	.card.is-done .card-btn {
+		background: rgba(52, 211, 153, 0.06);
+		border-color: rgba(52, 211, 153, 0.3);
 	}
 
-	.reply-action:hover,
-	.reply-action:focus-visible {
-		background: var(--accent-hover);
-		transform: translateY(-2px);
-		box-shadow: 0 10px 24px -6px rgba(109, 40, 217, 0.6);
+	.card.is-done .card-count {
+		background-image: linear-gradient(135deg, #ecfdf5 20%, #34d399 100%);
 	}
 
-	.action-arrow {
-		transition: transform 0.25s ease;
+	.card.is-done .card-label {
+		color: var(--ink-faint);
 	}
 
-	.reply-action:hover .action-arrow {
-		transform: translateX(3px);
+	.card.is-done .card-done {
+		display: inline-flex;
 	}
 
-	/* ---------- philosophy ---------- */
+	.card.is-done .card-arrow {
+		display: none;
+	}
+
+	/* ---------- the closing line ---------- */
 	.ai-philosophy {
-		margin-top: clamp(2.25rem, 4.5vw, 3.25rem);
+		margin-top: clamp(2.5rem, 5vw, 4rem);
 		text-align: center;
 	}
 
 	.philosophy-lede {
-		margin: 0 0 clamp(1.75rem, 3vw, 2.25rem);
-		font-size: clamp(1.1rem, 0.8vw + 0.95rem, 1.4rem);
-		font-weight: 600;
-		letter-spacing: -0.01em;
-		max-width: 34ch;
-		margin-inline: auto;
+		max-width: 22ch;
+		margin: 0 auto clamp(1.5rem, 2.6vw, 2rem);
+		font-size: clamp(1.5rem, 2vw + 1rem, 2.4rem);
+		font-weight: 700;
+		letter-spacing: -0.02em;
+		line-height: 1.2;
 	}
 
-	.philosophy-flow {
-		display: flex;
+	.ai-cta {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.6em;
+		min-height: 46px;
+		padding: 0.6rem 1.5rem;
+		background: rgba(109, 40, 217, 0.22);
+		border: 1px solid rgba(167, 139, 250, 0.55);
+		border-radius: 999px;
+		font-size: 0.95rem;
+		font-weight: 600;
+		color: #ffffff;
+		text-decoration: none;
+		transition: background-color 0.2s ease;
+	}
+
+	.ai-cta:hover,
+	.ai-cta:focus-visible {
+		background: var(--accent);
+	}
+
+	.ai-cta:focus-visible {
+		outline: 2px solid var(--accent-bright);
+		outline-offset: 3px;
+	}
+
+	/* the command bar: a light runs round its edge while the agent is working */
+	@property --ang {
+		syntax: '<angle>';
+		inherits: false;
+		initial-value: 0deg;
+	}
+
+	.cmd-bar::before {
+		content: '';
+		position: absolute;
+		inset: -1px;
+		padding: 1.5px;
+		border-radius: inherit;
+		background: conic-gradient(from var(--ang), transparent 0 62%, rgba(167, 139, 250, 0.95) 82%, #ffffff 90%, transparent 100%);
+		-webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+		-webkit-mask-composite: xor;
+		mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+		opacity: 0;
+		transition: opacity 0.4s ease;
+		pointer-events: none;
+	}
+
+	.cmd-bar.is-live::before {
+		opacity: 1;
+		animation: spin-edge 3.2s linear infinite;
+	}
+
+	@keyframes spin-edge {
+		to {
+			--ang: 360deg;
+		}
+	}
+
+	/* lines from each source to the agent, with a pulse of light travelling along them */
+	.links {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		overflow: visible;
+		pointer-events: none;
+	}
+
+	.links :global(.link-line) {
+		fill: none;
+		stroke: rgba(167, 139, 250, 0.55);
+		stroke-width: 1.5;
+		stroke-linecap: round;
+	}
+
+	.links :global(.link-pulse) {
+		fill: #ffffff;
+		opacity: 0;
+		filter: drop-shadow(0 0 6px #a78bfa) drop-shadow(0 0 12px #8b5cf6);
+	}
+
+	.src-check {
+		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		gap: clamp(0.75rem, 2vw, 1.5rem);
-		margin-bottom: clamp(1.75rem, 3vw, 2.25rem);
+		flex-shrink: 0;
+		width: 22px;
+		height: 22px;
+		margin-left: auto;
+		border-radius: 50%;
+		background: rgba(255, 255, 255, 0.1);
+		background: color-mix(in srgb, var(--c) 22%, transparent);
+		font-size: 0.7rem;
+		color: var(--c);
+		opacity: 0;
 	}
 
-	.flow-step {
-		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-		font-size: clamp(1rem, 1vw + 0.8rem, 1.3rem);
-		font-weight: 700;
-		letter-spacing: 0.02em;
-		color: var(--ink);
-		padding: 0.5rem 1.1rem;
-		border: 1px solid var(--border-soft);
-		border-radius: 999px;
+	.src.is-scanned {
+		border-color: var(--c);
+		box-shadow:
+			0 0 30px -6px color-mix(in srgb, var(--c) 60%, transparent),
+			0 14px 32px -14px rgba(0, 0, 0, 0.7),
+			inset 0 1px 0 rgba(255, 255, 255, 0.1);
 	}
 
-	.flow-arrow {
-		color: var(--accent);
-		font-size: 1.2rem;
+	.src.is-scanned .src-count {
+		color: var(--c);
 	}
 
-	.philosophy-footer {
-		margin: 0;
-		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-		font-size: 0.85rem;
-		color: var(--ink-faint);
+	.src.is-scanned .src-check {
+		opacity: 1;
+	}
+
+	.core-orbit {
+		position: absolute;
+		inset: -16px;
+	}
+
+	.core-orbit :global(i) {
+		position: absolute;
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background: #c4b5fd;
+		box-shadow: 0 0 10px 2px rgba(167, 139, 250, 0.8);
+	}
+
+	.core-orbit :global(i:nth-child(1)) {
+		left: 50%;
+		top: 0;
+		margin-left: -3px;
+	}
+
+	.core-orbit :global(i:nth-child(2)) {
+		left: 7%;
+		top: 76%;
+	}
+
+	.core-orbit :global(i:nth-child(3)) {
+		right: 7%;
+		top: 76%;
+	}
+
+	.core-wave {
+		position: absolute;
+		inset: 0;
+		border: 2px solid rgba(196, 181, 253, 0.9);
+		border-radius: 50%;
+		opacity: 0;
+	}
+
+	/* an icon on each card that draws itself */
+	.card-icon {
+		position: absolute;
+		top: 1.15rem;
+		right: 1.15rem;
+		width: 28px;
+		height: 28px;
+		fill: none;
+		stroke: rgba(196, 181, 253, 0.85);
+		stroke-width: 1.5;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+
+	.card-icon :global(path) {
+		stroke-dasharray: 1;
+		stroke-dashoffset: 0;
+	}
+
+	.card.is-done .card-icon {
+		stroke: #6ee7b7;
+	}
+
+	.card-btn {
+		box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+	}
+
+	/* the confetti blast is built by the script, so these need :global */
+	.ai :global(.burst-layer) {
+		position: absolute;
+		inset: 0;
+		z-index: 4;
+		overflow: hidden;
+		pointer-events: none;
+	}
+
+	.ai :global(.burst-piece) {
+		position: absolute;
+		left: 0;
+		top: 0;
+		display: block;
+		opacity: 0;
+		will-change: transform, opacity;
+	}
+
+	.ai :global(.burst-piece svg) {
+		display: block;
+		width: 100%;
+		height: 100%;
+	}
+
+	.ai :global(.burst-flash) {
+		position: absolute;
+		width: 70px;
+		height: 70px;
+		margin: -35px 0 0 -35px;
+		border-radius: 50%;
+		background: radial-gradient(circle, rgba(255, 255, 255, 0.9), rgba(167, 139, 250, 0.5) 45%, transparent 70%);
+	}
+
+	@media (max-width: 820px) {
+		.cards {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+
+		.card-btn {
+			min-height: 142px;
+		}
+
+		.cmd-stage {
+			min-height: 400px;
+		}
 	}
 
 	@media (max-width: 640px) {
+		.cmd-enter,
 		.demo-status .status-text {
 			display: none;
 		}
 
-		.philosophy-flow {
-			gap: 0.5rem;
+		.cmd-bar {
+			gap: 0.7rem;
+			padding-left: 1.1rem;
 		}
 
-		.flow-step {
-			font-size: 0.95rem;
-			padding: 0.45rem 0.85rem;
+		.ai-step {
+			padding: 0.4rem 0.8rem 0.4rem 0.65rem;
+		}
+
+		/* the scan stage needs less width: the chips sit at the corners */
+		.cmd-stage {
+			min-height: 420px;
+		}
+
+		.src {
+			min-width: 0;
+			gap: 0.55rem;
+			padding: 0.55rem 0.7rem 0.7rem 0.55rem;
+		}
+
+		.src-icon {
+			width: 30px;
+			height: 30px;
+			border-radius: 10px;
+		}
+
+		.src-icon svg {
+			width: 17px;
+			height: 17px;
+		}
+
+		.src-name {
+			font-size: 0.8rem;
+		}
+
+		.src-count,
+		.src-check {
+			display: none;
 		}
 	}
 
 	@media (prefers-reduced-motion: reduce) {
 		.reveal,
-		.msg--ai,
-		.msg-scan,
-		.scan-item,
-		.reply-item,
-		.reply-action,
-		.progress-fill,
-		.demo-replay {
+		.card-btn,
+		.ai-step,
+		.step-name,
+		.step-dot {
 			transition: none;
 		}
 
 		.caret,
-		.msg-thinking span,
-		.status-dot {
+		.status-dot,
+		.cmd-bar.is-live::before {
 			animation: none;
 		}
 	}
@@ -717,187 +1135,715 @@ const flow = ['Talk', 'Think', 'Act'];
 			transform: none !important;
 		}
 
-		/* no JS means no typing/reveal sequencing — show the finished
-		   exchange immediately rather than leaving it stuck mid-animation */
-		.caret {
+		/* no JS means no sequencing: show the finished result straight away */
+		.caret,
+		.demo-status,
+		.cmd-enter,
+		.scan-view {
 			display: none !important;
 		}
 
-		.msg--ai {
+		.reply-view {
 			opacity: 1 !important;
+			visibility: visible !important;
 		}
 
-		.agent-progress,
-		.msg-thinking,
-		.msg-scan {
-			display: none !important;
-		}
-
-		.msg-reply {
-			display: flex !important;
-		}
-
-		.reply-item,
-		.reply-action,
-		.scan-item {
+		.card {
 			opacity: 1 !important;
-			transform: none !important;
-		}
-
-		.demo-replay {
-			display: none !important;
-		}
-
-		.demo-status {
-			display: none !important;
 		}
 	</style>
 </noscript>
 
-<script define:vars={{ query }}>
+<script>
+	import { gsap } from 'gsap';
+	import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+	gsap.registerPlugin(ScrollTrigger);
+
 	const section = document.getElementById('ai');
-	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	if (section) init(section);
 
-	const typedQuery = document.getElementById('typedQuery');
-	const queryCaret = document.getElementById('queryCaret');
-	const msgAi = document.getElementById('msgAi');
-	const progressFill = document.getElementById('progressFill');
-	const scanItems = Array.from(document.querySelectorAll('.scan-item'));
-	const replyItems = Array.from(document.querySelectorAll('.reply-item'));
-	const replyAction = document.getElementById('replyAction');
-	const replay = document.getElementById('demoReplay');
-	const demo = document.getElementById('aiDemo');
-	const demoStatus = document.getElementById('demoStatus');
-	const statusText = document.getElementById('statusText');
+	function init(section: HTMLElement) {
+		const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+		const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		const canObserve = 'IntersectionObserver' in window;
+		const animated = !reduce && canObserve;
 
-	if (reduceMotion || !('IntersectionObserver' in window)) {
-		section?.classList.add('is-visible');
-	}
+		const query = section.dataset.query ?? '';
+		const demo = $('aiDemo');
+		const bar = $('cmdBar');
+		const kbd = $('cmdEnter');
+		const typedQuery = $('typedQuery');
+		const queryCaret = $('queryCaret');
+		const scanView = $('scanView');
+		const replyView = $('replyView');
+		const core = $('core');
+		const coreRing = $('coreRing');
+		const coreDot = $('coreDot');
+		const coreWave = $('coreWave');
+		const coreOrbit = $('coreOrbit');
+		const linksSvg = $('links') as unknown as SVGSVGElement;
+		const stage = $('cmdStage');
+		const chips = Array.from(scanView.querySelectorAll<HTMLElement>('.src'));
+		const cards = Array.from(section.querySelectorAll<HTMLElement>('.card'));
+		const status = $('demoStatus');
+		const statusText = $('statusText');
+		const summary = $('replySummary');
+		const live = $('aiLive');
 
-	let timers = [];
+		const stepsEl = $('aiSteps');
+		const pills = Array.from(stepsEl.querySelectorAll<HTMLElement>('.ai-step'));
+		const linkFills = Array.from(stepsEl.querySelectorAll<HTMLElement>('.link-fill'));
 
-	const clearTimers = () => {
-		timers.forEach((t) => clearTimeout(t));
-		timers = [];
-	};
+		const counts = cards.map((c) => Number(c.querySelector('.card-count')?.textContent ?? 0));
+		const total = counts.reduce((a, b) => a + b, 0);
+		const handled = cards.map(() => false);
+		let left = total;
 
-	const setProgress = (pct) => {
-		if (progressFill) progressFill.style.width = `${pct}%`;
-	};
+		const words = (el: HTMLElement, mask = false) => {
+			const parts = (el.textContent ?? '').split(/\s+/).filter(Boolean);
+			el.textContent = '';
+			return parts.map((word, k) => {
+				const sp = document.createElement('span');
+				sp.className = 'w';
+				sp.textContent = word;
+				if (mask) {
+					const wrap = document.createElement('span');
+					wrap.className = 'mw';
+					wrap.appendChild(sp);
+					el.appendChild(wrap);
+				} else el.appendChild(sp);
+				if (k < parts.length - 1) el.appendChild(document.createTextNode(' '));
+				return sp;
+			});
+		};
 
-	const setStatus = (ready) => {
-		demoStatus?.classList.toggle('is-ready', ready);
-		if (statusText) statusText.textContent = ready ? 'Ready' : 'Agent active';
-	};
+		const announce = (text: string) => {
+			live.textContent = '';
+			window.setTimeout(() => (live.textContent = text), 60);
+		};
 
-	const reset = () => {
-		clearTimers();
-		if (typedQuery) typedQuery.textContent = '';
-		queryCaret?.classList.remove('is-done');
-		msgAi?.classList.remove('is-active', 'is-thinking', 'is-scanning', 'is-replying');
-		scanItems.forEach((item) => item.classList.remove('is-shown'));
-		replyItems.forEach((item) => item.classList.remove('is-shown'));
-		replyAction?.classList.remove('is-shown');
-		setProgress(8);
-		setStatus(false);
-	};
+		const setStatus = (mode: 'active' | 'working' | 'ready' | 'done') => {
+			bar.classList.toggle('is-live', mode === 'active' || mode === 'working');
+			status.classList.toggle('is-ready', mode === 'ready');
+			status.classList.toggle('is-done', mode === 'done');
+			statusText.textContent = { active: 'Agent active', working: 'Working…', ready: 'Ready', done: 'Done' }[mode];
+		};
 
-	const play = () => {
-		reset();
+		const setSummary = (text: string) => {
+			summary.textContent = text;
+		};
 
-		if (reduceMotion) {
-			if (typedQuery) typedQuery.textContent = query;
-			queryCaret?.classList.add('is-done');
-			msgAi?.classList.add('is-active', 'is-replying');
-			scanItems.forEach((item) => item.classList.add('is-shown'));
-			replyItems.forEach((item) => item.classList.add('is-shown'));
-			replyAction?.classList.add('is-shown');
-			setProgress(100);
-			setStatus(true);
-			return;
-		}
+		// which of Talk / Think / Act the demo is in (-1 = none yet)
+		const setPhase = (n: number) => {
+			pills.forEach((p, i) => {
+				p.classList.toggle('is-active', i === n);
+				p.classList.toggle('is-past', i < n);
+				if (i === n) p.setAttribute('aria-current', 'step');
+				else p.removeAttribute('aria-current');
+			});
+			stepsEl.classList.remove('is-complete');
+			if (n >= 0 && !reduce) {
+				gsap.fromTo(pills[n], { scale: 1.12 }, { scale: 1, duration: 0.55, ease: 'back.out(3)', clearProps: 'transform' });
+			}
+		};
+		const linksSet = (k: number) => {
+			gsap.killTweensOf(linkFills);
+			linkFills.forEach((l, i) => gsap.set(l, { scaleX: i < k ? 1 : 0 }));
+		};
 
-		let i = 0;
-		const typeStep = () => {
-			if (typedQuery) typedQuery.textContent = query.slice(0, i);
-			i += 1;
-			if (i <= query.length) {
-				timers.push(setTimeout(typeStep, 26));
-			} else {
-				queryCaret?.classList.add('is-done');
-				timers.push(setTimeout(showThinking, 350));
+		let mainTl: gsap.core.Timeline | null = null;
+		let actionTl: gsap.core.Timeline | null = null;
+		let working = false;
+
+		// ---------- handling an item: one by one, or all the rest with the button ----------
+		const cardTimeline = (i: number) => {
+			const li = cards[i];
+			const sweep = li.querySelector<HTMLElement>('.card-sweep')!;
+			const badge = li.querySelector<HTMLElement>('.card-done')!;
+			const num = li.querySelector<HTMLElement>('.card-count')!;
+			const tl = gsap.timeline();
+			tl.fromTo(sweep, { xPercent: -110, opacity: 1 }, { xPercent: 110, opacity: 1, duration: 0.65, ease: 'power2.inOut', clearProps: 'transform,opacity' }, 0);
+			tl.call(() => markHandled(i), [], 0.25);
+			tl.fromTo(badge, { scale: 0.4, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.4, ease: 'back.out(3)', clearProps: 'opacity,transform' }, 0.27);
+			tl.fromTo(num, { scale: 1 }, { scale: 1.18, duration: 0.2, yoyo: true, repeat: 1, ease: 'power2.out', clearProps: 'transform' }, 0.25);
+			return tl;
+		};
+
+		const markHandled = (i: number) => {
+			if (handled[i]) return;
+			handled[i] = true;
+			left -= counts[i];
+			cards[i].classList.add('is-done');
+			cards[i].querySelector<HTMLButtonElement>('.card-btn')!.disabled = true;
+			if (left > 0) {
+				setSummary(`${total - left} of ${total} done`);
 			}
 		};
 
-		const showThinking = () => {
-			msgAi?.classList.add('is-active', 'is-thinking');
-			setProgress(15);
-			timers.push(setTimeout(showScan, 650));
+		// ---------- the celebration: a confetti blast over the whole section ----------
+		// Real physics, not a canned tween: each piece is shot out with its own speed, then gravity,
+		// air drag, sway and a tumbling flip act on it every frame, so it flies, slows, floats and falls.
+		let stopBlast: (() => void) | null = null;
+		const burst = () => {
+			stopBlast?.();
+			const area = section.getBoundingClientRect();
+			const st = stage.getBoundingClientRect();
+			const W = area.width;
+			const H = area.height;
+			const phone = W < 700;
+			const scale = phone ? 0.62 : Math.min(1, 0.55 + W / 2400);
+
+			const layer = document.createElement('div');
+			layer.className = 'burst-layer';
+			section.appendChild(layer);
+
+			const palette = ['#34d399', '#a78bfa', '#c4b5fd', '#ffffff', '#60a5fa', '#f472b6', '#fbbf24', '#2dd4bf'];
+			const svg = {
+				check: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#34d399"/><path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="#052e1f" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+				sparkle: '<svg viewBox="0 0 24 24"><path d="M12 1l2.6 8.4L23 12l-8.4 2.6L12 23l-2.6-8.4L1 12l8.4-2.6z" fill="currentColor"/></svg>',
+				ring: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.6"/></svg>',
+				square: '<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="4" fill="currentColor"/></svg>',
+				dot: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="currentColor"/></svg>',
+				triangle: '<svg viewBox="0 0 24 24"><path d="M12 2l11 19H1z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>',
+			};
+			type Kind = keyof typeof svg;
+			const mix: Array<[Kind, number, [number, number]]> = [
+				['check', 12, [24, 30]],
+				['sparkle', 26, [14, 26]],
+				['ring', 14, [12, 20]],
+				['square', 24, [8, 13]],
+				['dot', 14, [6, 10]],
+				['triangle', 10, [10, 15]],
+			];
+			const rnd = gsap.utils.random;
+
+			// three cannons: left and right edges of the section, and one at the cards
+			const cannons = [
+				{ x: W * 0.02, y: Math.min(H - 40, st.bottom - area.top + 30), from: -80, to: -38, power: [1400, 2400], n: 0.34 },
+				{ x: W * 0.98, y: Math.min(H - 40, st.bottom - area.top + 30), from: -142, to: -100, power: [1400, 2400], n: 0.34 },
+				{ x: st.left + st.width / 2 - area.left, y: st.top + st.height * 0.5 - area.top, from: -160, to: -20, power: [800, 1700], n: 0.32 },
+			];
+
+			type Piece = { el: HTMLElement; x: number; y: number; vx: number; vy: number; rot: number; vr: number; flip: number; flipSpeed: number; drag: number; sway: number; swayFreq: number; age: number; life: number; size: number };
+			const pieces: Piece[] = [];
+			const total = phone ? 62 : 110;
+			cannons.forEach((c) => {
+				const count = Math.round(total * c.n);
+				for (let i = 0; i < count; i++) {
+					// pick a shape by weight
+					let r = rnd(0, 100);
+					let pick = mix[0];
+					for (const m of mix) {
+						if (r < m[1]) {
+							pick = m;
+							break;
+						}
+						r -= m[1];
+					}
+					const [kind, , [lo, hi]] = pick;
+					const size = rnd(lo, hi) * (phone ? 0.85 : 1);
+					const el = document.createElement('span');
+					el.className = 'burst-piece';
+					el.innerHTML = svg[kind];
+					el.style.width = el.style.height = `${size}px`;
+					el.style.color = kind === 'check' ? '#34d399' : palette[Math.floor(rnd(0, palette.length))];
+					layer.appendChild(el);
+					const ang = (rnd(c.from, c.to) * Math.PI) / 180;
+					const sp = rnd(c.power[0], c.power[1]) * scale;
+					const light = kind === 'square' || kind === 'dot' || kind === 'triangle';
+					pieces.push({
+						el,
+						x: c.x + rnd(-12, 12),
+						y: c.y + rnd(-12, 12),
+						vx: Math.cos(ang) * sp,
+						vy: Math.sin(ang) * sp,
+						rot: rnd(0, 360),
+						vr: rnd(-720, 720),
+						flip: rnd(0, Math.PI * 2),
+						flipSpeed: rnd(5, 13),
+						drag: light ? rnd(1.9, 3.1) : rnd(1.3, 2.1),
+						sway: light ? rnd(40, 110) : rnd(15, 50),
+						swayFreq: rnd(2, 5),
+						age: -rnd(0, 0.12),
+						life: rnd(3.4, 5.2),
+						size,
+					});
+				}
+			});
+
+			// a quick flash at each cannon as it fires
+			cannons.forEach((c) => {
+				const flash = document.createElement('span');
+				flash.className = 'burst-flash';
+				flash.style.left = `${c.x}px`;
+				flash.style.top = `${c.y}px`;
+				layer.appendChild(flash);
+				gsap.fromTo(flash, { scale: 0.2, opacity: 0.9 }, { scale: 3.2, opacity: 0, duration: 0.5, ease: 'power2.out', onComplete: () => flash.remove() });
+			});
+
+			const G = 980 * scale + 220;
+			const tick = (_t: number, ms: number) => {
+				const dt = Math.min(ms / 1000, 0.05);
+				let alive = 0;
+				for (const p of pieces) {
+					p.age += dt;
+					if (p.age < 0) {
+						p.el.style.opacity = '0';
+						alive++;
+						continue;
+					}
+					if (p.age > p.life || p.y > H + 60) {
+						if (p.el.isConnected) p.el.remove();
+						continue;
+					}
+					alive++;
+					const k = Math.exp(-p.drag * dt);
+					p.vx *= k;
+					p.vy = p.vy * k + G * dt;
+					p.x += (p.vx + Math.sin(p.age * p.swayFreq + p.flip) * p.sway) * dt;
+					p.y += p.vy * dt;
+					p.rot += p.vr * dt;
+					p.vr *= Math.exp(-0.6 * dt);
+					const flipY = 0.3 + 0.7 * Math.abs(Math.cos(p.age * p.flipSpeed + p.flip));
+					const fade = Math.min(1, (p.life - p.age) / (p.life * 0.3));
+					p.el.style.opacity = String(Math.max(0, fade));
+					p.el.style.transform = `translate3d(${p.x - p.size / 2}px, ${p.y - p.size / 2}px, 0) rotate(${p.rot}deg) scale(1, ${flipY.toFixed(3)})`;
+				}
+				if (!alive) stop();
+			};
+			const stop = () => {
+				gsap.ticker.remove(tick);
+				layer.remove();
+				stopBlast = null;
+			};
+			stopBlast = stop;
+			gsap.ticker.add(tick);
 		};
 
-		const showScan = () => {
-			msgAi?.classList.remove('is-thinking');
-			msgAi?.classList.add('is-scanning');
-			setProgress(45);
-			scanItems.forEach((item, idx) => {
-				timers.push(
-					setTimeout(() => {
-						item.classList.add('is-shown');
-						setProgress(45 + ((idx + 1) / scanItems.length) * 30);
-					}, idx * 140),
+		const finish = (instant: boolean) => {
+			setSummary(`All ${total} done`);
+			setStatus('done');
+			stepsEl.classList.add('is-complete');
+			announce(`Done. The agent handled all ${total} items.`);
+			if (!instant) {
+				burst();
+				gsap.fromTo(
+					bar,
+					{ boxShadow: '0 22px 56px -14px rgba(0,0,0,0.65), 0 0 0 0 rgba(52,211,153,0)' },
+					{ boxShadow: '0 22px 56px -14px rgba(0,0,0,0.65), 0 0 0 10px rgba(52,211,153,0.18)', duration: 0.5, yoyo: true, repeat: 1, ease: 'power2.out', clearProps: 'boxShadow' },
+				);
+				gsap.fromTo(summary, { y: 6, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: 'power2.out', clearProps: 'opacity,transform' });
+			}
+		};
+
+		const handleOne = (i: number) => {
+			if (handled[i] || working) return;
+			if (reduce) {
+				markHandled(i);
+				if (left === 0) finish(true);
+				return;
+			}
+			const tl = cardTimeline(i);
+			tl.call(
+				() => {
+					if (left === 0) finish(false);
+				},
+				[],
+				0.7,
+			);
+		};
+
+		// the agent finishes the job on its own: the cards are handled one after another
+		const finishByAgent = () => {
+			const todo = cards.map((_, i) => i).filter((i) => !handled[i]);
+			if (!todo.length) {
+				if (left === 0) finish(false);
+				return;
+			}
+			working = true;
+			cards.forEach((c) => (c.querySelector<HTMLButtonElement>('.card-btn')!.disabled = true));
+			setStatus('working');
+			setSummary(`${total - left} of ${total} done`);
+			actionTl = gsap.timeline();
+			todo.forEach((i, k) => {
+				actionTl!.add(cardTimeline(i), 0.2 + k * 0.7);
+			});
+			actionTl.call(() => finish(false), [], 0.2 + todo.length * 0.7 + 0.4);
+		};
+
+		cards.forEach((li, i) => li.querySelector('.card-btn')?.addEventListener('click', () => handleOne(i)));
+
+		// ---------- back to the start ----------
+		const reset = () => {
+			stopBlast?.();
+			mainTl?.revert();
+			actionTl?.revert();
+			mainTl = actionTl = null;
+			working = false;
+			gsap.killTweensOf(bar, 'boxShadow');
+			gsap.killTweensOf(summary);
+			gsap.set(bar, { clearProps: 'boxShadow' });
+			gsap.set(summary, { clearProps: 'opacity,transform' });
+			typedQuery.textContent = '';
+			queryCaret.classList.remove('is-done');
+			scanView.classList.remove('is-on');
+			replyView.classList.remove('is-on');
+			linksSvg.innerHTML = '';
+			chips.forEach((c) => {
+				c.classList.remove('is-scanned');
+				c.querySelector('.src-count')!.textContent = '\u2014';
+			});
+			cards.forEach((c, i) => {
+				c.classList.remove('is-shown', 'is-done');
+				c.querySelector<HTMLButtonElement>('.card-btn')!.disabled = false;
+				c.querySelector('.card-count')!.textContent = String(counts[i]);
+				handled[i] = false;
+			});
+			left = total;
+			working = false;
+			setSummary(`${total} pending`);
+			linksSet(0);
+			setPhase(-1);
+			setStatus('active');
+		};
+
+		const showFinal = () => {
+			typedQuery.textContent = query;
+			queryCaret.classList.add('is-done');
+			replyView.classList.add('is-on');
+			cards.forEach((c) => c.classList.add('is-shown'));
+			cards.forEach((_, i) => markHandled(i));
+			linksSet(2);
+			setPhase(2);
+			finish(true);
+		};
+
+		// the distance from one element to the middle of the agent
+		const toCore = (el: HTMLElement) => {
+			const a = el.getBoundingClientRect();
+			const b = core.getBoundingClientRect();
+			return { x: b.left + b.width / 2 - (a.left + a.width / 2), y: b.top + b.height / 2 - (a.top + a.height / 2) };
+		};
+
+		// lines from each source to the agent (drawn fresh each time, from where things actually are)
+		const buildLinks = () => {
+			const ns = 'http://www.w3.org/2000/svg';
+			linksSvg.innerHTML = '';
+			const box = scanView.getBoundingClientRect();
+			linksSvg.setAttribute('viewBox', `0 0 ${box.width} ${box.height}`);
+			const c = core.getBoundingClientRect();
+			const cx = c.left + c.width / 2 - box.left;
+			const cy = c.top + c.height / 2 - box.top;
+			return chips.map((chip) => {
+				const r = chip.getBoundingClientRect();
+				const x = r.left + r.width / 2 - box.left;
+				const y = r.top + r.height / 2 - box.top;
+				const path = document.createElementNS(ns, 'path');
+				path.setAttribute('d', `M ${x} ${y} Q ${cx} ${y} ${cx} ${cy}`);
+				const col = getComputedStyle(chip).getPropertyValue('--c').trim() || '#a78bfa';
+				path.setAttribute('class', 'link-line');
+				path.style.stroke = col;
+				path.style.strokeOpacity = '0.6';
+				const len = path.getTotalLength();
+				path.style.strokeDasharray = String(len);
+				path.style.strokeDashoffset = String(len);
+				const pulse = document.createElementNS(ns, 'circle');
+				pulse.setAttribute('r', '4.5');
+				pulse.setAttribute('class', 'link-pulse');
+				pulse.style.filter = `drop-shadow(0 0 6px ${col}) drop-shadow(0 0 14px ${col})`;
+				linksSvg.append(path, pulse);
+				return { path, pulse, len };
+			});
+		};
+
+		// ---------- the demo ----------
+		const play = () => {
+			reset();
+			if (!animated) {
+				showFinal();
+				return;
+			}
+
+			const tl = (mainTl = gsap.timeline());
+			const typed = { n: 0 };
+			const found = { n: 0 };
+			const typeTime = query.length * 0.026;
+			const links = buildLinks();
+
+			// 1 · Talk: the request types itself into the bar
+			tl.call(() => setPhase(0), [], 0.25);
+			tl.fromTo(bar, { boxShadow: '0 22px 56px -14px rgba(0,0,0,0.65), 0 0 0 0 rgba(167,139,250,0)' }, { boxShadow: '0 22px 56px -14px rgba(0,0,0,0.65), 0 0 0 4px rgba(167,139,250,0.22)', duration: 0.3 }, 0.25);
+			tl.to(
+				typed,
+				{
+					n: query.length,
+					duration: typeTime,
+					ease: 'none',
+					onUpdate: () => {
+						typedQuery.textContent = query.slice(0, Math.round(typed.n));
+					},
+				},
+				0.3,
+			);
+			// ...and is sent with Enter
+			tl.call(() => queryCaret.classList.add('is-done'));
+			tl.fromTo(kbd, { scale: 1 }, { scale: 0.8, duration: 0.09, yoyo: true, repeat: 1, ease: 'power2.out', clearProps: 'transform' });
+			tl.fromTo(
+				bar,
+				{ boxShadow: '0 22px 56px -14px rgba(0,0,0,0.65), 0 0 0 4px rgba(167,139,250,0.22)' },
+				{ boxShadow: '0 22px 56px -14px rgba(0,0,0,0.65), 0 0 0 22px rgba(167,139,250,0)', duration: 0.8, ease: 'power2.out', clearProps: 'boxShadow' },
+				'<',
+			);
+
+			// 2 · Think: the sources fly into the agent, one by one
+			tl.addLabel('think', '+=0.3');
+			tl.call(
+				() => {
+					setPhase(1);
+					scanView.classList.add('is-on');
+				},
+				[],
+				'think',
+			);
+			tl.to(linkFills[0], { scaleX: 1, duration: 0.5, ease: 'power2.out' }, 'think');
+			tl.fromTo(core, { scale: 0.3, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.7, ease: 'back.out(2)' }, 'think');
+			tl.to(coreRing, { rotation: '+=720', duration: 3.6, ease: 'power1.inOut' }, 'think');
+			tl.to(coreOrbit, { rotation: '-=900', duration: 3.6, ease: 'power1.inOut' }, 'think');
+			tl.fromTo(chips, { opacity: 0, scale: 0.6, y: 18 }, { opacity: 1, scale: 1, y: 0, duration: 0.5, ease: 'back.out(2)', stagger: 0.12 }, 'think+=0.2');
+			// each source is read: a line draws to the agent and a pulse of light travels along it
+			chips.forEach((chip, i) => {
+				const at = 1.0 + i * 0.4;
+				const { path, pulse, len } = links[i];
+				const check = chip.querySelector<HTMLElement>('.src-check')!;
+				const bar = chip.querySelector<HTMLElement>('.src-bar i')!;
+				const countEl = chip.querySelector<HTMLElement>('.src-count')!;
+				const n = Number(chip.dataset.n ?? 0);
+				const unit = chip.dataset.unit ?? '';
+				const amount = { v: 0 };
+				const p = { v: 0 };
+				tl.to(path, { strokeDashoffset: 0, duration: 0.45, ease: 'power2.out' }, `think+=${at - 0.1}`);
+				tl.set(pulse, { opacity: 1 }, `think+=${at + 0.1}`);
+				tl.to(
+					p,
+					{
+						v: 1,
+						duration: 0.6,
+						ease: 'power2.in',
+						onUpdate: () => {
+							const pt = path.getPointAtLength(p.v * len);
+							pulse.setAttribute('cx', String(pt.x));
+							pulse.setAttribute('cy', String(pt.y));
+						},
+					},
+					`think+=${at + 0.1}`,
+				);
+				tl.fromTo(bar, { scaleX: 0 }, { scaleX: 1, duration: 0.6, ease: 'power2.in' }, `think+=${at + 0.1}`);
+				tl.set(pulse, { opacity: 0 }, `think+=${at + 0.7}`);
+				// the number found in that source counts up
+				tl.to(
+					amount,
+					{
+						v: n,
+						duration: 0.7,
+						ease: 'power2.out',
+						onUpdate: () => {
+							countEl.textContent = `${Math.round(amount.v)} ${unit}`;
+						},
+					},
+					`think+=${at + 0.7}`,
+				);
+				tl.call(() => chip.classList.add('is-scanned'), [], `think+=${at + 0.7}`);
+				tl.fromTo(check, { scale: 0 }, { scale: 1, duration: 0.4, ease: 'back.out(3)', clearProps: 'transform' }, `think+=${at + 0.7}`);
+				tl.fromTo(coreDot, { scale: 1 }, { scale: 1.32, duration: 0.14, yoyo: true, repeat: 1, ease: 'power2.out' }, `think+=${at + 0.7}`);
+				tl.to(path, { opacity: 0.25, duration: 0.4 }, `think+=${at + 0.8}`);
+			});
+
+			// 3 · Act: the agent bursts into the findings
+			tl.addLabel('reply', `think+=${1.0 + chips.length * 0.4 + 0.95}`);
+			tl.to(scanView, { opacity: 0, duration: 0.3 }, 'reply-=0.05');
+			tl.fromTo(coreDot, { scale: 1 }, { scale: 2.2, duration: 0.35, ease: 'power3.out' }, 'reply-=0.2');
+			tl.fromTo(coreWave, { scale: 1, opacity: 0.9 }, { scale: 3.6, opacity: 0, duration: 0.9, ease: 'power2.out' }, 'reply-=0.2');
+			tl.call(
+				() => {
+					setPhase(2);
+					scanView.classList.remove('is-on');
+					replyView.classList.add('is-on');
+					setSummary('0 pending');
+					cards.forEach((c) => (c.querySelector('.card-count')!.textContent = '0'));
+					setStatus('ready');
+				},
+				[],
+				'reply',
+			);
+			tl.to(linkFills[1], { scaleX: 1, duration: 0.5, ease: 'power2.out' }, 'reply');
+			tl.fromTo(summary, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out', clearProps: 'opacity,transform' }, 'reply');
+			tl.to(
+				found,
+				{
+					n: total,
+					duration: 1,
+					ease: 'power2.out',
+					onUpdate: () => setSummary(`${Math.round(found.n)} pending`),
+				},
+				'reply',
+			);
+
+			cards.forEach((li, i) => {
+				const at = 0.05 + i * 0.13;
+				const num = li.querySelector<HTMLElement>('.card-count')!;
+				const n = { v: 0 };
+				tl.call(() => li.classList.add('is-shown'), [], `reply+=${at}`);
+				tl.fromTo(li.querySelectorAll('.card-icon path'), { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.9, ease: 'power2.inOut', stagger: 0.12, clearProps: 'strokeDashoffset' }, `reply+=${at + 0.3}`);
+				tl.fromTo(
+					li,
+					{ opacity: 0, y: -70, scale: 0.4, filter: 'blur(10px)' },
+					{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)', duration: 0.8, ease: 'back.out(1.5)', clearProps: 'opacity,transform,filter' },
+					`reply+=${at}`,
+				);
+				tl.to(
+					n,
+					{
+						v: counts[i],
+						duration: 0.7,
+						ease: 'power2.out',
+						onUpdate: () => {
+							num.textContent = String(Math.round(n.v));
+						},
+					},
+					`reply+=${at + 0.15}`,
 				);
 			});
-			timers.push(setTimeout(showReply, scanItems.length * 140 + 350));
+
+			// 4 · Act: the agent finishes the job, a card at a time
+			const doneAt = 0.05 + cards.length * 0.13 + 0.9;
+			tl.call(() => announce(`The agent found ${total} items and is handling them.`), [], `reply+=${doneAt - 0.5}`);
+			tl.call(finishByAgent, [], `reply+=${doneAt}`);
 		};
 
-		const showReply = () => {
-			msgAi?.classList.remove('is-scanning');
-			msgAi?.classList.add('is-replying');
-			setProgress(100);
-			setStatus(true);
-			replyItems.forEach((item, idx) => {
-				timers.push(setTimeout(() => item.classList.add('is-shown'), idx * 160));
+		// ---------- the pointer: cards tilt towards it, with a light that follows ----------
+		if (!reduce) {
+			cards.forEach((li) => {
+				const btn = li.querySelector<HTMLButtonElement>('.card-btn')!;
+				gsap.set(btn, { transformPerspective: 700 });
+				const rx = gsap.quickTo(btn, 'rotationX', { duration: 0.5, ease: 'power3.out' });
+				const ry = gsap.quickTo(btn, 'rotationY', { duration: 0.5, ease: 'power3.out' });
+				btn.addEventListener('pointermove', (e) => {
+					if (e.pointerType !== 'mouse' || btn.disabled) return;
+					const r = btn.getBoundingClientRect();
+					const px = (e.clientX - r.left) / r.width;
+					const py = (e.clientY - r.top) / r.height;
+					ry((px - 0.5) * 16);
+					rx(-(py - 0.5) * 14);
+					btn.style.setProperty('--mx', `${e.clientX - r.left}px`);
+					btn.style.setProperty('--my', `${e.clientY - r.top}px`);
+					btn.style.setProperty('--spot', '1');
+				});
+				btn.addEventListener('pointerleave', () => {
+					rx(0);
+					ry(0);
+					btn.style.setProperty('--spot', '0');
+				});
 			});
-			timers.push(
-				setTimeout(() => replyAction?.classList.add('is-shown'), replyItems.length * 160 + 150),
+		}
+
+		// ---------- the heading and the closing statement ----------
+		const heading = $('aiHeading');
+		const lede = $('philosophyLede');
+		const philosophy = $('aiPhilosophy');
+		const aiCta = section.querySelector<HTMLElement>('.ai-cta')!;
+
+		if (!animated) {
+			words(heading, true);
+			section.classList.add('is-visible');
+			play();
+			return;
+		}
+
+		// start hidden; each piece plays when it scrolls into view
+		const headWords = words(heading, true);
+		const ledeWords = words(lede);
+		gsap.set(headWords, { yPercent: 118, rotate: 5, transformOrigin: 'left bottom' });
+		gsap.set(bar, { opacity: 0, y: 60, scale: 0.9 });
+		gsap.set(pills, { opacity: 0, y: 18 });
+		gsap.set(aiCta, { opacity: 0, y: 12 });
+		// the closing line is read by the scroll itself: each word lights up as it passes
+		gsap.set(ledeWords, { opacity: 0.18 });
+		gsap.to(ledeWords, {
+			opacity: 1,
+			ease: 'none',
+			stagger: 0.12,
+			scrollTrigger: { trigger: lede, start: 'top 88%', end: 'top 50%', scrub: true },
+		});
+
+		// a soft drift for the light behind everything
+		gsap.to('.glow--a', { x: 90, y: 60, duration: 9, ease: 'sine.inOut', yoyo: true, repeat: -1 });
+		gsap.to('.glow--b', { x: -80, y: -50, duration: 11, ease: 'sine.inOut', yoyo: true, repeat: -1 });
+
+		// the closing button follows the pointer a little
+		const pull = {
+			x: gsap.quickTo(aiCta, 'x', { duration: 0.4, ease: 'power3.out' }),
+			y: gsap.quickTo(aiCta, 'y', { duration: 0.4, ease: 'power3.out' }),
+		};
+		aiCta.addEventListener('pointermove', (e) => {
+			if (e.pointerType !== 'mouse') return;
+			const r = aiCta.getBoundingClientRect();
+			pull.x((e.clientX - (r.left + r.width / 2)) * 0.25);
+			pull.y((e.clientY - (r.top + r.height / 2)) * 0.35);
+		});
+		aiCta.addEventListener('pointerleave', () => {
+			pull.x(0);
+			pull.y(0);
+		});
+
+		const once = (el: Element, threshold: number, run: () => void) => {
+			const io = new IntersectionObserver(
+				(entries) => {
+					if (entries.some((e) => e.isIntersecting)) {
+						io.disconnect();
+						run();
+					}
+				},
+				{ threshold },
 			);
+			io.observe(el);
 		};
 
-		timers.push(setTimeout(typeStep, 250));
-	};
+		once(heading, 0.6, () => {
+			section.classList.add('is-visible');
+			gsap.to(headWords, { yPercent: 0, rotate: 0, duration: 0.95, ease: 'power4.out', stagger: 0.09 });
+		});
 
-	replay?.addEventListener('click', play);
-
-	if (demo) {
-		if (reduceMotion || !('IntersectionObserver' in window)) {
-			play();
-		} else {
-			// plays once on first entry; if the section is scrolled fully out
-			// of view afterward, it's allowed to replay on the next entry —
-			// it never loops while still on screen
-			let hasEntered = false;
-			let hasLeftSinceEntering = false;
-
-			const playObserver = new IntersectionObserver(
-				(entries) => {
-					entries.forEach((entry) => {
-						if (entry.intersectionRatio >= 0.4) {
-							if (!hasEntered) {
-								hasEntered = true;
-								section?.classList.add('is-visible');
-								play();
-							} else if (hasLeftSinceEntering) {
-								hasLeftSinceEntering = false;
-								play();
-							}
-						} else if (entry.intersectionRatio === 0 && hasEntered) {
-							hasLeftSinceEntering = true;
+		// the demo plays on entry; after it has fully left the screen it may play again on return,
+		// but it never loops while it is still visible
+		let entered = false;
+		let leftSince = false;
+		const playObserver = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					if (entry.intersectionRatio >= 0.35) {
+						if (!entered) {
+							entered = true;
+							section.classList.add('is-visible');
+							gsap.to(bar, { opacity: 1, y: 0, scale: 1, duration: 1, ease: 'power4.out', clearProps: 'opacity,transform' });
+							gsap.to(pills, { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out', stagger: 0.1, delay: 0.35, clearProps: 'opacity,transform' });
+							play();
+						} else if (leftSince) {
+							leftSince = false;
+							play();
 						}
-					});
-				},
-				{ threshold: [0, 0.4] },
-			);
-			playObserver.observe(demo);
-		}
+					} else if (entry.intersectionRatio === 0 && entered) {
+						leftSince = true;
+					}
+				});
+			},
+			{ threshold: [0, 0.35] },
+		);
+		playObserver.observe(demo);
+
+		// the button arrives once the closing line is in view
+		once(philosophy, 0.7, () => {
+			gsap.to(aiCta, { opacity: 1, y: 0, duration: 0.7, ease: 'back.out(1.8)', delay: 0.3 });
+		});
 	}
 </script>
