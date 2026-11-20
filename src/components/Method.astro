@@ -365,7 +365,10 @@ const total = String(steps.length).padStart(2, '0');
 		// so they stay in the page for screen readers and find-in-page). The step
 		// nearest the middle of the screen is the current one, and it pops in when it
 		// takes over. With reduced motion every step stays visible.
-		const focusMode = !REDUCED;
+		// On a phone the steps simply stack (the same way reduced motion shows them): one hidden
+		// step per screen would leave most of a small screen empty.
+		const STACKED = window.matchMedia('(max-width: 720px)').matches;
+		const focusMode = !REDUCED && !STACKED;
 		if (focusMode) gsap.set(steps, { opacity: 0 });
 		else wrap.removeAttribute('data-focus');
 
@@ -1184,13 +1187,27 @@ const total = String(steps.length).padStart(2, '0');
 	@media (max-width: 720px) {
 		.steps {
 			grid-template-columns: 1fr;
-			row-gap: max(5rem, calc(55vh - 19rem));
+			row-gap: 3.5rem;
 		}
 
 		.step--right {
 			grid-column: 1;
 			justify-self: start;
 			text-align: left;
+		}
+
+		/* the decorative trail would drift over the words on a small screen */
+		.trail-svg {
+			display: block;
+			opacity: 0;
+		}
+
+		.step--right .step__gets {
+			margin-left: 0;
+		}
+
+		.step--right .step__rule {
+			transform-origin: left center;
 		}
 
 		.step--right .vis {
@@ -1368,6 +1385,26 @@ const total = String(steps.length).padStart(2, '0');
 	:global(.method-chip .mc-dot:focus-visible) {
 		outline: 2px solid #a78bfa;
 		outline-offset: 4px;
+	}
+
+	/* short screens (phones on their side): keep the chip small and out of the content's way */
+	@media (max-height: 520px) {
+		:global(.method-chip) {
+			top: 68px;
+			left: auto;
+			right: 12px;
+			padding: 0.3rem 0.75rem;
+			transform: translate(0, -12px);
+		}
+
+		:global(.method-chip.is-on) {
+			transform: translate(0, 0);
+		}
+
+		:global(.method-chip .mc-name),
+		:global(.method-chip .mc-dots) {
+			display: none;
+		}
 	}
 
 	@media (max-width: 520px) {
